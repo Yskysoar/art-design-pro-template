@@ -23,6 +23,8 @@
 - 原 `Code/art-design-pro/.git` 已移除，不再保留原开源仓库历史和远程地址。
 - 远程仓库使用 SSH 地址：`git@github.com:Yskysoar/art-design-pro-template.git`。
 - 项目已接入 Vite middleware 本地 Mock：`Code/art-design-pro/mock/local-mock.ts`。
+- 当前后端基础联调已通过：`/api/health`、`/api/auth/login`、`/api/user/info`、`/api/v3/system/menus`。
+- 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
 
 ## 三、代码目录规则
@@ -52,6 +54,8 @@ Code/
 - 表格、表单、权限、请求封装优先复用现有组件和 hooks。
 - 后端使用 Java 17 + Spring Boot 3.x + Maven + MyBatis-Plus。
 - 后端包名当前使用 `com.template`。
+- 后端当前覆盖 Tomcat 为 `10.1.55`，用于修复 IDE 扫描到的 Tomcat 传递依赖 CVE。
+- 前后端认证统一使用 Bearer JWT，请求头格式为 `Authorization: Bearer <token>`。
 - 后续接入 Spring 三层架构后端时，controller 层只处理数据形式和规范，真实业务处理放在 service 层。
 - 若后端使用 MyBatis-Plus，优先使用框架内置能力；只有复杂查询、复杂统计或复杂函数场景才自定义 SQL。
 
@@ -129,12 +133,16 @@ git diff --cached --name-only
 - `Code/art-design-pro/.env.production`
 - `Code/art-design-pro/.vite-mock.out`
 - `Code/art-design-pro/.vite-mock.err`
+- `Code/art-design-pro/.frontend-dev.out`
+- `Code/art-design-pro/.frontend-dev.err`
 - `Code/art-design-pro/.auto-import.json`
 - `Code/art-design-pro/src/types/import/auto-imports.d.ts`
 - `Code/art-design-pro/src/types/import/components.d.ts`
 - `Code/backend-template-java/target/`
 - `Code/backend-template-java/uploads/`
 - `Code/backend-template-java/logs/`
+- `Code/backend-template-java/.boot-*.out`
+- `Code/backend-template-java/.boot-*.err`
 - `.claude/`
 
 提交信息规则：
@@ -215,3 +223,17 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd compile
 ```
 
 含义：使用本机 Maven 编译 `Code/backend-template-java`，验证 Java 源码和依赖是否正确。
+
+前后端联调时建议验证：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/health -Method Get
+```
+
+含义：验证后端健康检查是否正常。
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:5173/api/auth/login -Method Post -ContentType 'application/json' -Body '{"userName":"admin","password":"admin123"}'
+```
+
+含义：通过 Vite 代理验证前端是否能访问真实后端登录接口。

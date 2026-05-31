@@ -6,6 +6,8 @@ Code/art-design-pro/dist/
 Code/art-design-pro/dist-ssr/
 Code/art-design-pro/.vite-mock.out
 Code/art-design-pro/.vite-mock.err
+Code/art-design-pro/.frontend-dev.out
+Code/art-design-pro/.frontend-dev.err
 
 # Local environment files. Keep examples/docs instead of committing real values.
 Code/art-design-pro/.env
@@ -22,6 +24,8 @@ Code/art-design-pro/src/types/import/components.d.ts
 Code/backend-template-java/target/
 Code/backend-template-java/uploads/
 Code/backend-template-java/logs/
+Code/backend-template-java/.boot-*.out
+Code/backend-template-java/.boot-*.err
 
 # OS/editor noise
 .DS_Store
