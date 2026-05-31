@@ -24,6 +24,7 @@
 - 远程仓库使用 SSH 地址：`git@github.com:Yskysoar/art-design-pro-template.git`。
 - 项目已接入 Vite middleware 本地 Mock：`Code/art-design-pro/mock/local-mock.ts`。
 - 当前后端基础联调已通过：`/api/health`、`/api/auth/login`、`/api/user/info`、`/api/v3/system/menus`。
+- 当前后端已开发并编译通过：`/api/user/list`、`/api/role/list`。验证真实返回前需要重启后端进程。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
 
@@ -55,6 +56,7 @@ Code/
 - 后端使用 Java 17 + Spring Boot 3.x + Maven + MyBatis-Plus。
 - 后端包名当前使用 `com.template`。
 - 后端当前覆盖 Tomcat 为 `10.1.55`，用于修复 IDE 扫描到的 Tomcat 传递依赖 CVE。
+- 后端已注册 MyBatis-Plus 分页插件，分页列表优先使用 `selectPage` 和 `LambdaQueryWrapper`。
 - 前后端认证统一使用 Bearer JWT，请求头格式为 `Authorization: Bearer <token>`。
 - 后续接入 Spring 三层架构后端时，controller 层只处理数据形式和规范，真实业务处理放在 service 层。
 - 若后端使用 MyBatis-Plus，优先使用框架内置能力；只有复杂查询、复杂统计或复杂函数场景才自定义 SQL。
