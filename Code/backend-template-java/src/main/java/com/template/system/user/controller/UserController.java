@@ -5,12 +5,22 @@ import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.system.auth.service.AuthService;
 import com.template.system.auth.vo.UserInfoResponse;
+import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
+import com.template.system.user.dto.UserStatusRequest;
+import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.service.UserService;
 import com.template.system.user.vo.UserListItemVo;
+import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,5 +58,73 @@ public class UserController {
     @GetMapping("/list")
     public ApiResponse<PageResult<UserListItemVo>> listUsers(@ModelAttribute UserListQuery query) {
         return ApiResponse.success(userService.pageUsers(query));
+    }
+
+    /**
+     * 新增用户。
+     *
+     * @param request   新增用户请求
+     * @param principal 当前登录用户
+     * @return 空响应
+     */
+    @PostMapping
+    public ApiResponse<Void> createUser(
+            @Valid @RequestBody UserCreateRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.createUser(request, principal);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 更新用户。
+     *
+     * @param id        用户 ID
+     * @param request   更新用户请求
+     * @param principal 当前登录用户
+     * @return 空响应
+     */
+    @PutMapping("/{id}")
+    public ApiResponse<Void> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UserUpdateRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.updateUser(id, request, principal);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 修改用户状态。
+     *
+     * @param id        用户 ID
+     * @param request   状态请求
+     * @param principal 当前登录用户
+     * @return 空响应
+     */
+    @PatchMapping("/{id}/status")
+    public ApiResponse<Void> updateStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UserStatusRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.updateStatus(id, request, principal);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 删除用户。
+     *
+     * @param id        用户 ID
+     * @param principal 当前登录用户
+     * @return 空响应
+     */
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> deleteUser(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.deleteUser(id, principal);
+        return ApiResponse.success(null);
     }
 }

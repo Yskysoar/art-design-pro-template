@@ -3,25 +3,35 @@ package com.template.system.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
+import com.template.common.response.ApiCode;
+import com.template.security.auth.AppUserPrincipal;
 import com.template.system.relation.entity.SysUserRole;
 import com.template.system.relation.mapper.SysUserRoleMapper;
 import com.template.system.role.entity.SysRole;
 import com.template.system.role.mapper.SysRoleMapper;
+import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
+import com.template.system.user.dto.UserStatusRequest;
+import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.entity.SysUser;
 import com.template.system.user.mapper.SysUserMapper;
 import com.template.system.user.service.UserService;
 import com.template.system.user.vo.UserListItemVo;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -34,16 +44,25 @@ public class UserServiceImpl implements UserService {
     private static final long DEFAULT_CURRENT = 1L;
     private static final long DEFAULT_SIZE = 20L;
     private static final long MAX_SIZE = 100L;
+    private static final String DEFAULT_PASSWORD = "admin123";
+    private static final String USER_NORMAL = "NORMAL";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final SysUserMapper userMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final SysRoleMapper roleMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(SysUserMapper userMapper, SysUserRoleMapper userRoleMapper, SysRoleMapper roleMapper) {
+    public UserServiceImpl(
+            SysUserMapper userMapper,
+            SysUserRoleMapper userRoleMapper,
+            SysRoleMapper roleMapper,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -58,6 +77,72 @@ public class UserServiceImpl implements UserService {
                 .toList();
 
         return new PageResult<>(records, page.getCurrent(), page.getSize(), page.getTotal());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void createUser(UserCreateRequest request, AppUserPrincipal principal) {
+        assertUserNameUnique(request.userName(), null);
+        List<SysRole> roles = getRolesByCodes(request.roleCodes());
+
+        SysUser user = new SysUser();
+        user.setUserName(request.userName());
+        user.setPasswordHash(passwordEncoder.encode(getInitialPassword(request.password())));
+        user.setNickName(getDefaultNickName(request.nickName(), request.userName()));
+        user.setUserGender(normalizeGender(request.userGender()));
+        user.setUserPhone(request.userPhone());
+        user.setUserEmail(request.userEmail());
+        user.setAvatar(request.avatar());
+        user.setStatus(toBackendStatusWithDefault(request.status()));
+        user.setCreateBy(principal.userName());
+        user.setUpdateBy(principal.userName());
+        user.setDeleted(NOT_DELETED);
+
+        userMapper.insert(user);
+        rewriteUserRoles(user.getId(), roles);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUser(Long id, UserUpdateRequest request, AppUserPrincipal principal) {
+        SysUser user = getExistingUser(id);
+        assertUserNameUnique(request.userName(), id);
+        List<SysRole> roles = getRolesByCodes(request.roleCodes());
+
+        user.setUserName(request.userName());
+        user.setNickName(getDefaultNickName(request.nickName(), request.userName()));
+        user.setUserGender(normalizeGender(request.userGender()));
+        user.setUserPhone(request.userPhone());
+        user.setUserEmail(request.userEmail());
+        user.setAvatar(request.avatar());
+        user.setUpdateBy(principal.userName());
+
+        userMapper.updateById(user);
+        rewriteUserRoles(id, roles);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStatus(Long id, UserStatusRequest request, AppUserPrincipal principal) {
+        SysUser user = getExistingUser(id);
+        user.setStatus(toBackendStatusWithDefault(request.status()));
+        user.setUpdateBy(principal.userName());
+        userMapper.updateById(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteUser(Long id, AppUserPrincipal principal) {
+        SysUser user = getExistingUser(id);
+        if (principal.userId().equals(id)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "不能删除当前登录用户");
+        }
+
+        user.setDeleted(1);
+        user.setStatus("DISABLED");
+        user.setUpdateBy(principal.userName());
+        userMapper.updateById(user);
+        userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id));
     }
 
     private LambdaQueryWrapper<SysUser> buildQueryWrapper(UserListQuery query) {
@@ -104,6 +189,68 @@ public class UserServiceImpl implements UserService {
                 ));
     }
 
+    private SysUser getExistingUser(Long id) {
+        if (id == null) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "用户ID不能为空");
+        }
+
+        SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getId, id)
+                .eq(SysUser::getDeleted, NOT_DELETED));
+        if (user == null) {
+            throw new BusinessException(ApiCode.NOT_FOUND, "用户不存在");
+        }
+        return user;
+    }
+
+    private void assertUserNameUnique(String userName, Long excludeUserId) {
+        Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUserName, userName)
+                .eq(SysUser::getDeleted, NOT_DELETED)
+                .ne(excludeUserId != null, SysUser::getId, excludeUserId));
+        if (count != null && count > 0) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "用户名已存在");
+        }
+    }
+
+    private List<SysRole> getRolesByCodes(List<String> roleCodes) {
+        List<String> normalizedCodes = roleCodes == null ? List.of() : roleCodes.stream()
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
+        if (normalizedCodes.isEmpty()) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "至少选择一个角色");
+        }
+
+        List<SysRole> roles = roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+                .in(SysRole::getRoleCode, normalizedCodes)
+                .eq(SysRole::getEnabled, 1)
+                .eq(SysRole::getDeleted, NOT_DELETED));
+        Map<String, SysRole> roleMap = roles.stream()
+                .collect(Collectors.toMap(SysRole::getRoleCode, Function.identity()));
+        List<String> missingCodes = normalizedCodes.stream()
+                .filter(code -> !roleMap.containsKey(code))
+                .toList();
+        if (!missingCodes.isEmpty()) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "角色不存在或未启用：" + String.join(",", missingCodes));
+        }
+
+        return normalizedCodes.stream().map(roleMap::get).toList();
+    }
+
+    private void rewriteUserRoles(Long userId, List<SysRole> roles) {
+        userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId));
+
+        List<SysUserRole> relations = new ArrayList<>();
+        for (SysRole role : roles) {
+            SysUserRole relation = new SysUserRole();
+            relation.setUserId(userId);
+            relation.setRoleId(role.getId());
+            relations.add(relation);
+        }
+        relations.forEach(userRoleMapper::insert);
+    }
+
     private UserListItemVo toVo(SysUser user, List<String> roleCodes) {
         return new UserListItemVo(
                 user.getId(),
@@ -145,6 +292,11 @@ public class UserServiceImpl implements UserService {
         };
     }
 
+    private String toBackendStatusWithDefault(String status) {
+        String backendStatus = toBackendStatus(status);
+        return StringUtils.hasText(backendStatus) ? backendStatus : USER_NORMAL;
+    }
+
     private String toFrontendStatus(String backendStatus) {
         if ("LOCKED".equals(backendStatus)) {
             return "3";
@@ -157,5 +309,23 @@ public class UserServiceImpl implements UserService {
 
     private String formatDateTime(LocalDateTime dateTime) {
         return dateTime == null ? null : DATE_TIME_FORMATTER.format(dateTime);
+    }
+
+    private String getInitialPassword(String password) {
+        return StringUtils.hasText(password) ? password : DEFAULT_PASSWORD;
+    }
+
+    private String getDefaultNickName(String nickName, String userName) {
+        return StringUtils.hasText(nickName) ? nickName : userName;
+    }
+
+    private String normalizeGender(String gender) {
+        if ("1".equals(gender)) {
+            return "男";
+        }
+        if ("2".equals(gender)) {
+            return "女";
+        }
+        return gender;
     }
 }
