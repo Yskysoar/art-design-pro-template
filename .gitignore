@@ -1,0 +1,25 @@
+Info/
+
+# Nested project runtime/build output
+Code/art-design-pro/node_modules/
+Code/art-design-pro/dist/
+Code/art-design-pro/dist-ssr/
+Code/art-design-pro/.vite-mock.out
+Code/art-design-pro/.vite-mock.err
+
+# Local environment files. Keep examples/docs instead of committing real values.
+Code/art-design-pro/.env
+Code/art-design-pro/.env.development
+Code/art-design-pro/.env.production
+Code/art-design-pro/*.local
+
+# Generated type/import files
+Code/art-design-pro/.auto-import.json
+Code/art-design-pro/src/types/import/auto-imports.d.ts
+Code/art-design-pro/src/types/import/components.d.ts
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.claude/
