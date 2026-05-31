@@ -8,3 +8,4 @@
 - Mock SQL 必须符合业务逻辑，方便前端本地 Mock 数据逐步迁移到数据库。
 - 初始化管理员账号为 `admin`，初始密码为 `admin123`。
 - 生产环境不得误导入 Mock SQL。
+- 表结构 SQL 位于 `src/main/resources/db/schema/`。
