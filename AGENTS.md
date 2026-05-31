@@ -27,6 +27,8 @@
 - 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`/api/role/list`。验证真实返回前需要用户手动重启后端进程。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
+- 后端启动由用户手动执行；Agent 只在需要重启或验证时提醒用户，不再尝试代启动后端进程。
+- 数据库密码等敏感配置只通过本机环境变量传入，例如 `DB_PASSWORD`，不得写入 Git 跟踪文件、Docs 或提交信息。
 
 ## 三、代码目录规则
 
@@ -227,6 +229,16 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd compile
 ```
 
 含义：使用本机 Maven 编译 `Code/backend-template-java`，验证 Java 源码和依赖是否正确。
+
+如需启动后端，由用户在本机 PowerShell 中执行：
+
+```powershell
+$env:DB_PASSWORD="本机数据库密码"
+cd "D:\Coding\Project\资源——Art Design Pro开发模板\Code\backend-template-java"
+D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
+```
+
+含义：只在当前 PowerShell 窗口设置数据库密码环境变量，然后启动后端服务。不要把真实密码写入项目配置或文档。
 
 前后端联调时建议验证：
 
