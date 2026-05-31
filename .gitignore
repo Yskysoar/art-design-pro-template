@@ -18,6 +18,11 @@ Code/art-design-pro/.auto-import.json
 Code/art-design-pro/src/types/import/auto-imports.d.ts
 Code/art-design-pro/src/types/import/components.d.ts
 
+# Java backend runtime/build output
+Code/backend-template-java/target/
+Code/backend-template-java/uploads/
+Code/backend-template-java/logs/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db
