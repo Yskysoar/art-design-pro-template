@@ -265,6 +265,7 @@ declare namespace Api {
   /** 文章管理类型 */
   namespace Article {
     type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'OFFLINE'
+    type ArticleCommentStatus = 'NORMAL' | 'HIDDEN' | 'DELETED'
 
     interface ArticleType {
       id: number
@@ -286,6 +287,7 @@ declare namespace Api {
       visible: boolean
       viewCount: number
       count?: number
+      commentCount?: number
       createBy: string
       createTime: string
       create_time?: string
@@ -320,6 +322,9 @@ declare namespace Api {
       visible: boolean
       status: ArticleStatus
       viewCount: number
+      commentCount?: number
+      rootCommentCount?: number
+      replyCount?: number
       createBy: string
       createTime: string
       publishTime?: string
@@ -335,6 +340,38 @@ declare namespace Api {
       visible: boolean
       status: ArticleStatus
       attachmentIds: number[]
+    }
+
+    type ArticleCommentList = Api.Common.PaginatedResponse<ArticleCommentItem>
+
+    interface ArticleCommentItem {
+      id: number
+      articleId: number
+      parentId: number
+      rootId: number
+      content: string
+      status: ArticleCommentStatus
+      userId?: number
+      userName: string
+      userAvatar?: string
+      replyToUserName?: string
+      createTime: string
+      canHide?: boolean
+      canRestore?: boolean
+      canDelete?: boolean
+      replies: ArticleCommentItem[]
+    }
+
+    interface ArticleCommentSearchParams {
+      articleId: number
+      current: number
+      size: number
+    }
+
+    interface ArticleCommentSaveParams {
+      articleId: number
+      parentId?: number
+      content: string
     }
   }
 

@@ -6,6 +6,7 @@
         <ElTag v-if="article?.categoryName" size="small">{{ article.categoryName }}</ElTag>
         <span>{{ article?.createTime }}</span>
         <span>浏览 {{ article?.viewCount || 0 }}</span>
+        <span>评论 {{ article?.commentCount || 0 }}</span>
       </div>
 
       <h1 class="text-3xl font-semibold mt-4">{{ article?.title }}</h1>
@@ -26,6 +27,169 @@
           {{ item.originalName }}
         </ElLink>
       </div>
+
+      <section class="comments-section">
+        <div class="comments-header">
+          <h2>评论</h2>
+          <span>{{ commentSummaryText }}</span>
+        </div>
+
+        <div class="comment-editor">
+          <ElInput
+            v-model="commentContent"
+            type="textarea"
+            :rows="3"
+            maxlength="500"
+            show-word-limit
+            :disabled="!userStore.isLogin || submittingComment"
+            :placeholder="userStore.isLogin ? '写下你的评论' : '登录后可以发表评论'"
+          />
+          <div class="comment-editor-actions">
+            <ElButton type="primary" :disabled="!canSubmitComment" :loading="submittingComment" @click="submitComment()">
+              发布
+            </ElButton>
+          </div>
+        </div>
+
+        <div v-loading="commentsLoading" class="comments-list">
+          <ElEmpty v-if="showCommentsEmpty" description="暂无评论" />
+          <article v-for="comment in comments" :key="comment.id" class="comment-item">
+            <div class="comment-main">
+              <ElAvatar :size="36" :src="comment.userAvatar">{{ avatarText(comment.userName) }}</ElAvatar>
+              <div class="comment-body">
+                <div class="comment-meta">
+                  <span class="comment-user">{{ comment.userName }}</span>
+                  <ElTag v-if="comment.status === 'HIDDEN'" size="small" type="warning">已隐藏</ElTag>
+                  <ElTag v-if="comment.status === 'DELETED'" size="small" type="info">已删除</ElTag>
+                  <span>{{ comment.createTime }}</span>
+                </div>
+                <p class="comment-content">{{ displayCommentContent(comment) }}</p>
+                <div class="comment-actions">
+                  <ElButton
+                    link
+                    type="primary"
+                    :disabled="!userStore.isLogin || comment.status === 'DELETED'"
+                    @click="startReply(comment)"
+                  >
+                    回复
+                  </ElButton>
+                  <ElButton
+                    v-if="comment.canHide"
+                    link
+                    type="warning"
+                    @click="changeCommentStatus(comment, 'HIDDEN')"
+                  >
+                    隐藏
+                  </ElButton>
+                  <ElButton
+                    v-if="comment.canRestore"
+                    link
+                    type="success"
+                    @click="changeCommentStatus(comment, 'NORMAL')"
+                  >
+                    恢复
+                  </ElButton>
+                  <ElButton
+                    v-if="comment.canDelete"
+                    link
+                    type="danger"
+                    @click="removeComment(comment)"
+                  >
+                    删除
+                  </ElButton>
+                </div>
+
+                <div v-if="replyTarget && (replyTarget.id === comment.id || replyTarget.rootId === comment.id)" class="reply-editor">
+                  <ElInput
+                    v-model="replyContent"
+                    type="textarea"
+                    :rows="2"
+                    maxlength="500"
+                    show-word-limit
+                    :placeholder="replyPlaceholder"
+                  />
+                  <div class="reply-actions">
+                    <ElButton @click="cancelReply">取消</ElButton>
+                    <ElButton type="primary" :disabled="!canSubmitReply" :loading="submittingComment" @click="submitComment(replyTarget)">
+                      回复
+                    </ElButton>
+                  </div>
+                </div>
+
+                <div v-if="comment.replies?.length" class="reply-list">
+                  <div v-for="reply in visibleReplies(comment)" :key="reply.id" class="reply-item">
+                    <div class="reply-meta">
+                      <span class="comment-user">{{ reply.userName }}</span>
+                      <template v-if="reply.replyToUserName">
+                        <span>回复</span>
+                        <span class="comment-user">{{ reply.replyToUserName }}</span>
+                      </template>
+                      <ElTag v-if="reply.status === 'HIDDEN'" size="small" type="warning">已隐藏</ElTag>
+                      <ElTag v-if="reply.status === 'DELETED'" size="small" type="info">已删除</ElTag>
+                      <span>{{ reply.createTime }}</span>
+                    </div>
+                    <p class="comment-content">{{ displayCommentContent(reply) }}</p>
+                    <div class="comment-actions">
+                      <ElButton
+                        link
+                        type="primary"
+                        :disabled="!userStore.isLogin || reply.status === 'DELETED'"
+                        @click="startReply(reply)"
+                      >
+                        回复
+                      </ElButton>
+                      <ElButton
+                        v-if="reply.canHide"
+                        link
+                        type="warning"
+                        @click="changeCommentStatus(reply, 'HIDDEN')"
+                      >
+                        隐藏
+                      </ElButton>
+                      <ElButton
+                        v-if="reply.canRestore"
+                        link
+                        type="success"
+                        @click="changeCommentStatus(reply, 'NORMAL')"
+                      >
+                        恢复
+                      </ElButton>
+                      <ElButton
+                        v-if="reply.canDelete"
+                        link
+                        type="danger"
+                        @click="removeComment(reply)"
+                      >
+                        删除
+                      </ElButton>
+                    </div>
+                  </div>
+                  <ElButton
+                    v-if="comment.replies.length > REPLY_COLLAPSE_LIMIT"
+                    class="reply-toggle"
+                    link
+                    type="primary"
+                    @click="toggleReplies(comment.id)"
+                  >
+                    {{ expandedReplyIds.has(comment.id) ? '收起' : `展开全部 ${comment.replies.length} 条回复` }}
+                  </ElButton>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div v-if="commentsPagination.total > commentsPagination.size" class="comments-pagination">
+          <ElPagination
+            background
+            v-model:current-page="commentsPagination.current"
+            :page-size="commentsPagination.size"
+            layout="prev, pager, next"
+            :total="commentsPagination.total"
+            @current-change="getComments"
+          />
+        </div>
+      </section>
     </div>
     <ArtBackToTop />
   </div>
@@ -34,19 +198,56 @@
 <script setup lang="ts">
   import '@/assets/styles/core/md.scss'
   import '@/assets/styles/custom/one-dark-pro.scss'
-  import { fetchArticleDetail } from '@/api/article'
+  import {
+    createArticleComment,
+    deleteArticleComment,
+    fetchArticleComments,
+    fetchArticleDetail,
+    updateArticleCommentStatus
+  } from '@/api/article'
   import { useCommon } from '@/hooks/core/useCommon'
+  import { useUserStore } from '@/store/modules/user'
   import { sanitizeRichHtml } from '@/utils/security/html'
+  import { ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'ArticleDetail' })
 
+  const REPLY_COLLAPSE_LIMIT = 3
   const route = useRoute()
+  const userStore = useUserStore()
   const articleId = computed(() => Number(route.params.id))
   const article = ref<Api.Article.ArticleDetail>()
   const loading = ref(false)
+  const comments = ref<Api.Article.ArticleCommentItem[]>([])
+  const commentsLoading = ref(false)
+  const submittingComment = ref(false)
+  const commentContent = ref('')
+  const replyContent = ref('')
+  const replyTarget = ref<Api.Article.ArticleCommentItem>()
+  const expandedReplyIds = reactive(new Set<number>())
+  const commentsPagination = reactive({
+    current: 1,
+    size: 10,
+    total: 0
+  })
   const safeHtml = computed(() =>
     sanitizeRichHtml(article.value?.contentHtml || article.value?.html_content || '')
   )
+  const canSubmitComment = computed(
+    () => userStore.isLogin && commentContent.value.trim().length > 0 && commentContent.value.trim().length <= 500
+  )
+  const canSubmitReply = computed(
+    () => userStore.isLogin && replyContent.value.trim().length > 0 && replyContent.value.trim().length <= 500
+  )
+  const replyPlaceholder = computed(() =>
+    replyTarget.value?.userName ? `回复 ${replyTarget.value.userName}` : '回复评论'
+  )
+  const commentSummaryText = computed(() => {
+    const rootCount = article.value?.rootCommentCount ?? commentsPagination.total
+    const replyCount = article.value?.replyCount ?? 0
+    return replyCount > 0 ? `${rootCount} 条主评论 · ${replyCount} 条回复` : `${rootCount} 条主评论`
+  })
+  const showCommentsEmpty = computed(() => comments.value.length === 0 && !commentsLoading.value)
 
   const getArticleDetail = async () => {
     if (!articleId.value) return
@@ -58,9 +259,115 @@
     }
   }
 
+  const getComments = async () => {
+    if (!articleId.value) return
+    commentsLoading.value = true
+    try {
+      const result = await fetchArticleComments({
+        articleId: articleId.value,
+        current: commentsPagination.current,
+        size: commentsPagination.size
+      })
+      comments.value = result.records
+      commentsPagination.total = result.total
+      syncExpandedReplyIds(result.records)
+    } finally {
+      commentsLoading.value = false
+    }
+  }
+
+  const submitComment = async (parent?: Api.Article.ArticleCommentItem) => {
+    const content = parent ? replyContent.value.trim() : commentContent.value.trim()
+    if (!content || !articleId.value) return
+    submittingComment.value = true
+    try {
+      await createArticleComment({
+        articleId: articleId.value,
+        parentId: parent?.id ?? 0,
+        content
+      })
+      if (parent) {
+        replyContent.value = ''
+        replyTarget.value = undefined
+      } else {
+        commentContent.value = ''
+        commentsPagination.current = 1
+      }
+      await getArticleDetail()
+      await getComments()
+      ElMessage.success('评论已发布')
+    } finally {
+      submittingComment.value = false
+    }
+  }
+
+  const startReply = (comment: Api.Article.ArticleCommentItem) => {
+    replyTarget.value = comment
+    replyContent.value = ''
+  }
+
+  const cancelReply = () => {
+    replyTarget.value = undefined
+    replyContent.value = ''
+  }
+
+  const visibleReplies = (comment: Api.Article.ArticleCommentItem) => {
+    if (!comment.replies?.length) return []
+    if (comment.replies.length <= REPLY_COLLAPSE_LIMIT || expandedReplyIds.has(comment.id)) {
+      return comment.replies
+    }
+    return comment.replies.slice(0, REPLY_COLLAPSE_LIMIT)
+  }
+
+  const toggleReplies = (commentId: number) => {
+    if (expandedReplyIds.has(commentId)) {
+      expandedReplyIds.delete(commentId)
+    } else {
+      expandedReplyIds.add(commentId)
+    }
+  }
+
+  const syncExpandedReplyIds = (items: Api.Article.ArticleCommentItem[]) => {
+    const ids = new Set(items.map((item) => item.id))
+    Array.from(expandedReplyIds).forEach((id) => {
+      if (!ids.has(id)) expandedReplyIds.delete(id)
+    })
+  }
+
+  const changeCommentStatus = async (
+    comment: Api.Article.ArticleCommentItem,
+    status: Api.Article.ArticleCommentStatus
+  ) => {
+    await updateArticleCommentStatus(comment.id, status)
+    await getArticleDetail()
+    await getComments()
+    ElMessage.success(status === 'NORMAL' ? '评论已恢复' : '评论已隐藏')
+  }
+
+  const removeComment = async (comment: Api.Article.ArticleCommentItem) => {
+    await ElMessageBox.confirm('删除后会隐藏当前评论内容，历史子回复仍会保留。', '删除评论', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消'
+    })
+    await deleteArticleComment(comment.id)
+    await getArticleDetail()
+    await getComments()
+    ElMessage.success('评论已删除')
+  }
+
+  const displayCommentContent = (comment: Api.Article.ArticleCommentItem) => {
+    if (comment.status === 'DELETED') return '该评论已删除'
+    if (comment.status === 'HIDDEN') return '该评论已隐藏'
+    return comment.content
+  }
+
+  const avatarText = (name?: string) => name?.slice(0, 1) || '评'
+
   onMounted(() => {
     useCommon().scrollToTop()
     getArticleDetail()
+    getComments()
   })
 </script>
 
@@ -87,6 +394,121 @@
         font-size: 18px;
         font-weight: 600;
       }
+    }
+
+    .comments-section {
+      padding-top: 32px;
+      margin-top: 40px;
+      border-top: 1px solid var(--el-border-color);
+    }
+
+    .comments-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 18px;
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      span {
+        font-size: 14px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    .comment-editor,
+    .reply-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .comment-editor-actions,
+    .reply-actions,
+    .comments-pagination {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .comments-list {
+      min-height: 120px;
+      margin-top: 24px;
+    }
+
+    .comment-item {
+      padding: 18px 0;
+      border-top: 1px solid var(--el-border-color-lighter);
+    }
+
+    .comment-main {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .comment-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .comment-meta,
+    .reply-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+    }
+
+    .comment-user {
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+    }
+
+    .comment-content {
+      margin: 8px 0;
+      line-height: 1.7;
+      color: var(--el-text-color-primary);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .comment-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 28px;
+    }
+
+    .reply-editor {
+      margin-top: 12px;
+    }
+
+    .reply-list {
+      padding: 12px 14px;
+      margin-top: 12px;
+      background: var(--el-fill-color-lighter);
+      border-radius: 8px;
+    }
+
+    .reply-item + .reply-item {
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid var(--el-border-color-lighter);
+    }
+
+    .reply-toggle {
+      margin-top: 8px;
+      padding: 0;
+    }
+
+    .comments-pagination {
+      margin-top: 20px;
     }
 
     :deep(.markdown-body) {

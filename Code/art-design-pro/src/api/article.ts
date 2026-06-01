@@ -68,3 +68,43 @@ export function updateArticleStatus(id: number, status: Api.Article.ArticleStatu
     data: { status }
   })
 }
+
+/**
+ * 获取文章评论分页列表。
+ */
+export function fetchArticleComments(params: Api.Article.ArticleCommentSearchParams) {
+  return request.get<Api.Article.ArticleCommentList>({
+    url: '/api/article/comment/list',
+    params
+  })
+}
+
+/**
+ * 新增文章评论或回复。
+ */
+export function createArticleComment(data: Api.Article.ArticleCommentSaveParams) {
+  return request.post<number>({
+    url: '/api/article/comment',
+    data
+  })
+}
+
+/**
+ * 更新文章评论状态。
+ */
+export function updateArticleCommentStatus(id: number, status: Api.Article.ArticleCommentStatus) {
+  return request.request<void>({
+    url: `/api/article/comment/${id}/status`,
+    method: 'PATCH',
+    data: { status }
+  })
+}
+
+/**
+ * 删除文章评论。
+ */
+export function deleteArticleComment(id: number) {
+  return request.del<void>({
+    url: `/api/article/comment/${id}`
+  })
+}

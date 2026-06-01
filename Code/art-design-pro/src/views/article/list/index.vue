@@ -62,22 +62,21 @@
           <div class="px-2 py-1">
             <h2 class="text-base text-g-800 font-medium line-clamp-1">{{ item.title }}</h2>
             <p class="text-sm text-g-500 h-5 line-clamp-1">{{ item.summary || '暂无摘要' }}</p>
-            <div class="flex-b w-full h-6 mt-1">
-              <div class="flex-c text-g-500">
+            <div class="article-card-meta">
+              <div class="article-meta-item article-date">
                 <ArtSvgIcon icon="ri:time-line" class="mr-1 text-sm" />
                 <span class="text-sm">{{ formatDate(item.createTime || item.create_time) }}</span>
-                <div class="w-px h-3 bg-g-400 mx-3.5"></div>
+              </div>
+              <div class="article-meta-separator"></div>
+              <div class="article-meta-item">
                 <ArtSvgIcon icon="ri:eye-line" class="mr-1 text-sm" />
                 <span class="text-sm">{{ item.viewCount ?? item.count ?? 0 }}</span>
               </div>
-              <ElButton
-                class="opacity-0 group-hover:opacity-100"
-                v-auth="'article:publish:edit'"
-                size="small"
-                @click.stop="toEdit(item)"
-              >
-                编辑
-              </ElButton>
+              <div class="article-meta-separator"></div>
+              <div class="article-meta-item">
+                <ArtSvgIcon icon="ri:chat-3-line" class="mr-1 text-sm" />
+                <span class="text-sm">{{ item.commentCount ?? 0 }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -119,6 +118,7 @@
   const articleTypes = ref<Api.Article.ArticleType[]>([])
   const articleList = ref<Api.Article.ArticleListItem[]>([])
   const loading = ref(false)
+  const initialized = ref(false)
   const yearValue = ref('All')
   const query = reactive<Api.Article.ArticleSearchParams>({
     title: '',
@@ -163,10 +163,6 @@
     router.push({ name: 'ArticleDetail', params: { id: item.id } })
   }
 
-  const toEdit = (item: Api.Article.ArticleListItem) => {
-    router.push({ name: 'ArticlePublish', query: { id: item.id } })
-  }
-
   const toAddArticle = () => {
     router.push({ name: 'ArticlePublish' })
   }
@@ -196,6 +192,13 @@
   onMounted(async () => {
     await getArticleTypes()
     await getArticleList()
+    initialized.value = true
+  })
+
+  onActivated(async () => {
+    if (initialized.value) {
+      await getArticleList()
+    }
   })
 </script>
 
@@ -214,5 +217,34 @@
     .el-select {
       width: 180px;
     }
+  }
+
+  .article-card-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    height: 28px;
+    margin-top: 4px;
+    color: var(--art-gray-500);
+  }
+
+  .article-meta-item {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .article-date span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .article-meta-separator {
+    width: 1px;
+    height: 12px;
+    background: var(--art-gray-400);
   }
 </style>
