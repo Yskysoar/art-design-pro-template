@@ -11,7 +11,8 @@ VALUES
 INSERT INTO sys_org (id, parent_id, ancestors, org_name, org_code, org_type, sort, enabled, create_by, update_by)
 VALUES
   (1, 0, '0', '模板组织', 'ORG_TEMPLATE', 'GROUP', 1, 1, 'system', 'system'),
-  (2, 1, '0,1', '内容管理组', 'ORG_CONTENT', 'GROUP', 10, 1, 'system', 'system');
+  (2, 1, '0,1', '内容管理组', 'ORG_CONTENT', 'GROUP', 10, 1, 'system', 'system'),
+  (3, 1, '0,1', '运营管理组', 'ORG_OPERATION', 'GROUP', 20, 1, 'system', 'system');
 
 INSERT INTO sys_user (
   id, user_name, password_hash, nick_name, user_gender, user_phone, user_email,
@@ -86,6 +87,10 @@ VALUES
 INSERT INTO sys_user_org (user_id, org_id, primary_org)
 VALUES
   (1, 1, 1);
+
+INSERT INTO sys_role_org (role_id, org_id)
+VALUES
+  (2, 2);
 
 INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
