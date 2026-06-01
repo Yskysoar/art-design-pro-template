@@ -72,6 +72,14 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("无效 token 访问用户列表应返回 HTTP 401")
+    void listUsersShouldReturnUnauthorizedWithInvalidToken() throws Exception {
+        mockMvc.perform(get("/api/user/list").header("Authorization", "Bearer invalid-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
     @DisplayName("无用户查看权限访问用户列表应返回 HTTP 403")
     void listUsersShouldReturnForbiddenWithoutPermission() throws Exception {
         AppUserPrincipal principal = new AppUserPrincipal(2L, "guest", List.of("R_GUEST"));

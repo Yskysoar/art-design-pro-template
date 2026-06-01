@@ -29,6 +29,8 @@ Code/backend-template-java/uploads/
 Code/backend-template-java/logs/
 Code/backend-template-java/.boot-*.out
 Code/backend-template-java/.boot-*.err
+.boot-*.out
+.boot-*.err
 
 # OS/editor noise
 .DS_Store
