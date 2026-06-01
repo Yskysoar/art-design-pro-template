@@ -30,6 +30,10 @@ public class SysMenu {
     private String activePath;
     private Integer sort;
     private Integer enabled;
+    private String createBy;
+    private java.time.LocalDateTime createTime;
+    private String updateBy;
+    private java.time.LocalDateTime updateTime;
     private Integer deleted;
 
     public Long getId() {
@@ -182,6 +186,38 @@ public class SysMenu {
 
     public void setEnabled(Integer enabled) {
         this.enabled = enabled;
+    }
+
+    public String getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(String createBy) {
+        this.createBy = createBy;
+    }
+
+    public java.time.LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(java.time.LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public String getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(String updateBy) {
+        this.updateBy = updateBy;
+    }
+
+    public java.time.LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(java.time.LocalDateTime updateTime) {
+        this.updateTime = updateTime;
     }
 
     public Integer getDeleted() {

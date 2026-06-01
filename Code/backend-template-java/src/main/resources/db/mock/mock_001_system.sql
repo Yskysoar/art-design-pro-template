@@ -53,7 +53,8 @@ VALUES
   (7, '管理组织', 'system:org:manage', 'system', 'ADMIN', 1, 'system', 'system'),
   (8, '管理配置项', 'system:config:manage', 'system', 'ADMIN', 1, 'system', 'system'),
   (9, '发布文章', 'article:publish:add', 'article', 'BOTH', 1, 'system', 'system'),
-  (10, '编辑文章', 'article:publish:edit', 'article', 'BOTH', 1, 'system', 'system');
+  (10, '编辑文章', 'article:publish:edit', 'article', 'BOTH', 1, 'system', 'system'),
+  (11, '管理菜单', 'system:menu:manage', 'system', 'ADMIN', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -69,7 +70,14 @@ VALUES
   (6, 3, 'MENU', 'menu', 'Menus', '/system/menu', NULL, 'menus.system.menu', 'ri:menu-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 3, 1, 'system', 'system'),
   (7, 0, 'DIR', '/article', 'Article', '/index/index', NULL, 'menus.article.title', 'ri:book-2-line', 'BOTH', NULL, 0, 0, 0, 0, NULL, 20, 1, 'system', 'system'),
   (8, 7, 'MENU', 'article-list', 'ArticleList', '/article/list', NULL, 'menus.article.articleList', 'ri:article-line', 'BOTH', NULL, 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
-  (9, 7, 'MENU', 'publish', 'ArticlePublish', '/article/publish', NULL, 'menus.article.articlePublish', 'ri:telegram-2-line', 'ADMIN', 'article:publish:add', 1, 0, 0, 0, NULL, 2, 1, 'system', 'system');
+  (9, 7, 'MENU', 'publish', 'ArticlePublish', '/article/publish', NULL, 'menus.article.articlePublish', 'ri:telegram-2-line', 'ADMIN', 'article:publish:add', 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
+  (10, 4, 'BUTTON', NULL, 'UserAdd', NULL, NULL, '新增用户', NULL, 'ADMIN', 'system:user:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (11, 4, 'BUTTON', NULL, 'UserEdit', NULL, NULL, '编辑用户', NULL, 'ADMIN', 'system:user:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
+  (12, 4, 'BUTTON', NULL, 'UserDelete', NULL, NULL, '删除用户', NULL, 'ADMIN', 'system:user:delete', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
+  (13, 5, 'BUTTON', NULL, 'RoleAdd', NULL, NULL, '新增角色', NULL, 'ADMIN', 'system:role:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (14, 5, 'BUTTON', NULL, 'RoleEdit', NULL, NULL, '编辑角色', NULL, 'ADMIN', 'system:role:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
+  (15, 5, 'BUTTON', NULL, 'RolePermission', NULL, NULL, '分配角色权限', NULL, 'ADMIN', 'system:role:permission', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
+  (16, 6, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
@@ -82,11 +90,12 @@ VALUES
 INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
+  (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
   (2, 7), (2, 8), (2, 9),
   (3, 7), (3, 8),
   (4, 7), (4, 8);
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10),
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11),
   (2, 9), (2, 10);
