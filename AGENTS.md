@@ -18,6 +18,7 @@
 
 - 当前前端项目位于 `Code/art-design-pro/`。
 - 当前后端项目位于 `Code/backend-template-java/`。
+- `Code/art-design-pro-main/` 和 `Code/art-design-pro-main.zip` 是原始前端项目参考快照，只用于当前模板出现巨大混乱时对照修复；不得作为当前项目源码开发、修改、提交或打包对象。
 - 当前文档位于 `Docs/`。
 - 根目录已经作为新的 Git 仓库使用，管理 `Code/`、`Docs/` 和根级配置。
 - 原 `Code/art-design-pro/.git` 已移除，不再保留原开源仓库历史和远程地址。
@@ -31,6 +32,8 @@
 - 当前后端文章与上传模块已完成第一轮开发和真实 HTTP 回归：文章分类、列表、详情、新增、编辑、删除、状态变更、本地上传、wangEditor 上传和 `/api/common/files/**` 受控文件访问。
 - 当前前端文章列表、发布、详情页已接入真实后端接口，并保留接近原模板的卡片列表、发布设置和 Markdown 阅读风格。
 - 当前文章与上传模块后端测试已通过：`Tests run: 75, Failures: 0, Errors: 0, Skipped: 0`。
+- 当前文章评论模块处于第一轮开发和审查后状态：文章详情底部评论区、后端评论表、Service、Controller、权限码和 Mock SQL 已初步接入；后续优先修复 `Docs/5.开发审查问题记录.md` 中记录的 P1/P2 问题，包括评论公开接口文章可访问性、隐藏评论脱敏、评论数量原子更新、删除状态流转、公开响应 userId、频率限制和内容安全。
+- `Docs/5.开发审查问题记录.md` 已调整为模块内“待修复/部分修复/持续关注在前，已修复在后”的问题台账结构；新增问题和修复记录应继续按该结构维护。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
 - `Code/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
@@ -51,6 +54,8 @@ Code/
 │   ├── vite.config.ts
 │   ├── package.json
 │   └── pnpm-lock.yaml
+├── art-design-pro-main/        # 原始前端参考快照，禁止提交和日常开发修改
+├── art-design-pro-main.zip     # 原始前端参考压缩包，禁止提交
 └── backend-template-java/
     ├── pom.xml
     ├── README.md
@@ -144,6 +149,8 @@ git diff --cached --name-only
 不得提交：
 
 - `Info/`
+- `Code/art-design-pro-main/`
+- `Code/art-design-pro-main.zip`
 - `Code/art-design-pro/node_modules/`
 - `Code/art-design-pro/dist/`
 - `Code/art-design-pro/.env`
