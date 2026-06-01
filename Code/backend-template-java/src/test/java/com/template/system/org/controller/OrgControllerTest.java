@@ -79,7 +79,7 @@ class OrgControllerTest extends ControllerSecurityTestSupport {
     @Test
     @DisplayName("有组织管理权限访问组织树应返回组织节点")
     void orgTreeShouldReturnTreeWhenPermissionGranted() throws Exception {
-        when(orgService.getOrgTree()).thenReturn(List.of(new OrgTreeVo(1L, 0L, "0", "总部", "ORG_ROOT", "DEPT", 1, true, List.of())));
+        when(orgService.getOrgTree(ADMIN)).thenReturn(List.of(new OrgTreeVo(1L, 0L, "0", "总部", "ORG_ROOT", "DEPT", 1, true, List.of())));
 
         mockMvc.perform(get("/api/org/tree").header("Authorization", "Bearer " + token(jwtTokenService, ADMIN)))
                 .andExpect(status().isOk())

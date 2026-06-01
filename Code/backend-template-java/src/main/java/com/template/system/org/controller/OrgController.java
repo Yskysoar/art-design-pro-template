@@ -39,14 +39,15 @@ public class OrgController {
     /**
      * 查询组织树。
      *
-     * @return 组织树
+     * @param principal 当前登录用户
+     * @return 当前用户可见组织树
      */
     @GetMapping("/tree")
     public ApiResponse<List<OrgTreeVo>> getOrgTree(
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
         permissionService.requirePermission(principal, ORG_MANAGE_PERMISSION);
-        return ApiResponse.success(orgService.getOrgTree());
+        return ApiResponse.success(orgService.getOrgTree(principal));
     }
 
     /**

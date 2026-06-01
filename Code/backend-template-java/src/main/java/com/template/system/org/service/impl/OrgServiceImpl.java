@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
+import com.template.system.enums.DataScope;
 import com.template.system.org.dto.OrgSaveRequest;
 import com.template.system.org.entity.SysOrg;
 import com.template.system.org.mapper.SysOrgMapper;
@@ -13,13 +15,17 @@ import com.template.system.relation.entity.SysRoleOrg;
 import com.template.system.relation.entity.SysUserOrg;
 import com.template.system.relation.mapper.SysRoleOrgMapper;
 import com.template.system.relation.mapper.SysUserOrgMapper;
+import com.template.system.role.entity.SysRole;
+import com.template.system.role.mapper.SysRoleMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.HashSet;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,23 +43,30 @@ public class OrgServiceImpl implements OrgService {
     private final SysOrgMapper orgMapper;
     private final SysUserOrgMapper userOrgMapper;
     private final SysRoleOrgMapper roleOrgMapper;
+    private final SysRoleMapper roleMapper;
+    private final PermissionService permissionService;
 
     public OrgServiceImpl(
             SysOrgMapper orgMapper,
             SysUserOrgMapper userOrgMapper,
-            SysRoleOrgMapper roleOrgMapper
+            SysRoleOrgMapper roleOrgMapper,
+            SysRoleMapper roleMapper,
+            PermissionService permissionService
     ) {
         this.orgMapper = orgMapper;
         this.userOrgMapper = userOrgMapper;
         this.roleOrgMapper = roleOrgMapper;
+        this.roleMapper = roleMapper;
+        this.permissionService = permissionService;
     }
 
     @Override
-    public List<OrgTreeVo> getOrgTree() {
+    public List<OrgTreeVo> getOrgTree(AppUserPrincipal principal) {
         List<SysOrg> orgs = orgMapper.selectList(new LambdaQueryWrapper<SysOrg>()
                 .eq(SysOrg::getDeleted, NOT_DELETED)
                 .orderByAsc(SysOrg::getSort)
                 .orderByAsc(SysOrg::getId));
+        orgs = filterVisibleOrgs(orgs, principal);
         Map<Long, List<SysOrg>> childrenMap = orgs.stream()
                 .sorted(Comparator.comparing(SysOrg::getSort, Comparator.nullsLast(Integer::compareTo)))
                 .collect(Collectors.groupingBy(SysOrg::getParentId));
@@ -116,6 +129,125 @@ public class OrgServiceImpl implements OrgService {
         return childrenMap.getOrDefault(parentId, List.of()).stream()
                 .map(org -> toVo(org, buildTree(org.getId(), childrenMap)))
                 .toList();
+    }
+
+    private List<SysOrg> filterVisibleOrgs(List<SysOrg> orgs, AppUserPrincipal principal) {
+        if (permissionService.isSuperAdmin(principal)) {
+            return orgs;
+        }
+
+        List<SysRole> roles = getEnabledRoles(principal);
+        if (roles.stream().anyMatch(role -> DataScope.ALL.name().equalsIgnoreCase(role.getDataScope()))) {
+            return orgs;
+        }
+
+        Set<Long> visibleIds = resolveVisibleOrgIds(orgs, principal, roles);
+        if (visibleIds.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> idsWithAncestors = new HashSet<>(visibleIds);
+        Map<Long, SysOrg> orgMap = orgs.stream().collect(Collectors.toMap(SysOrg::getId, org -> org));
+        for (Long visibleId : visibleIds) {
+            addAncestors(visibleId, orgMap, idsWithAncestors);
+        }
+        return orgs.stream()
+                .filter(org -> idsWithAncestors.contains(org.getId()))
+                .toList();
+    }
+
+    private Set<Long> resolveVisibleOrgIds(List<SysOrg> orgs, AppUserPrincipal principal, List<SysRole> roles) {
+        Set<Long> userOrgIds = getUserOrgIds(principal);
+        Set<Long> visibleIds = new HashSet<>();
+        for (SysRole role : roles) {
+            DataScope scope = parseDataScope(role.getDataScope());
+            switch (scope) {
+                case ALL -> visibleIds.addAll(orgs.stream().map(SysOrg::getId).toList());
+                case CURRENT_ORG_AND_SUB -> addOrgsAndChildren(orgs, userOrgIds, visibleIds);
+                case CUSTOM_ORG -> addOrgsAndChildren(orgs, getRoleOrgIds(role.getId()), visibleIds);
+                case CURRENT_ORG, SELF -> visibleIds.addAll(userOrgIds);
+            }
+        }
+        return visibleIds;
+    }
+
+    private void addOrgsAndChildren(List<SysOrg> orgs, Set<Long> rootIds, Set<Long> collector) {
+        if (rootIds.isEmpty()) {
+            return;
+        }
+        collector.addAll(rootIds);
+        for (SysOrg org : orgs) {
+            if (isDescendantOfAny(org, rootIds)) {
+                collector.add(org.getId());
+            }
+        }
+    }
+
+    private boolean isDescendantOfAny(SysOrg org, Set<Long> rootIds) {
+        if (!StringUtils.hasText(org.getAncestors())) {
+            return false;
+        }
+        Set<Long> ancestorIds = java.util.Arrays.stream(org.getAncestors().split(","))
+                .filter(StringUtils::hasText)
+                .map(Long::valueOf)
+                .collect(Collectors.toSet());
+        return rootIds.stream().anyMatch(ancestorId -> ancestorIds.contains(ancestorId) && !ancestorId.equals(org.getId()));
+    }
+
+    private void addAncestors(Long orgId, Map<Long, SysOrg> orgMap, Set<Long> collector) {
+        SysOrg org = orgMap.get(orgId);
+        if (org == null || !StringUtils.hasText(org.getAncestors())) {
+            return;
+        }
+        java.util.Arrays.stream(org.getAncestors().split(","))
+                .filter(StringUtils::hasText)
+                .map(Long::valueOf)
+                .filter(id -> id > ROOT_PARENT_ID)
+                .filter(orgMap::containsKey)
+                .forEach(collector::add);
+    }
+
+    private Set<Long> getUserOrgIds(AppUserPrincipal principal) {
+        if (principal == null || principal.userId() == null) {
+            return Set.of();
+        }
+        return userOrgMapper.selectList(new LambdaQueryWrapper<SysUserOrg>()
+                        .eq(SysUserOrg::getUserId, principal.userId()))
+                .stream()
+                .map(SysUserOrg::getOrgId)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Long> getRoleOrgIds(Long roleId) {
+        if (roleId == null) {
+            return Set.of();
+        }
+        return roleOrgMapper.selectList(new LambdaQueryWrapper<SysRoleOrg>()
+                        .eq(SysRoleOrg::getRoleId, roleId))
+                .stream()
+                .map(SysRoleOrg::getOrgId)
+                .collect(Collectors.toSet());
+    }
+
+    private List<SysRole> getEnabledRoles(AppUserPrincipal principal) {
+        if (principal == null || principal.roles() == null || principal.roles().isEmpty()) {
+            return List.of();
+        }
+        return roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+                .in(SysRole::getRoleCode, principal.roles())
+                .eq(SysRole::getEnabled, ENABLED)
+                .eq(SysRole::getDeleted, NOT_DELETED));
+    }
+
+    private DataScope parseDataScope(String dataScope) {
+        if (!StringUtils.hasText(dataScope)) {
+            return DataScope.SELF;
+        }
+        try {
+            return DataScope.valueOf(dataScope.toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "数据权限范围不支持：" + dataScope);
+        }
     }
 
     private OrgTreeVo toVo(SysOrg org, List<OrgTreeVo> children) {

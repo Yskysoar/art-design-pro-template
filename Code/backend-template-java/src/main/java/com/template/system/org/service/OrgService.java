@@ -14,9 +14,10 @@ public interface OrgService {
     /**
      * 查询组织树。
      *
-     * @return 组织树
+     * @param principal 当前登录用户
+     * @return 当前用户可见组织树
      */
-    List<OrgTreeVo> getOrgTree();
+    List<OrgTreeVo> getOrgTree(AppUserPrincipal principal);
 
     /**
      * 新增组织。
