@@ -249,6 +249,14 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
 
 含义：使用本机 Maven 执行后端测试，验证单元测试和测试依赖是否正确。
 
+数据库测试规则：
+
+- 必要时 Agent 可以操作 SQL 文件并连接数据库执行测试，但只能操作本项目的 `backend-template` 数据库。
+- 禁止对其他数据库执行写入、删除、重建、初始化或测试操作。
+- 可以在 `backend-template` 数据库中执行接口联调、写接口回归和 SQL 验证。
+- 数据库测试完成后必须重新初始化 `backend-template` 数据库，执行 `Code/backend-template-java/src/main/resources/db/` 下的结构 SQL 和 Mock SQL，恢复项目标准开发数据。
+- 数据库密码等敏感信息仍只能来自环境变量或本机未追踪配置，不得写入 Git 跟踪文件、Docs 或提交信息。
+
 如需启动后端，Agent 可自行执行：
 
 ```powershell
