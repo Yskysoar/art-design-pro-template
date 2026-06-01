@@ -17,7 +17,7 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增角色</ElButton>
+            <ElButton v-auth="'system:role:add'" @click="showDialog('add')" v-ripple>新增角色</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -168,22 +168,26 @@
                   {
                     key: 'permission',
                     label: '菜单权限',
-                    icon: 'ri:user-3-line'
+                    icon: 'ri:user-3-line',
+                    auth: 'system:role:permission'
                   },
                   {
                     key: 'dataScope',
                     label: '数据权限',
-                    icon: 'ri:organization-chart'
+                    icon: 'ri:organization-chart',
+                    auth: 'system:role:permission'
                   },
                   {
                     key: 'edit',
                     label: '编辑角色',
-                    icon: 'ri:edit-2-line'
+                    icon: 'ri:edit-2-line',
+                    auth: 'system:role:edit'
                   },
                   {
                     key: 'delete',
                     label: '删除角色',
                     icon: 'ri:delete-bin-4-line',
+                    auth: 'system:role:edit',
                     color: '#f56c6c'
                   }
                 ],

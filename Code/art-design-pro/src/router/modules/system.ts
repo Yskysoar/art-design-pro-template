@@ -18,7 +18,12 @@ export const systemRoutes: AppRouteRecord = {
         title: 'menus.system.user',
         icon: 'ri:user-line',
         keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
+        roles: ['R_SUPER', 'R_ADMIN'],
+        authList: [
+          { title: '新增用户', authMark: 'system:user:add' },
+          { title: '编辑用户', authMark: 'system:user:edit' },
+          { title: '删除用户', authMark: 'system:user:delete' }
+        ]
       }
     },
     {
@@ -29,7 +34,12 @@ export const systemRoutes: AppRouteRecord = {
         title: 'menus.system.role',
         icon: 'ri:user-settings-line',
         keepAlive: true,
-        roles: ['R_SUPER']
+        roles: ['R_SUPER'],
+        authList: [
+          { title: '新增角色', authMark: 'system:role:add' },
+          { title: '编辑角色', authMark: 'system:role:edit' },
+          { title: '分配角色权限', authMark: 'system:role:permission' }
+        ]
       }
     },
     {
@@ -54,9 +64,7 @@ export const systemRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER'],
         authList: [
-          { title: '新增', authMark: 'add' },
-          { title: '编辑', authMark: 'edit' },
-          { title: '删除', authMark: 'delete' }
+          { title: '管理菜单', authMark: 'system:menu:manage' }
         ]
       }
     },
@@ -68,7 +76,8 @@ export const systemRoutes: AppRouteRecord = {
         title: '配置项管理',
         icon: 'ri:settings-3-line',
         keepAlive: true,
-        roles: ['R_SUPER']
+        roles: ['R_SUPER'],
+        authList: [{ title: '管理配置项', authMark: 'system:config:manage' }]
       }
     },
     {
@@ -79,7 +88,8 @@ export const systemRoutes: AppRouteRecord = {
         title: '组织管理',
         icon: 'ri:organization-chart',
         keepAlive: true,
-        roles: ['R_SUPER']
+        roles: ['R_SUPER'],
+        authList: [{ title: '管理组织', authMark: 'system:org:manage' }]
       }
     },
     {

@@ -1,6 +1,7 @@
 <!-- 表格按钮 -->
 <template>
   <div
+    v-if="!props.auth || hasAuth(props.auth)"
     :class="[
       'inline-flex items-center justify-center min-w-8 h-8 px-2.5 mr-2.5 text-sm c-p rounded-md align-middle',
       buttonClass
@@ -13,7 +14,11 @@
 </template>
 
 <script setup lang="ts">
+  import { useAuth } from '@/hooks/core/useAuth'
+
   defineOptions({ name: 'ArtButtonTable' })
+
+  const { hasAuth } = useAuth()
 
   interface Props {
     /** 按钮类型 */
@@ -26,6 +31,8 @@
     iconColor?: string
     /** 按钮背景色 */
     buttonBgColor?: string
+    /** 权限标识 */
+    auth?: string
   }
 
   const props = withDefaults(defineProps<Props>(), {})

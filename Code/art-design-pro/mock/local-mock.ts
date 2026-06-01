@@ -233,7 +233,12 @@ const menus: AppRouteRecord[] = [
           title: 'menus.system.user',
           icon: 'ri:user-line',
           keepAlive: true,
-          roles: ['R_SUPER', 'R_ADMIN']
+          roles: ['R_SUPER', 'R_ADMIN'],
+          authList: [
+            { title: '新增用户', authMark: 'system:user:add' },
+            { title: '编辑用户', authMark: 'system:user:edit' },
+            { title: '删除用户', authMark: 'system:user:delete' }
+          ]
         }
       },
       {
@@ -245,7 +250,12 @@ const menus: AppRouteRecord[] = [
           title: 'menus.system.role',
           icon: 'ri:user-settings-line',
           keepAlive: true,
-          roles: ['R_SUPER']
+          roles: ['R_SUPER'],
+          authList: [
+            { title: '新增角色', authMark: 'system:role:add' },
+            { title: '编辑角色', authMark: 'system:role:edit' },
+            { title: '分配角色权限', authMark: 'system:role:permission' }
+          ]
         }
       },
       {
@@ -258,11 +268,7 @@ const menus: AppRouteRecord[] = [
           icon: 'ri:menu-line',
           keepAlive: true,
           roles: ['R_SUPER'],
-          authList: [
-            { title: '新增', authMark: 'add' },
-            { title: '编辑', authMark: 'edit' },
-            { title: '删除', authMark: 'delete' }
-          ]
+          authList: [{ title: '管理菜单', authMark: 'system:menu:manage' }]
         }
       }
     ]
@@ -379,7 +385,17 @@ function handleMockRequest(request: MockRequest): MockResponse | null {
 
   if (request.method === 'GET' && request.pathname === '/api/user/info') {
     return ok({
-      buttons: ['add', 'edit', 'delete', 'btn:add', 'btn:edit', 'btn:delete'],
+      buttons: [
+        'system:user:add',
+        'system:user:edit',
+        'system:user:delete',
+        'system:role:add',
+        'system:role:edit',
+        'system:role:permission',
+        'system:menu:manage',
+        'system:org:manage',
+        'system:config:manage'
+      ],
       roles: ['R_SUPER', 'R_ADMIN'],
       userId: 1,
       userName: 'admin',

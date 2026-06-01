@@ -12,7 +12,7 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增配置</ElButton>
+            <ElButton v-auth="'system:config:manage'" @click="showDialog('add')" v-ripple>新增配置</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -142,9 +142,9 @@
           formatter: (row) =>
             h('div', [
               row.editable
-                ? h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) })
+                ? h(ArtButtonTable, { type: 'edit', auth: 'system:config:manage', onClick: () => showDialog('edit', row) })
                 : null,
-              row.editable ? h(ArtButtonTable, { type: 'delete', onClick: () => deleteConfig(row) }) : null
+              row.editable ? h(ArtButtonTable, { type: 'delete', auth: 'system:config:manage', onClick: () => deleteConfig(row) }) : null
             ])
         }
       ]

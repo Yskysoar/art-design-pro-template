@@ -6,7 +6,7 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增用户</ElButton>
+            <ElButton v-auth="'system:user:add'" @click="showDialog('add')" v-ripple>新增用户</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -141,10 +141,12 @@
             h('div', [
               h(ArtButtonTable, {
                 type: 'edit',
+                auth: 'system:user:edit',
                 onClick: () => showDialog('edit', row)
               }),
               h(ArtButtonTable, {
                 type: 'delete',
+                auth: 'system:user:delete',
                 onClick: () => deleteUser(row)
               })
             ])

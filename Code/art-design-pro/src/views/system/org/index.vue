@@ -12,7 +12,7 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="getOrgTree">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增组织</ElButton>
+            <ElButton v-auth="'system:org:manage'" @click="showDialog('add')" v-ripple>新增组织</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -171,9 +171,9 @@
       fixed: 'right',
       formatter: (row: OrgItem) =>
         h('div', [
-          h(ArtButtonTable, { type: 'add', onClick: () => showDialog('add', row) }),
-          h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) }),
-          h(ArtButtonTable, { type: 'delete', onClick: () => deleteOrg(row) })
+          h(ArtButtonTable, { type: 'add', auth: 'system:org:manage', onClick: () => showDialog('add', row) }),
+          h(ArtButtonTable, { type: 'edit', auth: 'system:org:manage', onClick: () => showDialog('edit', row) }),
+          h(ArtButtonTable, { type: 'delete', auth: 'system:org:manage', onClick: () => deleteOrg(row) })
         ])
     }
   ])

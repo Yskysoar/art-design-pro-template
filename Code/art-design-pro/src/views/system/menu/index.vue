@@ -19,7 +19,7 @@
         @refresh="handleRefresh"
       >
         <template #left>
-          <ElButton v-auth="'add'" @click="handleAddMenu" v-ripple> 添加菜单 </ElButton>
+          <ElButton v-auth="'system:menu:manage'" @click="handleAddMenu" v-ripple> 添加菜单 </ElButton>
           <ElButton @click="toggleExpand" v-ripple>
             {{ isExpanded ? '收起' : '展开' }}
           </ElButton>
@@ -206,10 +206,12 @@
           return h('div', buttonStyle, [
             h(ArtButtonTable, {
               type: 'edit',
+              auth: 'system:menu:manage',
               onClick: () => handleEditAuth(row)
             }),
             h(ArtButtonTable, {
               type: 'delete',
+              auth: 'system:menu:manage',
               onClick: () => handleDeleteAuth(row)
             })
           ])
@@ -218,15 +220,18 @@
         return h('div', buttonStyle, [
           h(ArtButtonTable, {
             type: 'add',
+            auth: 'system:menu:manage',
             onClick: () => handleAddAuth(row),
             title: '新增权限'
           }),
           h(ArtButtonTable, {
             type: 'edit',
+            auth: 'system:menu:manage',
             onClick: () => handleEditMenu(row)
           }),
           h(ArtButtonTable, {
             type: 'delete',
+            auth: 'system:menu:manage',
             onClick: () => handleDeleteMenu(row)
           })
         ])
