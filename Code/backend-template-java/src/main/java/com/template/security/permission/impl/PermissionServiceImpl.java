@@ -62,9 +62,11 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public boolean isSuperAdmin(AppUserPrincipal principal) {
-        return principal != null
-                && principal.roles() != null
-                && principal.roles().contains(SUPER_ROLE_CODE);
+        if (principal == null || principal.roles() == null || !principal.roles().contains(SUPER_ROLE_CODE)) {
+            return false;
+        }
+        return getEnabledRoles(principal).stream()
+                .anyMatch(role -> SUPER_ROLE_CODE.equals(role.getRoleCode()));
     }
 
     @Override
