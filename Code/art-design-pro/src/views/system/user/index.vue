@@ -33,13 +33,13 @@
 
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchDeleteUser, fetchGetUserList } from '@/api/system-manage'
+  import { fetchDeleteUser, fetchGetOrgTree, fetchGetUserList, fetchUpdateUserStatus } from '@/api/system-manage'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
   import { ElTag, ElMessageBox, ElImage } from 'element-plus'
   import { DialogType } from '@/types'
+  import defaultAvatar from '@/assets/images/user/avatar.webp'
 
   defineOptions({ name: 'User' })
 
@@ -49,20 +49,21 @@
   const dialogVisible = ref(false)
   const currentUserData = ref<Partial<UserListItem>>({})
   const selectedRows = ref<UserListItem[]>([])
+  const orgNameMap = ref<Record<number, string>>({})
 
   const searchForm = ref({
     userName: undefined,
     userGender: undefined,
     userPhone: undefined,
     userEmail: undefined,
-    status: '1'
+    status: undefined
   })
 
   const USER_STATUS_CONFIG = {
-    '1': { type: 'success' as const, text: '在线' },
+    '1': { type: 'success' as const, text: '启用' },
     '2': { type: 'info' as const, text: '离线' },
     '3': { type: 'warning' as const, text: '异常' },
-    '4': { type: 'danger' as const, text: '注销' }
+    '4': { type: 'danger' as const, text: '禁用' }
   } as const
 
   const getUserStatusConfig = (status: string) => {
@@ -72,6 +73,29 @@
         text: '未知'
       }
     )
+  }
+
+  const buildOrgNameMap = (items: Api.SystemManage.OrgTreeItem[], map: Record<number, string>) => {
+    items.forEach((item) => {
+      map[item.id] = item.orgName
+      if (Array.isArray(item.children) && item.children.length) {
+        buildOrgNameMap(item.children, map)
+      }
+    })
+  }
+
+  const loadOrgNames = async () => {
+    const orgs = await fetchGetOrgTree()
+    const map: Record<number, string> = {}
+    buildOrgNameMap(orgs, map)
+    orgNameMap.value = map
+  }
+
+  const formatOrgNames = (orgIds: number[]) => {
+    if (!Array.isArray(orgIds) || !orgIds.length) {
+      return '-'
+    }
+    return orgIds.map((id) => orgNameMap.value[id] || `#${id}`).join('、')
   }
 
   const {
@@ -105,8 +129,8 @@
             h('div', { class: 'user flex-c' }, [
               h(ElImage, {
                 class: 'size-9.5 rounded-md',
-                src: row.avatar,
-                previewSrcList: [row.avatar],
+                src: row.avatar || defaultAvatar,
+                previewSrcList: [row.avatar || defaultAvatar],
                 previewTeleported: true
               }),
               h('div', { class: 'ml-2' }, [
@@ -116,12 +140,17 @@
             ])
         },
         { prop: 'userGender', label: '性别', sortable: true },
-        { prop: 'userPhone', label: '手机号' },
+        {
+          prop: 'userPhone',
+          label: '手机号',
+          width: 150,
+          formatter: (row) => h('span', { style: { whiteSpace: 'nowrap' } }, row.userPhone || '-')
+        },
         {
           prop: 'orgIds',
           label: '组织',
           minWidth: 180,
-          formatter: (row) => (Array.isArray(row.orgIds) && row.orgIds.length ? row.orgIds.join(', ') : '-')
+          formatter: (row) => h('span', formatOrgNames(row.orgIds))
         },
         {
           prop: 'status',
@@ -135,14 +164,21 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 120,
+          width: 170,
           fixed: 'right',
-          formatter: (row) =>
-            h('div', [
+          formatter: (row) => {
+            const disabled = row.status === '4'
+            return h('div', [
               h(ArtButtonTable, {
                 type: 'edit',
                 auth: 'system:user:edit',
                 onClick: () => showDialog('edit', row)
+              }),
+              h(ArtButtonTable, {
+                icon: disabled ? 'ri:play-circle-line' : 'ri:pause-circle-line',
+                iconClass: disabled ? 'bg-success/12 text-success' : 'bg-warning/12 text-warning',
+                auth: 'system:user:edit',
+                onClick: () => toggleUserStatus(row)
               }),
               h(ArtButtonTable, {
                 type: 'delete',
@@ -150,19 +186,12 @@
                 onClick: () => deleteUser(row)
               })
             ])
+          }
         }
       ]
     },
     transform: {
-      dataTransformer: (records) => {
-        if (!Array.isArray(records)) {
-          return []
-        }
-        return records.map((item, index: number) => ({
-          ...item,
-          avatar: ACCOUNT_TABLE_DATA[index % ACCOUNT_TABLE_DATA.length].avatar
-        }))
-      }
+      dataTransformer: (records) => (Array.isArray(records) ? records : [])
     }
   })
 
@@ -180,13 +209,28 @@
   }
 
   const deleteUser = (row: UserListItem): void => {
-    ElMessageBox.confirm('确定要注销该用户吗？', '注销用户', {
+    ElMessageBox.confirm('确定要删除该用户吗？该操作会逻辑删除用户；如需临时停用账号，请使用禁用按钮。', '删除用户', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'error'
     }).then(async () => {
       await fetchDeleteUser(row.id)
-      ElMessage.success('注销成功')
+      ElMessage.success('删除成功')
+      refreshData()
+    })
+  }
+
+  const toggleUserStatus = (row: UserListItem): void => {
+    const disabled = row.status === '4'
+    const nextStatus = disabled ? '1' : '4'
+    const actionText = disabled ? '启用' : '禁用'
+    ElMessageBox.confirm(`确定要${actionText}该用户吗？`, `${actionText}用户`, {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: disabled ? 'success' : 'warning'
+    }).then(async () => {
+      await fetchUpdateUserStatus(row.id, { status: nextStatus })
+      ElMessage.success(`${actionText}成功`)
       refreshData()
     })
   }
@@ -200,4 +244,8 @@
   const handleSelectionChange = (selection: UserListItem[]): void => {
     selectedRows.value = selection
   }
+
+  onMounted(() => {
+    loadOrgNames()
+  })
 </script>
