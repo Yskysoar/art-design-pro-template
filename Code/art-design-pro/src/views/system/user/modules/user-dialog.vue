@@ -27,7 +27,9 @@
         <ElTreeSelect
           v-model="formData.orgIds"
           :data="orgTree"
-          :props="{ label: 'orgName', value: 'id', children: 'children' }"
+          :props="{ label: 'orgName', children: 'children' }"
+          node-key="id"
+          value-key="id"
           multiple
           check-strictly
           filterable

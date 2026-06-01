@@ -39,7 +39,9 @@
           <ElTreeSelect
             v-model="form.parentId"
             :data="parentOptions"
-            :props="{ label: 'orgName', value: 'id', children: 'children' }"
+            :props="{ label: 'orgName', children: 'children' }"
+            node-key="id"
+            value-key="id"
             check-strictly
             clearable
             filterable
