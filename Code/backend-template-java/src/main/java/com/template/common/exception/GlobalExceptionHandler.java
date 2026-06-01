@@ -3,6 +3,8 @@ package com.template.common.exception;
 import com.template.common.response.ApiCode;
 import com.template.common.response.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,8 +18,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    public ApiResponse<Void> handleBusinessException(BusinessException exception) {
-        return ApiResponse.fail(exception.getCode(), exception.getMessage());
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
+        ApiResponse<Void> response = ApiResponse.fail(exception.getCode(), exception.getMessage());
+        if (exception.getCode() == ApiCode.FORBIDDEN.getCode()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @ExceptionHandler({
