@@ -43,6 +43,9 @@ public class Article {
     /** 浏览次数。 */
     private Long viewCount;
 
+    /** 评论数量，隐藏评论计入，删除评论不计入。 */
+    private Long commentCount;
+
     /** 发布时间。 */
     private LocalDateTime publishTime;
 
@@ -139,6 +142,14 @@ public class Article {
 
     public void setViewCount(Long viewCount) {
         this.viewCount = viewCount;
+    }
+
+    public Long getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(Long commentCount) {
+        this.commentCount = commentCount;
     }
 
     public LocalDateTime getPublishTime() {

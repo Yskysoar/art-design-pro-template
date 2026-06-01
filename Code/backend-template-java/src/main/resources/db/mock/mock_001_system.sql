@@ -6,7 +6,8 @@ VALUES
   (1, 'user_org_relation_mode', 'ONE_TO_MANY', '用户和组织默认一对多', 1, 'system', 'system'),
   (2, 'role_level_enabled', 'true', '启用角色层级管理', 1, 'system', 'system'),
   (3, 'anonymous_portal_access', 'true', '允许匿名访问前台公开内容', 1, 'system', 'system'),
-  (4, 'guest_admin_access', 'false', '禁止游客访问后台', 1, 'system', 'system');
+  (4, 'guest_admin_access', 'false', '禁止游客访问后台', 1, 'system', 'system'),
+  (5, 'article_comment_hide_enabled', 'true', '是否开启文章评论隐藏和恢复功能', 1, 'system', 'system');
 
 INSERT INTO sys_org (id, parent_id, ancestors, org_name, org_code, org_type, sort, enabled, create_by, update_by)
 VALUES
@@ -71,7 +72,8 @@ VALUES
   (11, '管理菜单', 'system:menu:manage', 'system', 'ADMIN', 1, 'system', 'system'),
   (12, '查看用户', 'system:user:view', 'system', 'ADMIN', 1, 'system', 'system'),
   (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system'),
-  (14, '上传文章资源', 'article:upload', 'article', 'BOTH', 1, 'system', 'system');
+  (14, '上传文章资源', 'article:upload', 'article', 'BOTH', 1, 'system', 'system'),
+  (15, '管理文章评论', 'article:comment:manage', 'article', 'BOTH', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -130,8 +132,8 @@ VALUES
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14),
-  (2, 9), (2, 10), (2, 14);
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15),
+  (2, 9), (2, 10), (2, 14), (2, 15);
 
 INSERT INTO article_category (id, category_name, category_code, sort, enabled, create_by, update_by)
 VALUES
@@ -141,7 +143,7 @@ VALUES
 
 INSERT INTO article (
   id, title, category_id, cover_url, summary, content_html, content_text,
-  visible, status, view_count, publish_time, create_by, update_by
+  visible, status, view_count, comment_count, publish_time, create_by, update_by
 )
 VALUES
   (
@@ -155,7 +157,16 @@ VALUES
     1,
     'PUBLISHED',
     128,
+    2,
     '2026-06-01 10:00:00',
     'admin',
     'admin'
   );
+
+INSERT INTO article_comment (
+  id, article_id, parent_id, root_id, content, status,
+  user_id, user_name, user_avatar, create_time
+)
+VALUES
+  (1, 1, 0, 1, '文章模块说明很清楚，后续评论区可以直接作为真实联调样例。', 'NORMAL', 2, 'moderator', '/src/assets/images/avatar/avatar.webp', '2026-06-01 10:20:00'),
+  (2, 1, 1, 1, '收到，这条回复用于验证子评论挂载。', 'NORMAL', 1, 'admin', '/src/assets/images/avatar/avatar.webp', '2026-06-01 10:25:00');

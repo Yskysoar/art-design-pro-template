@@ -224,6 +224,7 @@ CREATE TABLE IF NOT EXISTS article (
   visible TINYINT NOT NULL DEFAULT 1 COMMENT '是否可见',
   status VARCHAR(20) NOT NULL DEFAULT 'DRAFT' COMMENT '状态：DRAFT/PUBLISHED/OFFLINE',
   view_count BIGINT NOT NULL DEFAULT 0 COMMENT '浏览次数',
+  comment_count BIGINT NOT NULL DEFAULT 0 COMMENT '评论数量，隐藏计入，删除不计入',
   publish_time DATETIME DEFAULT NULL COMMENT '发布时间',
   create_by VARCHAR(50) DEFAULT NULL COMMENT '创建人',
   create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -246,3 +247,24 @@ CREATE TABLE IF NOT EXISTS article_attachment (
   UNIQUE KEY uk_article_attachment (article_id, file_id),
   KEY idx_article_attachment_file (file_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章附件关系表';
+
+CREATE TABLE IF NOT EXISTS article_comment (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '评论ID',
+  article_id BIGINT NOT NULL COMMENT '文章ID',
+  parent_id BIGINT NOT NULL DEFAULT 0 COMMENT '父评论ID，0表示一级评论',
+  root_id BIGINT NOT NULL DEFAULT 0 COMMENT '根评论ID',
+  content VARCHAR(500) NOT NULL COMMENT '评论内容，纯文本，最多500字',
+  status VARCHAR(20) NOT NULL DEFAULT 'NORMAL' COMMENT '状态：NORMAL/HIDDEN/DELETED',
+  user_id BIGINT DEFAULT NULL COMMENT '评论用户ID',
+  user_name VARCHAR(50) NOT NULL COMMENT '评论用户名称',
+  user_avatar VARCHAR(255) DEFAULT NULL COMMENT '评论用户头像',
+  ip_address VARCHAR(64) DEFAULT NULL COMMENT '来源IP',
+  user_agent VARCHAR(500) DEFAULT NULL COMMENT '浏览器User-Agent',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
+  PRIMARY KEY (id),
+  KEY idx_article_comment_article_root (article_id, root_id),
+  KEY idx_article_comment_parent (parent_id),
+  KEY idx_article_comment_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章评论表';

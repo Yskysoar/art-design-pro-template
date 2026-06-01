@@ -9,8 +9,10 @@ import com.template.article.dto.ArticleStatusRequest;
 import com.template.article.entity.Article;
 import com.template.article.entity.ArticleAttachment;
 import com.template.article.entity.ArticleCategory;
+import com.template.article.entity.ArticleComment;
 import com.template.article.mapper.ArticleAttachmentMapper;
 import com.template.article.mapper.ArticleCategoryMapper;
+import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
 import com.template.article.service.ArticleService;
 import com.template.article.service.HtmlSanitizerService;
@@ -48,6 +50,7 @@ public class ArticleServiceImpl implements ArticleService {
     private static final int VISIBLE = 1;
     private static final int HIDDEN = 0;
     private static final int NOT_DELETED = 0;
+    private static final long ROOT_PARENT_ID = 0L;
     private static final long DEFAULT_CURRENT = 1L;
     private static final long DEFAULT_SIZE = 20L;
     private static final long MAX_SIZE = 100L;
@@ -57,6 +60,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final ArticleMapper articleMapper;
     private final ArticleCategoryMapper categoryMapper;
     private final ArticleAttachmentMapper attachmentMapper;
+    private final ArticleCommentMapper commentMapper;
     private final FileStorageService fileStorageService;
     private final HtmlSanitizerService htmlSanitizerService;
 
@@ -64,12 +68,14 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleMapper articleMapper,
             ArticleCategoryMapper categoryMapper,
             ArticleAttachmentMapper attachmentMapper,
+            ArticleCommentMapper commentMapper,
             FileStorageService fileStorageService,
             HtmlSanitizerService htmlSanitizerService
     ) {
         this.articleMapper = articleMapper;
         this.categoryMapper = categoryMapper;
         this.attachmentMapper = attachmentMapper;
+        this.commentMapper = commentMapper;
         this.fileStorageService = fileStorageService;
         this.htmlSanitizerService = htmlSanitizerService;
     }
@@ -106,6 +112,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ArticleDetailVo getArticle(Long id) {
         Article article = getExistingArticle(id);
+        incrementViewCount(article);
         ArticleCategory category = getExistingCategory(article.getCategoryId());
         return toDetailVo(article, category, loadAttachments(article.getId()));
     }
@@ -117,6 +124,7 @@ public class ArticleServiceImpl implements ArticleService {
         applyArticleFields(article, request, principal.userName(), true);
         article.setCreateBy(principal.userName());
         article.setViewCount(0L);
+        article.setCommentCount(0L);
         article.setDeleted(NOT_DELETED);
         articleMapper.insert(article);
         saveAttachments(article.getId(), request.attachmentIds());
@@ -287,6 +295,7 @@ public class ArticleServiceImpl implements ArticleService {
                 Integer.valueOf(VISIBLE).equals(article.getVisible()),
                 article.getViewCount(),
                 article.getViewCount(),
+                article.getCommentCount(),
                 article.getCreateBy(),
                 createTime,
                 createTime,
@@ -296,6 +305,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     private ArticleDetailVo toDetailVo(Article article, ArticleCategory category, List<ArticleAttachmentVo> attachments) {
         String sanitizedHtml = htmlSanitizerService.sanitize(article.getContentHtml());
+        long rootCommentCount = countComments(article.getId(), ROOT_PARENT_ID, true);
+        long replyCount = countComments(article.getId(), ROOT_PARENT_ID, false);
         return new ArticleDetailVo(
                 article.getId(),
                 article.getTitle(),
@@ -309,6 +320,9 @@ public class ArticleServiceImpl implements ArticleService {
                 Integer.valueOf(VISIBLE).equals(article.getVisible()),
                 article.getStatus(),
                 article.getViewCount(),
+                article.getCommentCount(),
+                rootCommentCount,
+                replyCount,
                 article.getCreateBy(),
                 formatDateTime(article.getCreateTime()),
                 formatDateTime(article.getPublishTime()),
@@ -318,5 +332,21 @@ public class ArticleServiceImpl implements ArticleService {
 
     private String formatDateTime(LocalDateTime dateTime) {
         return dateTime == null ? null : DATE_TIME_FORMATTER.format(dateTime);
+    }
+
+    private void incrementViewCount(Article article) {
+        long current = article.getViewCount() == null ? 0L : article.getViewCount();
+        article.setViewCount(current + 1);
+        articleMapper.updateById(article);
+    }
+
+    private long countComments(Long articleId, long parentId, boolean rootOnly) {
+        Long count = commentMapper.selectCount(new LambdaQueryWrapper<ArticleComment>()
+                .eq(ArticleComment::getArticleId, articleId)
+                .eq(rootOnly, ArticleComment::getParentId, parentId)
+                .ne(!rootOnly, ArticleComment::getParentId, parentId)
+                .eq(ArticleComment::getDeleted, NOT_DELETED)
+                .ne(ArticleComment::getStatus, "DELETED"));
+        return count == null ? 0L : count;
     }
 }

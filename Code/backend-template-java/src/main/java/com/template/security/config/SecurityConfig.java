@@ -48,7 +48,8 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/health",
                                 "/api/portal/public/**",
-                                "/api/common/files/**"
+                                "/api/common/files/**",
+                                "/api/article/comment/list"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

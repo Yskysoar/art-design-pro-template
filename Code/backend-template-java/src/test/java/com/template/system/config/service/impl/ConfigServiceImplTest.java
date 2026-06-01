@@ -3,8 +3,10 @@ package com.template.system.config.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
+import com.template.common.response.ApiCode;
 import com.template.common.pagination.PageResult;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.config.dto.ConfigListQuery;
 import com.template.system.config.dto.ConfigSaveRequest;
 import com.template.system.config.entity.SysConfig;
@@ -25,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,12 +43,14 @@ class ConfigServiceImplTest {
 
     @Mock
     private SysConfigMapper configMapper;
+    @Mock
+    private PermissionService permissionService;
 
     private ConfigServiceImpl configService;
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigServiceImpl(configMapper);
+        configService = new ConfigServiceImpl(configMapper, permissionService);
     }
 
     @Test
@@ -196,6 +201,28 @@ class ConfigServiceImplTest {
         ))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("配置键不允许修改");
+
+        verify(configMapper, never()).updateById(any(SysConfig.class));
+    }
+
+    @Test
+    @DisplayName("文章评论隐藏配置只能由超级管理员修改")
+    void updateConfigShouldRequireSuperAdminForCommentHideSwitch() {
+        AppUserPrincipal manager = new AppUserPrincipal(2L, "manager", List.of("R_MODERATOR"));
+        SysConfig existing = editableConfig(5L, "article_comment_hide_enabled", "true");
+        when(configMapper.selectOne(anyWrapper())).thenReturn(existing);
+        when(configMapper.selectCount(anyWrapper())).thenReturn(0L);
+        doThrow(new BusinessException(ApiCode.FORBIDDEN, "仅超级管理员可操作"))
+                .when(permissionService)
+                .requireSuperAdmin(manager);
+
+        assertThatThrownBy(() -> configService.updateConfig(
+                5L,
+                new ConfigSaveRequest("article_comment_hide_enabled", "false", "是否开启文章评论隐藏和恢复功能", true),
+                manager
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("仅超级管理员可操作");
 
         verify(configMapper, never()).updateById(any(SysConfig.class));
     }

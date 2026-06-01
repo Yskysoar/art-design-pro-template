@@ -8,6 +8,7 @@ import com.template.article.entity.ArticleAttachment;
 import com.template.article.entity.ArticleCategory;
 import com.template.article.mapper.ArticleAttachmentMapper;
 import com.template.article.mapper.ArticleCategoryMapper;
+import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
 import com.template.article.service.HtmlSanitizerService;
 import com.template.common.exception.BusinessException;
@@ -46,6 +47,8 @@ class ArticleServiceImplTest {
     @Mock
     private ArticleAttachmentMapper attachmentMapper;
     @Mock
+    private ArticleCommentMapper commentMapper;
+    @Mock
     private FileStorageService fileStorageService;
     @Mock
     private HtmlSanitizerService htmlSanitizerService;
@@ -58,6 +61,7 @@ class ArticleServiceImplTest {
                 articleMapper,
                 categoryMapper,
                 attachmentMapper,
+                commentMapper,
                 fileStorageService,
                 htmlSanitizerService
         );

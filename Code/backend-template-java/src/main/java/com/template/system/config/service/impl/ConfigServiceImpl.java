@@ -7,6 +7,7 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.config.dto.ConfigListQuery;
 import com.template.system.config.dto.ConfigSaveRequest;
 import com.template.system.config.entity.SysConfig;
@@ -38,19 +39,24 @@ public class ConfigServiceImpl implements ConfigService {
             "user_org_relation_mode",
             "role_level_enabled",
             "anonymous_portal_access",
-            "guest_admin_access"
+            "guest_admin_access",
+            "article_comment_hide_enabled"
     );
     private static final Map<String, Set<String>> ALLOWED_VALUES = Map.of(
             "user_org_relation_mode", Set.of("ONE_TO_ONE", "ONE_TO_MANY"),
             "role_level_enabled", Set.of("true", "false"),
             "anonymous_portal_access", Set.of("true", "false"),
-            "guest_admin_access", Set.of("true", "false")
+            "guest_admin_access", Set.of("true", "false"),
+            "article_comment_hide_enabled", Set.of("true", "false")
     );
+    private static final String ARTICLE_COMMENT_HIDE_ENABLED = "article_comment_hide_enabled";
 
     private final SysConfigMapper configMapper;
+    private final PermissionService permissionService;
 
-    public ConfigServiceImpl(SysConfigMapper configMapper) {
+    public ConfigServiceImpl(SysConfigMapper configMapper, PermissionService permissionService) {
         this.configMapper = configMapper;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -93,6 +99,7 @@ public class ConfigServiceImpl implements ConfigService {
         assertConfigKeyNotChanged(config, request.configKey());
         assertConfigKeyUnique(request.configKey(), id);
         assertConfigValueSupported(request.configKey(), request.configValue());
+        assertSuperAdminOnlyConfig(config, principal);
 
         config.setConfigKey(request.configKey());
         config.setConfigValue(request.configValue());
@@ -167,6 +174,12 @@ public class ConfigServiceImpl implements ConfigService {
     private void assertBuiltInConfigNotDeleted(SysConfig config) {
         if (BUILT_IN_CONFIG_KEYS.contains(config.getConfigKey())) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "系统内置配置不允许删除");
+        }
+    }
+
+    private void assertSuperAdminOnlyConfig(SysConfig config, AppUserPrincipal principal) {
+        if (ARTICLE_COMMENT_HIDE_ENABLED.equals(config.getConfigKey())) {
+            permissionService.requireSuperAdmin(principal);
         }
     }
 

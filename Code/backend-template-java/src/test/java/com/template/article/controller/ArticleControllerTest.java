@@ -109,6 +109,7 @@ class ArticleControllerTest extends ControllerSecurityTestSupport {
                         true,
                         12L,
                         12L,
+                        3L,
                         "admin",
                         "2026-06-01 10:00:00",
                         "2026-06-01 10:00:00",

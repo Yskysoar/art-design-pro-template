@@ -16,6 +16,7 @@ public record ArticleListItemVo(
         Boolean visible,
         Long viewCount,
         Long count,
+        Long commentCount,
         String createBy,
         String createTime,
         String create_time,
