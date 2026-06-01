@@ -17,6 +17,7 @@ import com.template.system.role.entity.SysRole;
 import com.template.system.role.mapper.SysRoleMapper;
 import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
+import com.template.system.user.dto.UserPasswordChangeRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.entity.SysUser;
 import com.template.system.user.mapper.SysUserMapper;
@@ -185,6 +186,45 @@ class UserServiceImplTest {
                 .hasMessageContaining("组织不存在");
 
         verify(userOrgMapper, never()).insert(any(SysUserOrg.class));
+    }
+
+    @Test
+    @DisplayName("修改当前用户密码时旧密码错误应拒绝")
+    void changeCurrentUserPasswordShouldRejectWrongOldPassword() {
+        SysUser user = user(1L, "admin");
+        user.setPasswordHash("old-hash");
+        when(userMapper.selectOne(anyWrapper())).thenReturn(user);
+        when(passwordEncoder.matches("wrong-pass", "old-hash")).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.changeCurrentUserPassword(
+                new UserPasswordChangeRequest("wrong-pass", "new-pass-123"),
+                ADMIN
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("当前密码不正确");
+
+        verify(userMapper, never()).updateById(any(SysUser.class));
+    }
+
+    @Test
+    @DisplayName("修改当前用户密码时应校验旧密码并写入新哈希")
+    void changeCurrentUserPasswordShouldUpdatePasswordHash() {
+        SysUser user = user(1L, "admin");
+        user.setPasswordHash("old-hash");
+        when(userMapper.selectOne(anyWrapper())).thenReturn(user);
+        when(passwordEncoder.matches("old-pass-123", "old-hash")).thenReturn(true);
+        when(passwordEncoder.matches("new-pass-123", "old-hash")).thenReturn(false);
+        when(passwordEncoder.encode("new-pass-123")).thenReturn("new-hash");
+
+        userService.changeCurrentUserPassword(
+                new UserPasswordChangeRequest("old-pass-123", "new-pass-123"),
+                ADMIN
+        );
+
+        ArgumentCaptor<SysUser> userCaptor = ArgumentCaptor.forClass(SysUser.class);
+        verify(userMapper).updateById(userCaptor.capture());
+        assertThat(userCaptor.getValue().getPasswordHash()).isEqualTo("new-hash");
+        assertThat(userCaptor.getValue().getUpdateBy()).isEqualTo("admin");
     }
 
     private SysUser user(Long id, String userName) {

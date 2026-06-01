@@ -127,10 +127,20 @@ declare namespace Api {
       orgIds: number[]
     }
 
+    /** 用户状态变更参数 */
+    interface UserStatusParams {
+      status: string
+    }
+
     /** 用户组织关系 */
     interface UserOrg {
       userId: number
       orgIds: number[]
+    }
+
+    interface UserPasswordChangeParams {
+      oldPassword: string
+      newPassword: string
     }
 
     /** 角色列表 */

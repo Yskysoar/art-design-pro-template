@@ -21,6 +21,7 @@ import com.template.system.role.entity.SysRole;
 import com.template.system.role.mapper.SysRoleMapper;
 import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
+import com.template.system.user.dto.UserPasswordChangeRequest;
 import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.entity.SysUser;
@@ -194,6 +195,21 @@ public class UserServiceImpl implements UserService {
         getExistingUser(userId);
         rewriteUserOrgs(userId, normalizeOrgIds(orgIds));
         SysUser user = getExistingUser(userId);
+        user.setUpdateBy(principal.userName());
+        userMapper.updateById(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changeCurrentUserPassword(UserPasswordChangeRequest request, AppUserPrincipal principal) {
+        SysUser user = getExistingUser(principal.userId());
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPasswordHash())) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "当前密码不正确");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "新密码不能与当前密码相同");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         user.setUpdateBy(principal.userName());
         userMapper.updateById(user);
     }

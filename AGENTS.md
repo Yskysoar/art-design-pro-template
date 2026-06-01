@@ -32,7 +32,10 @@
 - 当前后端文章与上传模块已完成第一轮开发和真实 HTTP 回归：文章分类、列表、详情、新增、编辑、删除、状态变更、本地上传、wangEditor 上传和 `/api/common/files/**` 受控文件访问。
 - 当前前端文章列表、发布、详情页已接入真实后端接口，并保留接近原模板的卡片列表、发布设置和 Markdown 阅读风格。
 - 当前文章与上传模块后端测试已通过：`Tests run: 75, Failures: 0, Errors: 0, Skipped: 0`。
-- 当前文章评论模块处于第一轮开发和审查后状态：文章详情底部评论区、后端评论表、Service、Controller、权限码和 Mock SQL 已初步接入；后续优先修复 `Docs/5.开发审查问题记录.md` 中记录的 P1/P2 问题，包括评论公开接口文章可访问性、隐藏评论脱敏、评论数量原子更新、删除状态流转、公开响应 userId、频率限制和内容安全。
+- 当前文章评论模块已完成第一轮开发和二轮安全加固：文章详情底部评论区、后端评论表、Service、Controller、权限码和 Mock SQL 已接入；评论读取跟随文章可访问性，游客只能读取已发布且可见文章评论；隐藏和删除评论后端返回脱敏内容；评论数使用数据库原子更新；已删除评论不可恢复；公开评论响应不返回内部 `userId`，改用 `mine` 标志。当前后端测试结果：`Tests run: 93, Failures: 0, Errors: 0, Skipped: 0`，前端 `vue-tsc --noEmit` 已通过。
+- 当前文章评论模块剩余优先事项：评论发布频率限制、重复内容限制、敏感词或审核队列、独立评论演示页改造成评论管理页、更多真实浏览器联调。
+- 当前顶部栏用户菜单已改为真实头像渲染，保留个人中心、修改密码、锁屏和退出登录；使用文档和 GitHub 不再放在右上角用户菜单。修改密码调用 `PUT /api/user/profile/password`，校验旧密码，成功后强制重新登录。
+- 所有和当前登录用户对接的前端展示点必须优先使用 `userStore.getUserInfo` / 后端 `/api/user/info` 的真实数据渲染，例如头像、用户名、邮箱、角色、个人中心、锁屏弹窗和右上角用户菜单；只有后端未返回字段时才使用本地默认头像或空状态文案兜底。
 - `Docs/5.开发审查问题记录.md` 已调整为模块内“待修复/部分修复/持续关注在前，已修复在后”的问题台账结构；新增问题和修复记录应继续按该结构维护。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
@@ -74,7 +77,8 @@ Code/
 - 前后端认证统一使用 Bearer JWT，请求头格式为 `Authorization: Bearer <token>`。
 - 后端系统管理接口权限通过 `PermissionService` 校验，新增管理接口时必须同步设计权限码、Mock SQL 权限数据和 Controller 入口校验。
 - 每完成一个后端业务模块，都要同步维护 `src/main/resources/db/mock/` 下真实数据库 Mock SQL，确保菜单、权限、角色、用户等关联数据自洽。
-- 文章与上传模块权限码为 `article:publish:add`、`article:publish:edit`、`article:upload`；前端按钮权限与后端接口权限应使用同一组权限码。
+- 文章与上传模块权限码为 `article:publish:add`、`article:publish:edit`、`article:upload`、`article:comment:manage`；前端按钮权限与后端接口权限应使用同一组权限码。
+- 评论接口维护时应保持公开读取安全边界：`GET /api/article/comment/list` 可匿名访问，但必须跟随文章可访问性；公开响应不得返回内部用户 ID；隐藏或删除内容必须在后端脱敏；评论计数更新应保持数据库原子增减。
 - 后续接入 Spring 三层架构后端时，controller 层只处理数据形式和规范，真实业务处理放在 service 层。
 - 若后端使用 MyBatis-Plus，优先使用框架内置能力；只有复杂查询、复杂统计或复杂函数场景才自定义 SQL。
 

@@ -104,7 +104,8 @@ VALUES
   (21, 8, 'BUTTON', NULL, 'ArticleAdd', NULL, NULL, '新增文章', NULL, 'BOTH', 'article:publish:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (22, 8, 'BUTTON', NULL, 'ArticleEdit', NULL, NULL, '编辑文章', NULL, 'BOTH', 'article:publish:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
   (23, 9, 'BUTTON', NULL, 'ArticleUpload', NULL, NULL, '上传文章资源', NULL, 'BOTH', 'article:upload', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (24, 7, 'MENU', 'detail/:id', 'ArticleDetail', '/article/detail', NULL, 'menus.article.articleDetail', NULL, 'BOTH', NULL, 1, 0, 1, 0, '/article/article-list', 3, 1, 'system', 'system');
+  (24, 7, 'MENU', 'detail/:id', 'ArticleDetail', '/article/detail', NULL, 'menus.article.articleDetail', NULL, 'BOTH', NULL, 1, 0, 1, 0, '/article/article-list', 3, 1, 'system', 'system'),
+  (25, 3, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
@@ -125,10 +126,10 @@ INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
   (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20),
-  (1, 21), (1, 22), (1, 23), (1, 24),
-  (2, 7), (2, 8), (2, 9), (2, 21), (2, 22), (2, 23), (2, 24),
-  (3, 7), (3, 8), (3, 24),
-  (4, 7), (4, 8), (4, 24);
+  (1, 21), (1, 22), (1, 23), (1, 24), (1, 25),
+  (2, 7), (2, 8), (2, 9), (2, 21), (2, 22), (2, 23), (2, 24), (2, 25),
+  (3, 7), (3, 8), (3, 24), (3, 25),
+  (4, 7), (4, 8), (4, 24), (4, 25);
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES

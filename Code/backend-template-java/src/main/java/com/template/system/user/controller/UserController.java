@@ -8,6 +8,7 @@ import com.template.system.auth.service.AuthService;
 import com.template.system.auth.vo.UserInfoResponse;
 import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
+import com.template.system.user.dto.UserPasswordChangeRequest;
 import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.service.UserService;
@@ -53,6 +54,15 @@ public class UserController {
     @GetMapping("/info")
     public ApiResponse<UserInfoResponse> getUserInfo(@AuthenticationPrincipal AppUserPrincipal principal) {
         return ApiResponse.success(authService.getUserInfo(principal.userId()));
+    }
+
+    @PutMapping("/profile/password")
+    public ApiResponse<Void> changeCurrentUserPassword(
+            @Valid @RequestBody UserPasswordChangeRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.changeCurrentUserPassword(request, principal);
+        return ApiResponse.success(null);
     }
 
     @GetMapping("/list")

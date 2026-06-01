@@ -32,6 +32,14 @@ export function fetchDeleteUser(id: number) {
   })
 }
 
+export function fetchUpdateUserStatus(id: number, data: Api.SystemManage.UserStatusParams) {
+  return request.request<void>({
+    url: `/api/user/${id}/status`,
+    method: 'PATCH',
+    data
+  })
+}
+
 export function fetchGetUserOrgs(id: number) {
   return request.get<Api.SystemManage.UserOrg>({
     url: `/api/user/${id}/orgs`
@@ -42,6 +50,13 @@ export function fetchSaveUserOrgs(id: number, orgIds: number[]) {
   return request.put<void>({
     url: `/api/user/${id}/orgs`,
     data: orgIds
+  })
+}
+
+export function fetchChangeCurrentUserPassword(data: Api.SystemManage.UserPasswordChangeParams) {
+  return request.put<void>({
+    url: '/api/user/profile/password',
+    data
   })
 }
 
