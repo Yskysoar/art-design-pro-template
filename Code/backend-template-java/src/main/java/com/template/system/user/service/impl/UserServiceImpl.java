@@ -7,6 +7,7 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
 import com.template.system.config.mapper.SysConfigMapper;
 import com.template.system.enums.UserOrgRelationMode;
@@ -64,6 +65,7 @@ public class UserServiceImpl implements UserService {
     private final SysOrgMapper orgMapper;
     private final SysConfigMapper configMapper;
     private final PasswordEncoder passwordEncoder;
+    private final PermissionService permissionService;
 
     public UserServiceImpl(
             SysUserMapper userMapper,
@@ -72,7 +74,8 @@ public class UserServiceImpl implements UserService {
             SysRoleMapper roleMapper,
             SysOrgMapper orgMapper,
             SysConfigMapper configMapper,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            PermissionService permissionService
     ) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
@@ -81,6 +84,7 @@ public class UserServiceImpl implements UserService {
         this.orgMapper = orgMapper;
         this.configMapper = configMapper;
         this.passwordEncoder = passwordEncoder;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -107,6 +111,7 @@ public class UserServiceImpl implements UserService {
     public void createUser(UserCreateRequest request, AppUserPrincipal principal) {
         assertUserNameUnique(request.userName(), null);
         List<SysRole> roles = getRolesByCodes(request.roleCodes());
+        assertAssignableRoles(roles, principal);
 
         SysUser user = new SysUser();
         user.setUserName(request.userName());
@@ -132,6 +137,8 @@ public class UserServiceImpl implements UserService {
         SysUser user = getExistingUser(id);
         assertUserNameUnique(request.userName(), id);
         List<SysRole> roles = getRolesByCodes(request.roleCodes());
+        assertTargetUserManageable(id, principal);
+        assertAssignableRoles(roles, principal);
 
         user.setUserName(request.userName());
         user.setNickName(getDefaultNickName(request.nickName(), request.userName()));
@@ -150,6 +157,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, UserStatusRequest request, AppUserPrincipal principal) {
         SysUser user = getExistingUser(id);
+        assertTargetUserManageable(id, principal);
         user.setStatus(toBackendStatusWithDefault(request.status()));
         user.setUpdateBy(principal.userName());
         userMapper.updateById(user);
@@ -162,6 +170,7 @@ public class UserServiceImpl implements UserService {
         if (principal.userId().equals(id)) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "不能删除当前登录用户");
         }
+        assertTargetUserManageable(id, principal);
 
         userMapper.deleteById(id);
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id));
@@ -300,6 +309,47 @@ public class UserServiceImpl implements UserService {
         return normalizedCodes.stream().map(roleMap::get).toList();
     }
 
+    private void assertAssignableRoles(List<SysRole> roles, AppUserPrincipal principal) {
+        if (permissionService.isSuperAdmin(principal)) {
+            return;
+        }
+        int operatorLevel = permissionService.getMaxRoleLevel(principal);
+        List<String> blockedRoles = roles.stream()
+                .filter(role -> role.getRoleLevel() != null && role.getRoleLevel() >= operatorLevel)
+                .map(SysRole::getRoleName)
+                .toList();
+        if (!blockedRoles.isEmpty()) {
+            throw new BusinessException(ApiCode.FORBIDDEN, "不能分配高于或等于自身层级的角色：" + String.join(",", blockedRoles));
+        }
+    }
+
+    private void assertTargetUserManageable(Long userId, AppUserPrincipal principal) {
+        if (permissionService.isSuperAdmin(principal)) {
+            return;
+        }
+        int operatorLevel = permissionService.getMaxRoleLevel(principal);
+        List<SysRole> targetRoles = getUserRoles(userId);
+        boolean hasHigherOrEqualRole = targetRoles.stream()
+                .anyMatch(role -> role.getRoleLevel() != null && role.getRoleLevel() >= operatorLevel);
+        if (hasHigherOrEqualRole) {
+            throw new BusinessException(ApiCode.FORBIDDEN, "不能管理高于或等于自身层级的用户");
+        }
+    }
+
+    private List<SysRole> getUserRoles(Long userId) {
+        List<Long> roleIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>()
+                        .eq(SysUserRole::getUserId, userId))
+                .stream()
+                .map(SysUserRole::getRoleId)
+                .toList();
+        if (roleIds.isEmpty()) {
+            return List.of();
+        }
+        return roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+                .in(SysRole::getId, roleIds)
+                .eq(SysRole::getDeleted, NOT_DELETED));
+    }
+
     private void rewriteUserRoles(Long userId, List<SysRole> roles) {
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId));
 
@@ -336,6 +386,10 @@ public class UserServiceImpl implements UserService {
 
     private void assertOrgRelationMode(List<Long> orgIds) {
         String mode = getConfigValue(CONFIG_USER_ORG_MODE);
+        if (!UserOrgRelationMode.ONE_TO_ONE.name().equalsIgnoreCase(mode)
+                && !UserOrgRelationMode.ONE_TO_MANY.name().equalsIgnoreCase(mode)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "用户组织关系配置值不支持：" + mode);
+        }
         if (UserOrgRelationMode.ONE_TO_ONE.name().equalsIgnoreCase(mode) && orgIds.size() > 1) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "当前系统仅允许一个用户关联一个组织");
         }

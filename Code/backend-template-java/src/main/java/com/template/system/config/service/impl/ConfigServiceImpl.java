@@ -19,6 +19,8 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 系统配置项业务服务实现。
@@ -32,6 +34,18 @@ public class ConfigServiceImpl implements ConfigService {
     private static final long DEFAULT_SIZE = 20L;
     private static final long MAX_SIZE = 100L;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final Set<String> BUILT_IN_CONFIG_KEYS = Set.of(
+            "user_org_relation_mode",
+            "role_level_enabled",
+            "anonymous_portal_access",
+            "guest_admin_access"
+    );
+    private static final Map<String, Set<String>> ALLOWED_VALUES = Map.of(
+            "user_org_relation_mode", Set.of("ONE_TO_ONE", "ONE_TO_MANY"),
+            "role_level_enabled", Set.of("true", "false"),
+            "anonymous_portal_access", Set.of("true", "false"),
+            "guest_admin_access", Set.of("true", "false")
+    );
 
     private final SysConfigMapper configMapper;
 
@@ -57,6 +71,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional(rollbackFor = Exception.class)
     public void createConfig(ConfigSaveRequest request, AppUserPrincipal principal) {
         assertConfigKeyUnique(request.configKey(), null);
+        assertConfigValueSupported(request.configKey(), request.configValue());
 
         SysConfig config = new SysConfig();
         config.setConfigKey(request.configKey());
@@ -75,7 +90,9 @@ public class ConfigServiceImpl implements ConfigService {
     public void updateConfig(Long id, ConfigSaveRequest request, AppUserPrincipal principal) {
         SysConfig config = getExistingConfig(id);
         assertEditable(config);
+        assertConfigKeyNotChanged(config, request.configKey());
         assertConfigKeyUnique(request.configKey(), id);
+        assertConfigValueSupported(request.configKey(), request.configValue());
 
         config.setConfigKey(request.configKey());
         config.setConfigValue(request.configValue());
@@ -91,6 +108,7 @@ public class ConfigServiceImpl implements ConfigService {
     public void deleteConfig(Long id) {
         SysConfig config = getExistingConfig(id);
         assertEditable(config);
+        assertBuiltInConfigNotDeleted(config);
         configMapper.deleteById(id);
     }
 
@@ -120,10 +138,34 @@ public class ConfigServiceImpl implements ConfigService {
     private void assertConfigKeyUnique(String configKey, Long excludeId) {
         Long count = configMapper.selectCount(new LambdaQueryWrapper<SysConfig>()
                 .eq(SysConfig::getConfigKey, configKey)
-                .eq(SysConfig::getDeleted, NOT_DELETED)
                 .ne(excludeId != null, SysConfig::getId, excludeId));
         if (count != null && count > 0) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "配置键已存在");
+        }
+    }
+
+    private void assertConfigKeyNotChanged(SysConfig config, String requestConfigKey) {
+        if (!config.getConfigKey().equals(requestConfigKey)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "配置键不允许修改");
+        }
+    }
+
+    private void assertConfigValueSupported(String configKey, String configValue) {
+        Set<String> allowedValues = ALLOWED_VALUES.get(configKey);
+        if (allowedValues == null) {
+            return;
+        }
+        String normalizedValue = "user_org_relation_mode".equals(configKey)
+                ? configValue.toUpperCase()
+                : configValue.toLowerCase();
+        if (!allowedValues.contains(normalizedValue)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "配置值不支持：" + configValue);
+        }
+    }
+
+    private void assertBuiltInConfigNotDeleted(SysConfig config) {
+        if (BUILT_IN_CONFIG_KEYS.contains(config.getConfigKey())) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "系统内置配置不允许删除");
         }
     }
 

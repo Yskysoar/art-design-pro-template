@@ -3,6 +3,7 @@ package com.template.system.config.controller;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.config.dto.ConfigListQuery;
 import com.template.system.config.dto.ConfigSaveRequest;
 import com.template.system.config.service.ConfigService;
@@ -26,10 +27,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/config")
 public class ConfigController {
 
-    private final ConfigService configService;
+    private static final String CONFIG_MANAGE_PERMISSION = "system:config:manage";
 
-    public ConfigController(ConfigService configService) {
+    private final ConfigService configService;
+    private final PermissionService permissionService;
+
+    public ConfigController(ConfigService configService, PermissionService permissionService) {
         this.configService = configService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -39,7 +44,11 @@ public class ConfigController {
      * @return 配置项分页数据
      */
     @GetMapping("/list")
-    public ApiResponse<PageResult<ConfigItemVo>> listConfigs(@ModelAttribute ConfigListQuery query) {
+    public ApiResponse<PageResult<ConfigItemVo>> listConfigs(
+            @ModelAttribute ConfigListQuery query,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, CONFIG_MANAGE_PERMISSION);
         return ApiResponse.success(configService.pageConfigs(query));
     }
 
@@ -55,6 +64,7 @@ public class ConfigController {
             @Valid @RequestBody ConfigSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, CONFIG_MANAGE_PERMISSION);
         configService.createConfig(request, principal);
         return ApiResponse.success(null);
     }
@@ -73,6 +83,7 @@ public class ConfigController {
             @Valid @RequestBody ConfigSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, CONFIG_MANAGE_PERMISSION);
         configService.updateConfig(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -84,7 +95,11 @@ public class ConfigController {
      * @return 空响应
      */
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteConfig(@PathVariable Long id) {
+    public ApiResponse<Void> deleteConfig(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, CONFIG_MANAGE_PERMISSION);
         configService.deleteConfig(id);
         return ApiResponse.success(null);
     }

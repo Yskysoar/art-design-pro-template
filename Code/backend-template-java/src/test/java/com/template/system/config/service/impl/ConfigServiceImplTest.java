@@ -24,6 +24,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -111,6 +112,21 @@ class ConfigServiceImplTest {
     }
 
     @Test
+    @DisplayName("新增内置配置项时应校验配置值枚举")
+    void createConfigShouldRejectUnsupportedBuiltInValue() {
+        when(configMapper.selectCount(anyWrapper())).thenReturn(0L);
+
+        assertThatThrownBy(() -> configService.createConfig(
+                new ConfigSaveRequest("user_org_relation_mode", "INVALID", "用户组织关系模式", true),
+                ADMIN
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("配置值不支持：INVALID");
+
+        verify(configMapper, never()).insert(any(SysConfig.class));
+    }
+
+    @Test
     @DisplayName("更新可编辑配置项时应保留主键并更新业务字段")
     void updateConfigShouldUpdateEditableConfig() {
         SysConfig existing = editableConfig(2L, "guest_admin_access", "false");
@@ -152,6 +168,23 @@ class ConfigServiceImplTest {
     }
 
     @Test
+    @DisplayName("更新配置项时不允许修改配置键")
+    void updateConfigShouldRejectChangedConfigKey() {
+        SysConfig existing = editableConfig(3L, "guest_admin_access", "false");
+        when(configMapper.selectOne(anyWrapper())).thenReturn(existing);
+
+        assertThatThrownBy(() -> configService.updateConfig(
+                3L,
+                new ConfigSaveRequest("anonymous_portal_access", "false", "禁止游客访问后台", true),
+                ADMIN
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("配置键不允许修改");
+
+        verify(configMapper, never()).updateById(any(SysConfig.class));
+    }
+
+    @Test
     @DisplayName("删除可编辑配置项时应执行逻辑删除")
     void deleteConfigShouldMarkDeleted() {
         SysConfig existing = editableConfig(4L, "temporary_feature", "true");
@@ -172,6 +205,19 @@ class ConfigServiceImplTest {
                 .hasMessage("配置项不存在");
 
         verify(configMapper, never()).updateById(any(SysConfig.class));
+    }
+
+    @Test
+    @DisplayName("删除系统内置配置项时应拒绝")
+    void deleteConfigShouldRejectBuiltInConfig() {
+        SysConfig existing = editableConfig(1L, "user_org_relation_mode", "ONE_TO_MANY");
+        when(configMapper.selectOne(anyWrapper())).thenReturn(existing);
+
+        assertThatThrownBy(() -> configService.deleteConfig(1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("系统内置配置不允许删除");
+
+        verify(configMapper, never()).deleteById(anyLong());
     }
 
     private SysConfig editableConfig(Long id, String configKey, String configValue) {

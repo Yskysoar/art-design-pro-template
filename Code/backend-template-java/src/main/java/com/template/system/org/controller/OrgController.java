@@ -2,6 +2,7 @@ package com.template.system.org.controller;
 
 import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.org.dto.OrgSaveRequest;
 import com.template.system.org.service.OrgService;
 import com.template.system.org.vo.OrgTreeVo;
@@ -25,10 +26,14 @@ import java.util.List;
 @RequestMapping("/api/org")
 public class OrgController {
 
-    private final OrgService orgService;
+    private static final String ORG_MANAGE_PERMISSION = "system:org:manage";
 
-    public OrgController(OrgService orgService) {
+    private final OrgService orgService;
+    private final PermissionService permissionService;
+
+    public OrgController(OrgService orgService, PermissionService permissionService) {
         this.orgService = orgService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -37,7 +42,10 @@ public class OrgController {
      * @return 组织树
      */
     @GetMapping("/tree")
-    public ApiResponse<List<OrgTreeVo>> getOrgTree() {
+    public ApiResponse<List<OrgTreeVo>> getOrgTree(
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, ORG_MANAGE_PERMISSION);
         return ApiResponse.success(orgService.getOrgTree());
     }
 
@@ -53,6 +61,7 @@ public class OrgController {
             @Valid @RequestBody OrgSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ORG_MANAGE_PERMISSION);
         orgService.createOrg(request, principal);
         return ApiResponse.success(null);
     }
@@ -71,6 +80,7 @@ public class OrgController {
             @Valid @RequestBody OrgSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ORG_MANAGE_PERMISSION);
         orgService.updateOrg(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -82,7 +92,11 @@ public class OrgController {
      * @return 空响应
      */
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteOrg(@PathVariable Long id) {
+    public ApiResponse<Void> deleteOrg(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, ORG_MANAGE_PERMISSION);
         orgService.deleteOrg(id);
         return ApiResponse.success(null);
     }

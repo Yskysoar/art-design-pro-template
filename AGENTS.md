@@ -26,10 +26,12 @@
 - 当前后端基础联调已通过：`/api/health`、`/api/auth/login`、`/api/user/info`、`/api/v3/system/menus`。
 - 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`GET /api/user/{id}/orgs`、`PUT /api/user/{id}/orgs`、`/api/role/list`、`POST /api/role`、`PUT /api/role/{id}`、`DELETE /api/role/{id}`、`GET /api/role/{id}/permissions`、`PUT /api/role/{id}/permissions`、`GET /api/role/{id}/data-scope`、`PUT /api/role/{id}/data-scope`、`GET /api/v3/system/menus/manage`、`POST /api/v3/system/menus`、`PUT /api/v3/system/menus/{id}`、`DELETE /api/v3/system/menus/{id}`、`GET /api/org/tree`、`POST /api/org`、`PUT /api/org/{id}`、`DELETE /api/org/{id}`、`GET /api/config/list`、`POST /api/config`、`PUT /api/config/{id}`、`DELETE /api/config/{id}`。其中配置项、组织、角色数据权限和用户组织关系已通过真实接口回归。
 - 当前前端系统管理页已接入真实后端接口：用户、角色、菜单、配置项和组织管理 CRUD。
+- 当前后端系统管理主要接口已接入权限码校验；超级管理员 `R_SUPER` 可跳过权限码校验，普通角色必须拥有对应权限码。
+- 当前配置项已增加内置配置值校验、禁止修改配置键、禁止删除系统内置配置等基础保护。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
 - `Code/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
-- 后端可由 Agent 在用户确认后代为启动；如因环境限制失败，再切回由用户手动启动。
+- 用户已授予 Agent 完全访问权限用于项目开发、前后端启动、联调测试和代码审查；后续项目开发由 Agent 自行启动前后端并完成本地联调。该授权不包含高风险操作，高风险操作仍必须先说明影响并获得用户确认。
 - 数据库密码等敏感配置只通过本机环境变量传入，例如 `DB_PASSWORD`，不得写入 Git 跟踪文件、Docs 或提交信息。
 
 ## 三、代码目录规则
@@ -62,6 +64,7 @@ Code/
 - 后端当前覆盖 Tomcat 为 `10.1.55`，用于修复 IDE 扫描到的 Tomcat 传递依赖 CVE。
 - 后端已注册 MyBatis-Plus 分页插件，分页列表优先使用 `selectPage` 和 `LambdaQueryWrapper`。
 - 前后端认证统一使用 Bearer JWT，请求头格式为 `Authorization: Bearer <token>`。
+- 后端系统管理接口权限通过 `PermissionService` 校验，新增管理接口时必须同步设计权限码、Mock SQL 权限数据和 Controller 入口校验。
 - 每完成一个后端业务模块，都要同步维护 `src/main/resources/db/mock/` 下真实数据库 Mock SQL，确保菜单、权限、角色、用户等关联数据自洽。
 - 后续接入 Spring 三层架构后端时，controller 层只处理数据形式和规范，真实业务处理放在 service 层。
 - 若后端使用 MyBatis-Plus，优先使用框架内置能力；只有复杂查询、复杂统计或复杂函数场景才自定义 SQL。
@@ -78,7 +81,8 @@ Docs/
 ├── 1.项目说明文档.md
 ├── 2.代码审查总结.md
 ├── 3.后端开发设计方案.md
-└── 4.后端测试设计.md
+├── 4.后端测试设计.md
+└── 5.开发审查问题记录.md
 ```
 
 维护要求：
@@ -88,6 +92,7 @@ Docs/
 - `Docs/2.代码审查总结.md` 只维护代码审查、安全风险、上线阻断项、修复优先级和整改建议。
 - `Docs/3.后端开发设计方案.md` 维护后端技术选型、架构、权限、数据权限、接口、数据库、Mock SQL 和开发阶段规划。
 - `Docs/4.后端测试设计.md` 维护后端测试分层、测试用例、测试命令和回归验证方案。
+- `Docs/5.开发审查问题记录.md` 维护开发过程中的模块化问题台账、问题原因、修复状态、修复方式和验证建议。
 - 修改接口契约、Mock 行为、后端对接方式或安全策略后，必须同步更新相关文档。
 
 ## 五、本地 Mock 规则
@@ -191,7 +196,7 @@ git push -u origin master
 - 新增和修改文件统一使用 UTF-8。
 - 中文文档、注释、日志不得出现乱码。
 - 命令说明和操作解释使用中文。
-- 高风险操作必须先说明影响并获得用户确认。
+- 当前允许 Agent 自行启动前端、启动后端、运行测试、执行只读或常规开发联调命令。高风险操作必须先说明影响并获得用户确认。
 
 高风险操作包括：
 
@@ -244,7 +249,7 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
 
 含义：使用本机 Maven 执行后端测试，验证单元测试和测试依赖是否正确。
 
-如需启动后端，Agent 可在用户确认后执行：
+如需启动后端，Agent 可自行执行：
 
 ```powershell
 $env:DB_PASSWORD="本机数据库密码"
@@ -261,6 +266,14 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
 ```
 
 含义：使用 Maven 启动后端服务，数据库密码从本机未追踪配置或环境变量读取。
+
+如需启动前端，Agent 可在 `Code/art-design-pro` 下自行执行：
+
+```powershell
+pnpm dev
+```
+
+含义：启动 Vite 前端开发服务器，用于本地页面联调和浏览器验证。
 
 前后端联调时建议验证：
 

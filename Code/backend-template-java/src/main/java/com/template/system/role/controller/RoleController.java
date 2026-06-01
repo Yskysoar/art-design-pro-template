@@ -3,6 +3,7 @@ package com.template.system.role.controller;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.role.dto.RoleDataScopeSaveRequest;
 import com.template.system.role.dto.RoleListQuery;
 import com.template.system.role.dto.RolePermissionSaveRequest;
@@ -30,10 +31,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/role")
 public class RoleController {
 
-    private final RoleService roleService;
+    private static final String ROLE_ADD_PERMISSION = "system:role:add";
+    private static final String ROLE_EDIT_PERMISSION = "system:role:edit";
+    private static final String ROLE_PERMISSION_PERMISSION = "system:role:permission";
+    private static final String ROLE_VIEW_PERMISSION = "system:role:view";
 
-    public RoleController(RoleService roleService) {
+    private final RoleService roleService;
+    private final PermissionService permissionService;
+
+    public RoleController(RoleService roleService, PermissionService permissionService) {
         this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -43,7 +51,11 @@ public class RoleController {
      * @return 角色分页列表
      */
     @GetMapping("/list")
-    public ApiResponse<PageResult<RoleListItemVo>> listRoles(@ModelAttribute RoleListQuery query) {
+    public ApiResponse<PageResult<RoleListItemVo>> listRoles(
+            @ModelAttribute RoleListQuery query,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, ROLE_VIEW_PERMISSION);
         return ApiResponse.success(roleService.pageRoles(query));
     }
 
@@ -59,6 +71,7 @@ public class RoleController {
             @Valid @RequestBody RoleSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ROLE_ADD_PERMISSION);
         roleService.createRole(request, principal);
         return ApiResponse.success(null);
     }
@@ -77,6 +90,7 @@ public class RoleController {
             @Valid @RequestBody RoleSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ROLE_EDIT_PERMISSION);
         roleService.updateRole(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -93,6 +107,7 @@ public class RoleController {
             @PathVariable Long id,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ROLE_EDIT_PERMISSION);
         roleService.deleteRole(id, principal);
         return ApiResponse.success(null);
     }
@@ -104,7 +119,11 @@ public class RoleController {
      * @return 菜单权限 ID 集合
      */
     @GetMapping("/{id}/permissions")
-    public ApiResponse<RolePermissionVo> getRolePermissions(@PathVariable Long id) {
+    public ApiResponse<RolePermissionVo> getRolePermissions(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, ROLE_PERMISSION_PERMISSION);
         return ApiResponse.success(roleService.getRolePermissions(id));
     }
 
@@ -115,7 +134,11 @@ public class RoleController {
      * @return 数据权限范围和自定义组织 ID
      */
     @GetMapping("/{id}/data-scope")
-    public ApiResponse<RoleDataScopeVo> getRoleDataScope(@PathVariable Long id) {
+    public ApiResponse<RoleDataScopeVo> getRoleDataScope(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, ROLE_PERMISSION_PERMISSION);
         return ApiResponse.success(roleService.getRoleDataScope(id));
     }
 
@@ -133,6 +156,7 @@ public class RoleController {
             @RequestBody RolePermissionSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ROLE_PERMISSION_PERMISSION);
         roleService.saveRolePermissions(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -151,6 +175,7 @@ public class RoleController {
             @Valid @RequestBody RoleDataScopeSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, ROLE_PERMISSION_PERMISSION);
         roleService.saveRoleDataScope(id, request, principal);
         return ApiResponse.success(null);
     }

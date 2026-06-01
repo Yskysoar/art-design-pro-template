@@ -7,6 +7,7 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.menu.entity.SysMenu;
 import com.template.system.menu.mapper.SysMenuMapper;
 import com.template.system.org.entity.SysOrg;
@@ -71,6 +72,7 @@ public class RoleServiceImpl implements RoleService {
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleOrgMapper roleOrgMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final PermissionService permissionService;
 
     public RoleServiceImpl(
             SysRoleMapper roleMapper,
@@ -78,7 +80,8 @@ public class RoleServiceImpl implements RoleService {
             SysOrgMapper orgMapper,
             SysRoleMenuMapper roleMenuMapper,
             SysRoleOrgMapper roleOrgMapper,
-            SysUserRoleMapper userRoleMapper
+            SysUserRoleMapper userRoleMapper,
+            PermissionService permissionService
     ) {
         this.roleMapper = roleMapper;
         this.menuMapper = menuMapper;
@@ -86,6 +89,7 @@ public class RoleServiceImpl implements RoleService {
         this.roleMenuMapper = roleMenuMapper;
         this.roleOrgMapper = roleOrgMapper;
         this.userRoleMapper = userRoleMapper;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -105,6 +109,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createRole(RoleSaveRequest request, AppUserPrincipal principal) {
+        assertCanCreateBusinessRole(principal);
         assertRoleCodeUnique(request.roleCode(), null);
 
         SysRole role = new SysRole();
@@ -128,6 +133,7 @@ public class RoleServiceImpl implements RoleService {
     public void updateRole(Long id, RoleSaveRequest request, AppUserPrincipal principal) {
         SysRole role = getExistingRole(id);
         assertSystemRoleEditable(role);
+        assertRoleLevelManageable(role, principal);
         assertRoleCodeUnique(request.roleCode(), id);
 
         role.setRoleName(request.roleName());
@@ -144,6 +150,7 @@ public class RoleServiceImpl implements RoleService {
     public void deleteRole(Long id, AppUserPrincipal principal) {
         SysRole role = getExistingRole(id);
         assertSystemRoleEditable(role);
+        assertRoleLevelManageable(role, principal);
         Long userCount = userRoleMapper.selectCount(new LambdaQueryWrapper<SysUserRole>()
                 .eq(SysUserRole::getRoleId, id));
         if (userCount != null && userCount > 0) {
@@ -181,6 +188,7 @@ public class RoleServiceImpl implements RoleService {
     public void saveRolePermissions(Long id, RolePermissionSaveRequest request, AppUserPrincipal principal) {
         SysRole role = getExistingRole(id);
         assertSystemRoleEditable(role);
+        assertRoleLevelManageable(role, principal);
         List<Long> menuIds = normalizeMenuIds(request == null ? null : request.menuIds());
         assertMenusExist(menuIds);
 
@@ -201,6 +209,7 @@ public class RoleServiceImpl implements RoleService {
     public void saveRoleDataScope(Long id, RoleDataScopeSaveRequest request, AppUserPrincipal principal) {
         SysRole role = getExistingRole(id);
         assertSystemRoleEditable(role);
+        assertRoleLevelManageable(role, principal);
         String dataScope = normalizeDataScope(request.dataScope());
         List<Long> orgIds = CUSTOM_ORG_DATA_SCOPE.equals(dataScope)
                 ? normalizeOrgIds(request.orgIds())
@@ -276,6 +285,27 @@ public class RoleServiceImpl implements RoleService {
     private void assertSystemRoleEditable(SysRole role) {
         if (SYSTEM_ROLE_TYPE.equals(role.getRoleType())) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "系统角色暂不允许修改或删除");
+        }
+    }
+
+    private void assertCanCreateBusinessRole(AppUserPrincipal principal) {
+        if (permissionService.isSuperAdmin(principal)) {
+            return;
+        }
+        int operatorLevel = permissionService.getMaxRoleLevel(principal);
+        if (operatorLevel <= 10) {
+            throw new BusinessException(ApiCode.FORBIDDEN, "当前角色层级不足，不能创建业务角色");
+        }
+    }
+
+    private void assertRoleLevelManageable(SysRole role, AppUserPrincipal principal) {
+        if (permissionService.isSuperAdmin(principal)) {
+            return;
+        }
+        int operatorLevel = permissionService.getMaxRoleLevel(principal);
+        int targetLevel = role.getRoleLevel() == null ? 0 : role.getRoleLevel();
+        if (targetLevel >= operatorLevel) {
+            throw new BusinessException(ApiCode.FORBIDDEN, "不能管理高于或等于自身层级的角色");
         }
     }
 

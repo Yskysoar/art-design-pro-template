@@ -3,6 +3,7 @@ package com.template.system.user.controller;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.auth.service.AuthService;
 import com.template.system.auth.vo.UserInfoResponse;
 import com.template.system.user.dto.UserCreateRequest;
@@ -34,12 +35,19 @@ import java.util.List;
 @RequestMapping("/api/user")
 public class UserController {
 
+    private static final String USER_ADD_PERMISSION = "system:user:add";
+    private static final String USER_EDIT_PERMISSION = "system:user:edit";
+    private static final String USER_DELETE_PERMISSION = "system:user:delete";
+    private static final String USER_VIEW_PERMISSION = "system:user:view";
+
     private final AuthService authService;
     private final UserService userService;
+    private final PermissionService permissionService;
 
-    public UserController(AuthService authService, UserService userService) {
+    public UserController(AuthService authService, UserService userService, PermissionService permissionService) {
         this.authService = authService;
         this.userService = userService;
+        this.permissionService = permissionService;
     }
 
     @GetMapping("/info")
@@ -48,7 +56,11 @@ public class UserController {
     }
 
     @GetMapping("/list")
-    public ApiResponse<PageResult<UserListItemVo>> listUsers(@ModelAttribute UserListQuery query) {
+    public ApiResponse<PageResult<UserListItemVo>> listUsers(
+            @ModelAttribute UserListQuery query,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, USER_VIEW_PERMISSION);
         return ApiResponse.success(userService.pageUsers(query));
     }
 
@@ -57,6 +69,7 @@ public class UserController {
             @Valid @RequestBody UserCreateRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, USER_ADD_PERMISSION);
         userService.createUser(request, principal);
         return ApiResponse.success(null);
     }
@@ -67,6 +80,7 @@ public class UserController {
             @Valid @RequestBody UserUpdateRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, USER_EDIT_PERMISSION);
         userService.updateUser(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -77,6 +91,7 @@ public class UserController {
             @Valid @RequestBody UserStatusRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, USER_EDIT_PERMISSION);
         userService.updateStatus(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -86,12 +101,17 @@ public class UserController {
             @PathVariable Long id,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, USER_DELETE_PERMISSION);
         userService.deleteUser(id, principal);
         return ApiResponse.success(null);
     }
 
     @GetMapping("/{id}/orgs")
-    public ApiResponse<UserOrgVo> getUserOrgs(@PathVariable Long id) {
+    public ApiResponse<UserOrgVo> getUserOrgs(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, USER_VIEW_PERMISSION);
         return ApiResponse.success(userService.getUserOrgs(id));
     }
 
@@ -101,6 +121,7 @@ public class UserController {
             @RequestBody List<Long> orgIds,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, USER_EDIT_PERMISSION);
         userService.saveUserOrgs(id, orgIds, principal);
         return ApiResponse.success(null);
     }

@@ -68,7 +68,9 @@ VALUES
   (8, '管理配置项', 'system:config:manage', 'system', 'ADMIN', 1, 'system', 'system'),
   (9, '发布文章', 'article:publish:add', 'article', 'BOTH', 1, 'system', 'system'),
   (10, '编辑文章', 'article:publish:edit', 'article', 'BOTH', 1, 'system', 'system'),
-  (11, '管理菜单', 'system:menu:manage', 'system', 'ADMIN', 1, 'system', 'system');
+  (11, '管理菜单', 'system:menu:manage', 'system', 'ADMIN', 1, 'system', 'system'),
+  (12, '查看用户', 'system:user:view', 'system', 'ADMIN', 1, 'system', 'system'),
+  (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -122,5 +124,5 @@ VALUES
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11),
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13),
   (2, 9), (2, 10);

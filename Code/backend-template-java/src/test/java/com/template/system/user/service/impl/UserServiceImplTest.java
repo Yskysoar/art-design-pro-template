@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
 import com.template.system.config.mapper.SysConfigMapper;
 import com.template.system.org.entity.SysOrg;
@@ -60,6 +61,8 @@ class UserServiceImplTest {
     private SysConfigMapper configMapper;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private PermissionService permissionService;
 
     private UserServiceImpl userService;
 
@@ -72,7 +75,8 @@ class UserServiceImplTest {
                 roleMapper,
                 orgMapper,
                 configMapper,
-                passwordEncoder
+                passwordEncoder,
+                permissionService
         );
     }
 
@@ -101,6 +105,7 @@ class UserServiceImplTest {
     void createUserShouldRewriteRolesAndOrgs() {
         when(userMapper.selectCount(anyWrapper())).thenReturn(0L);
         when(roleMapper.selectList(anyRoleWrapper())).thenReturn(List.of(role(2L, "R_USER")));
+        when(permissionService.isSuperAdmin(ADMIN)).thenReturn(true);
         when(passwordEncoder.encode("admin123")).thenReturn("hashed");
         when(configMapper.selectList(anyConfigWrapper())).thenReturn(List.of(config("ONE_TO_MANY")));
         when(orgMapper.selectList(anyOrgWrapper())).thenReturn(List.of(org(2L), org(3L)));
@@ -134,6 +139,7 @@ class UserServiceImplTest {
         when(userMapper.selectOne(anyWrapper())).thenReturn(user(10L, "demo"));
         when(userMapper.selectCount(anyWrapper())).thenReturn(0L);
         when(roleMapper.selectList(anyRoleWrapper())).thenReturn(List.of(role(2L, "R_USER")));
+        when(permissionService.isSuperAdmin(ADMIN)).thenReturn(true);
         when(configMapper.selectList(anyConfigWrapper())).thenReturn(List.of(config("ONE_TO_ONE")));
 
         UserUpdateRequest request = new UserUpdateRequest(
@@ -150,6 +156,19 @@ class UserServiceImplTest {
         assertThatThrownBy(() -> userService.updateUser(10L, request, ADMIN))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("当前系统仅允许一个用户关联一个组织");
+
+        verify(userOrgMapper, never()).insert(any(SysUserOrg.class));
+    }
+
+    @Test
+    @DisplayName("配置值非法时应拒绝保存用户组织关系")
+    void saveUserOrgsShouldRejectUnsupportedConfigValue() {
+        when(userMapper.selectOne(anyWrapper())).thenReturn(user(10L, "demo"));
+        when(configMapper.selectList(anyConfigWrapper())).thenReturn(List.of(config("INVALID")));
+
+        assertThatThrownBy(() -> userService.saveUserOrgs(10L, List.of(2L), ADMIN))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("用户组织关系配置值不支持：INVALID");
 
         verify(userOrgMapper, never()).insert(any(SysUserOrg.class));
     }
@@ -181,6 +200,8 @@ class UserServiceImplTest {
         SysRole role = new SysRole();
         role.setId(id);
         role.setRoleCode(code);
+        role.setRoleName(code);
+        role.setRoleLevel(10);
         role.setEnabled(1);
         role.setDeleted(0);
         return role;

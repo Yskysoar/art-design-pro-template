@@ -2,6 +2,7 @@ package com.template.system.menu.controller;
 
 import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.security.permission.PermissionService;
 import com.template.system.menu.dto.MenuSaveRequest;
 import com.template.system.menu.service.MenuService;
 import com.template.system.menu.vo.AppRouteVo;
@@ -25,10 +26,14 @@ import java.util.List;
 @RequestMapping("/api/v3/system")
 public class MenuController {
 
-    private final MenuService menuService;
+    private static final String MENU_MANAGE_PERMISSION = "system:menu:manage";
 
-    public MenuController(MenuService menuService) {
+    private final MenuService menuService;
+    private final PermissionService permissionService;
+
+    public MenuController(MenuService menuService, PermissionService permissionService) {
         this.menuService = menuService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -50,7 +55,10 @@ public class MenuController {
      * @return 完整菜单树
      */
     @GetMapping("/menus/manage")
-    public ApiResponse<List<AppRouteVo>> getManageMenuTree() {
+    public ApiResponse<List<AppRouteVo>> getManageMenuTree(
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, MENU_MANAGE_PERMISSION);
         return ApiResponse.success(menuService.getManageMenuTree());
     }
 
@@ -66,6 +74,7 @@ public class MenuController {
             @Valid @RequestBody MenuSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, MENU_MANAGE_PERMISSION);
         menuService.createMenu(request, principal);
         return ApiResponse.success(null);
     }
@@ -84,6 +93,7 @@ public class MenuController {
             @Valid @RequestBody MenuSaveRequest request,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
+        permissionService.requirePermission(principal, MENU_MANAGE_PERMISSION);
         menuService.updateMenu(id, request, principal);
         return ApiResponse.success(null);
     }
@@ -95,7 +105,11 @@ public class MenuController {
      * @return 空响应
      */
     @DeleteMapping("/menus/{id}")
-    public ApiResponse<Void> deleteMenu(@PathVariable Long id) {
+    public ApiResponse<Void> deleteMenu(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        permissionService.requirePermission(principal, MENU_MANAGE_PERMISSION);
         menuService.deleteMenu(id);
         return ApiResponse.success(null);
     }
