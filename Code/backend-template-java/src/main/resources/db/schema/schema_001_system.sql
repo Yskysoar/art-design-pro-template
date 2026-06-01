@@ -121,9 +121,9 @@ CREATE TABLE IF NOT EXISTS sys_config (
   create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   update_by VARCHAR(50) DEFAULT NULL COMMENT '更新人',
   update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，删除后写入记录ID',
   PRIMARY KEY (id),
-  UNIQUE KEY uk_sys_config_key (config_key)
+  UNIQUE KEY uk_sys_config_key_deleted (config_key, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
 
 CREATE TABLE IF NOT EXISTS sys_user_role (

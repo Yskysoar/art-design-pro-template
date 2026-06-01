@@ -138,6 +138,7 @@ public class ConfigServiceImpl implements ConfigService {
     private void assertConfigKeyUnique(String configKey, Long excludeId) {
         Long count = configMapper.selectCount(new LambdaQueryWrapper<SysConfig>()
                 .eq(SysConfig::getConfigKey, configKey)
+                .eq(SysConfig::getDeleted, NOT_DELETED)
                 .ne(excludeId != null, SysConfig::getId, excludeId));
         if (count != null && count > 0) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "配置键已存在");

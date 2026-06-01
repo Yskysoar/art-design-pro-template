@@ -91,7 +91,7 @@ class ConfigServiceImplTest {
         assertThat(inserted.getConfigKey()).isEqualTo("anonymous_portal_access");
         assertThat(inserted.getConfigValue()).isEqualTo("true");
         assertThat(inserted.getEditable()).isEqualTo(1);
-        assertThat(inserted.getDeleted()).isEqualTo(0);
+        assertThat(inserted.getDeleted()).isEqualTo(0L);
         assertThat(inserted.getCreateBy()).isEqualTo("admin");
         assertThat(inserted.getUpdateBy()).isEqualTo("admin");
     }
@@ -109,6 +109,22 @@ class ConfigServiceImplTest {
                 .hasMessage("配置键已存在");
 
         verify(configMapper, never()).insert(any(SysConfig.class));
+    }
+
+    @Test
+    @DisplayName("删除后的同名配置键不应阻止重新新增配置项")
+    void createConfigShouldAllowSameKeyAfterDeletedConfig() {
+        when(configMapper.selectCount(anyWrapper())).thenReturn(0L);
+
+        configService.createConfig(
+                new ConfigSaveRequest("temporary_feature", "true", "临时功能开关", true),
+                ADMIN
+        );
+
+        ArgumentCaptor<SysConfig> captor = ArgumentCaptor.forClass(SysConfig.class);
+        verify(configMapper).insert(captor.capture());
+        assertThat(captor.getValue().getConfigKey()).isEqualTo("temporary_feature");
+        assertThat(captor.getValue().getDeleted()).isEqualTo(0L);
     }
 
     @Test

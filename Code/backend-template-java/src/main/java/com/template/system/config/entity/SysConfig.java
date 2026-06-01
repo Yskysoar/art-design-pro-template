@@ -1,6 +1,7 @@
 package com.template.system.config.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -18,7 +19,7 @@ public class SysConfig {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 配置键，要求全局唯一，例如 user_org_relation_mode。 */
+    /** 配置键，未删除记录内唯一，例如 user_org_relation_mode。 */
     private String configKey;
 
     /** 配置值，按业务约定保存字符串、布尔值或枚举值。 */
@@ -42,8 +43,9 @@ public class SysConfig {
     /** 最后更新时间。 */
     private LocalDateTime updateTime;
 
-    /** 逻辑删除标记，0 表示正常，1 表示已删除。 */
-    private Integer deleted;
+    /** 逻辑删除标记，0 表示正常，删除后写入记录 ID。 */
+    @TableLogic(value = "0", delval = "id")
+    private Long deleted;
 
     public Long getId() {
         return id;
@@ -117,11 +119,15 @@ public class SysConfig {
         this.updateTime = updateTime;
     }
 
-    public Integer getDeleted() {
+    public Long getDeleted() {
         return deleted;
     }
 
-    public void setDeleted(Integer deleted) {
+    public void setDeleted(Long deleted) {
         this.deleted = deleted;
+    }
+
+    public void setDeleted(Integer deleted) {
+        this.deleted = deleted == null ? null : deleted.longValue();
     }
 }
