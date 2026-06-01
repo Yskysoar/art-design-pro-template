@@ -55,7 +55,7 @@
           <h3>完整编辑器内容</h3>
           <ElTabs v-model="fullActiveTab">
             <ElTabPane label="渲染效果" name="preview">
-              <div class="content-preview" v-html="fullEditorHtml"></div>
+              <div class="content-preview" v-html="safeFullEditorHtml"></div>
             </ElTabPane>
             <ElTabPane label="HTML源码" name="html">
               <ElInput
@@ -73,7 +73,7 @@
           <h3>简化编辑器内容</h3>
           <ElTabs v-model="simpleActiveTab">
             <ElTabPane label="渲染效果" name="preview">
-              <div class="content-preview" v-html="simpleEditorHtml"></div>
+              <div class="content-preview" v-html="safeSimpleEditorHtml"></div>
             </ElTabPane>
             <ElTabPane label="HTML源码" name="html">
               <ElInput
@@ -211,6 +211,8 @@
 </template>
 
 <script setup lang="ts">
+  import { sanitizeRichHtml } from '@/utils/security/html'
+
   defineOptions({ name: 'WidgetsWangEditor' })
 
   const fullEditorRef = ref()
@@ -218,6 +220,8 @@
   const fullActiveTab = ref('preview')
   const simpleActiveTab = ref('preview')
   const activeCollapse = ref(['basic'])
+  const safeFullEditorHtml = computed(() => sanitizeRichHtml(fullEditorHtml.value))
+  const safeSimpleEditorHtml = computed(() => sanitizeRichHtml(simpleEditorHtml.value))
 
   /**
    * 简化工具栏配置

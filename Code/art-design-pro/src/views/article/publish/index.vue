@@ -105,6 +105,7 @@
   import { useUserStore } from '@/store/modules/user'
   import EmojiText from '@/utils/ui/emojo'
   import { useCommon } from '@/hooks/core/useCommon'
+  import { sanitizeRichHtml } from '@/utils/security/html'
 
   defineOptions({ name: 'ArticlePublish' })
 
@@ -216,16 +217,9 @@
 
   const stripHtml = (html: string) => {
     const container = document.createElement('div')
-    container.innerHTML = sanitizeHtml(html)
+    container.innerHTML = sanitizeRichHtml(html)
     return container.textContent?.trim()
   }
-
-  const sanitizeHtml = (html: string) =>
-    html
-      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-      .replace(/\son\w+="[^"]*"/gi, '')
-      .replace(/\son\w+='[^']*'/gi, '')
-      .replace(/javascript:/gi, '')
 
   onMounted(async () => {
     useCommon().scrollToTop()

@@ -36,6 +36,7 @@
   import '@/assets/styles/custom/one-dark-pro.scss'
   import { fetchArticleDetail } from '@/api/article'
   import { useCommon } from '@/hooks/core/useCommon'
+  import { sanitizeRichHtml } from '@/utils/security/html'
 
   defineOptions({ name: 'ArticleDetail' })
 
@@ -43,7 +44,9 @@
   const articleId = computed(() => Number(route.params.id))
   const article = ref<Api.Article.ArticleDetail>()
   const loading = ref(false)
-  const safeHtml = computed(() => sanitizeHtml(article.value?.contentHtml || article.value?.html_content || ''))
+  const safeHtml = computed(() =>
+    sanitizeRichHtml(article.value?.contentHtml || article.value?.html_content || '')
+  )
 
   const getArticleDetail = async () => {
     if (!articleId.value) return
@@ -54,13 +57,6 @@
       loading.value = false
     }
   }
-
-  const sanitizeHtml = (html: string) =>
-    html
-      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-      .replace(/\son\w+="[^"]*"/gi, '')
-      .replace(/\son\w+='[^']*'/gi, '')
-      .replace(/javascript:/gi, '')
 
   onMounted(() => {
     useCommon().scrollToTop()

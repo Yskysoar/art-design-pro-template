@@ -20,13 +20,13 @@
       <!-- 原始内容 -->
       <span ref="textRef" class="inline-block">
         <slot>
-          <span v-html="text"></span>
+          <span v-html="safeText"></span>
         </slot>
       </span>
       <!-- 克隆内容用于无缝循环 -->
       <span v-if="shouldClone" class="inline-block" :style="cloneSpacing">
         <slot>
-          <span v-html="text"></span>
+          <span v-html="safeText"></span>
         </slot>
       </span>
     </div>
@@ -51,6 +51,7 @@
     useTimeoutFn
   } from '@vueuse/core'
   import { useSettingStore } from '@/store/modules/setting'
+  import { sanitizeInlineHtml } from '@/utils/security/html'
 
   type ThemeType =
     | 'theme'
@@ -108,6 +109,7 @@
 
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
+  const safeText = computed(() => sanitizeInlineHtml(props.text))
 
   const containerRef = ref<HTMLElement>()
   const contentRef = ref<HTMLElement>()

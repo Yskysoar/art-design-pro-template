@@ -37,6 +37,7 @@ import { upgradeLogList } from '@/mock/upgrade/changeLog'
 import { ElNotification } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { StorageConfig } from '@/utils/storage/storage-config'
+import { sanitizeRichHtml } from '@/utils/security/html'
 
 /**
  * 版本管理器
@@ -144,7 +145,7 @@ class VersionManager {
       )
     }
 
-    return messageParts.join('')
+    return sanitizeRichHtml(messageParts.join(''))
   }
 
   /**
