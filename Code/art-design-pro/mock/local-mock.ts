@@ -54,9 +54,21 @@ interface ArticleTypeItem {
 }
 
 interface ArticleDetail {
+  id: number
   title: string
+  categoryId: number
+  categoryName: string
   blog_class: string
+  coverUrl: string
+  summary: string
+  contentHtml: string
   html_content: string
+  visible: boolean
+  status: string
+  viewCount: number
+  createBy: string
+  createTime: string
+  attachments: unknown[]
 }
 
 interface AppRouteRecord {
@@ -166,14 +178,29 @@ const articleTypes: ArticleTypeItem[] = [
 ]
 
 const articleDetail: ArticleDetail = {
+  id: 1,
   title: '本地 Mock 文章详情',
+  categoryId: 2,
+  categoryName: '技术文章',
   blog_class: '2',
+  coverUrl: '/src/assets/images/cover/img1.webp',
+  summary: '本地 Mock 文章详情摘要',
+  contentHtml: `
+    <h2>本地 Mock 文章</h2>
+    <p>这是一份保存在本地 Vite middleware 中的文章详情数据，用于替代外部 Mock 服务。</p>
+  `,
   html_content: `
     <h2>本地 Mock 文章</h2>
     <p>这是一份保存在本地 Vite middleware 中的文章详情数据，用于替代外部 Mock 服务。</p>
     <p>后续对接真实后端时，可将该接口替换为数据库返回内容。</p>
     <pre><code>GET /api/article/detail?id=1</code></pre>
-  `
+  `,
+  visible: true,
+  status: 'PUBLISHED',
+  viewCount: 12,
+  createBy: 'admin',
+  createTime: '2026-06-01 10:00:00',
+  attachments: []
 }
 
 const menus: AppRouteRecord[] = [
@@ -294,8 +321,8 @@ const menus: AppRouteRecord[] = [
           icon: 'ri:article-line',
           keepAlive: true,
           authList: [
-            { title: '新增', authMark: 'add' },
-            { title: '编辑', authMark: 'edit' }
+            { title: '新增', authMark: 'article:publish:add' },
+            { title: '编辑', authMark: 'article:publish:edit' }
           ]
         }
       },
@@ -319,7 +346,7 @@ const menus: AppRouteRecord[] = [
           title: 'menus.article.articlePublish',
           icon: 'ri:telegram-2-line',
           keepAlive: true,
-          authList: [{ title: '发布', authMark: 'add' }]
+          authList: [{ title: '发布', authMark: 'article:publish:add' }]
         }
       }
     ]
@@ -394,7 +421,10 @@ function handleMockRequest(request: MockRequest): MockResponse | null {
         'system:role:permission',
         'system:menu:manage',
         'system:org:manage',
-        'system:config:manage'
+        'system:config:manage',
+        'article:publish:add',
+        'article:publish:edit',
+        'article:upload'
       ],
       roles: ['R_SUPER', 'R_ADMIN'],
       userId: 1,

@@ -30,7 +30,7 @@
 
   type InsertFnType = (url: string, alt: string, href: string) => void
 
-  const { VITE_API_URL } = import.meta.env
+  const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
   // Props 定义
   interface Props {
@@ -80,7 +80,7 @@
 
   // 计算属性：上传服务器地址
   const uploadServer = computed(
-    () => props.uploadConfig?.server || `${VITE_API_URL}/api/common/upload/wangeditor`
+    () => props.uploadConfig?.server || `${apiBase}/api/common/upload/wangeditor`
   )
 
   // 合并上传配置

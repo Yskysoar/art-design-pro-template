@@ -3,6 +3,7 @@ package com.template.security.config;
 import com.template.security.auth.JsonAccessDeniedHandler;
 import com.template.security.auth.JsonAuthenticationEntryPoint;
 import com.template.security.jwt.JwtAuthenticationFilter;
+import com.template.file.config.FileStorageProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Spring Security 基础配置。
  */
 @Configuration
-@EnableConfigurationProperties(SecurityProperties.class)
+@EnableConfigurationProperties({SecurityProperties.class, FileStorageProperties.class})
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -43,7 +44,12 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/auth/login", "/api/health", "/api/portal/public/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/health",
+                                "/api/portal/public/**",
+                                "/api/common/files/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

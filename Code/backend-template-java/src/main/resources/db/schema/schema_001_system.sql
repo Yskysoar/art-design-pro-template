@@ -176,3 +176,73 @@ CREATE TABLE IF NOT EXISTS sys_role_org (
   UNIQUE KEY uk_sys_role_org (role_id, org_id),
   KEY idx_sys_role_org_org (org_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色自定义数据权限组织关联表';
+
+CREATE TABLE IF NOT EXISTS article_category (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '分类ID',
+  category_name VARCHAR(50) NOT NULL COMMENT '分类名称',
+  category_code VARCHAR(50) NOT NULL COMMENT '分类编码',
+  sort INT NOT NULL DEFAULT 0 COMMENT '排序',
+  enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+  create_by VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_by VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_article_category_code (category_code),
+  KEY idx_article_category_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章分类表';
+
+CREATE TABLE IF NOT EXISTS file_resource (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '文件ID',
+  original_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
+  storage_name VARCHAR(255) NOT NULL COMMENT '存储文件名',
+  storage_path VARCHAR(500) NOT NULL COMMENT '相对存储路径',
+  url VARCHAR(600) NOT NULL COMMENT '受控访问URL',
+  content_type VARCHAR(100) NOT NULL COMMENT 'MIME类型',
+  extension VARCHAR(20) NOT NULL COMMENT '文件扩展名',
+  size BIGINT NOT NULL COMMENT '文件大小，单位字节',
+  sha256 VARCHAR(64) NOT NULL COMMENT '文件SHA-256',
+  storage_type VARCHAR(20) NOT NULL DEFAULT 'LOCAL' COMMENT '存储类型',
+  uploader_id BIGINT DEFAULT NULL COMMENT '上传人ID',
+  create_by VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_file_resource_storage_path (storage_path),
+  KEY idx_file_resource_uploader (uploader_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件资源表';
+
+CREATE TABLE IF NOT EXISTS article (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '文章ID',
+  title VARCHAR(120) NOT NULL COMMENT '文章标题',
+  category_id BIGINT NOT NULL COMMENT '分类ID',
+  cover_url VARCHAR(600) DEFAULT NULL COMMENT '封面URL',
+  summary VARCHAR(300) DEFAULT NULL COMMENT '摘要',
+  content_html MEDIUMTEXT NOT NULL COMMENT '净化后的富文本HTML',
+  content_text MEDIUMTEXT DEFAULT NULL COMMENT '纯文本内容',
+  visible TINYINT NOT NULL DEFAULT 1 COMMENT '是否可见',
+  status VARCHAR(20) NOT NULL DEFAULT 'DRAFT' COMMENT '状态：DRAFT/PUBLISHED/OFFLINE',
+  view_count BIGINT NOT NULL DEFAULT 0 COMMENT '浏览次数',
+  publish_time DATETIME DEFAULT NULL COMMENT '发布时间',
+  create_by VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_by VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
+  PRIMARY KEY (id),
+  KEY idx_article_category (category_id),
+  KEY idx_article_status (status),
+  KEY idx_article_publish_time (publish_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章表';
+
+CREATE TABLE IF NOT EXISTS article_attachment (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '关联ID',
+  article_id BIGINT NOT NULL COMMENT '文章ID',
+  file_id BIGINT NOT NULL COMMENT '文件ID',
+  sort INT NOT NULL DEFAULT 0 COMMENT '排序',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_article_attachment (article_id, file_id),
+  KEY idx_article_attachment_file (file_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章附件关系表';

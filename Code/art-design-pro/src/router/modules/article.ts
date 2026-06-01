@@ -19,8 +19,8 @@ export const articleRoutes: AppRouteRecord = {
         icon: 'ri:article-line',
         keepAlive: true,
         authList: [
-          { title: '新增', authMark: 'add' },
-          { title: '编辑', authMark: 'edit' }
+          { title: '新增', authMark: 'article:publish:add' },
+          { title: '编辑', authMark: 'article:publish:edit' }
         ]
       }
     },
@@ -53,7 +53,7 @@ export const articleRoutes: AppRouteRecord = {
         title: 'menus.article.articlePublish',
         icon: 'ri:telegram-2-line',
         keepAlive: true,
-        authList: [{ title: '发布', authMark: 'add' }]
+        authList: [{ title: '发布', authMark: 'article:publish:add' }]
       }
     }
   ]

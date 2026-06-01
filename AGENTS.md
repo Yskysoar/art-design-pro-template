@@ -28,6 +28,9 @@
 - 当前前端系统管理页已接入真实后端接口：用户、角色、菜单、配置项和组织管理 CRUD。
 - 当前后端系统管理主要接口已接入权限码校验；超级管理员 `R_SUPER` 可跳过权限码校验，普通角色必须拥有对应权限码。
 - 当前配置项已增加内置配置值校验、禁止修改配置键、禁止删除系统内置配置等基础保护。
+- 当前后端文章与上传模块已完成第一轮开发和真实 HTTP 回归：文章分类、列表、详情、新增、编辑、删除、状态变更、本地上传、wangEditor 上传和 `/api/common/files/**` 受控文件访问。
+- 当前前端文章列表、发布、详情页已接入真实后端接口，并保留接近原模板的卡片列表、发布设置和 Markdown 阅读风格。
+- 当前文章与上传模块后端测试已通过：`Tests run: 75, Failures: 0, Errors: 0, Skipped: 0`。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
 - `Code/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
@@ -66,6 +69,7 @@ Code/
 - 前后端认证统一使用 Bearer JWT，请求头格式为 `Authorization: Bearer <token>`。
 - 后端系统管理接口权限通过 `PermissionService` 校验，新增管理接口时必须同步设计权限码、Mock SQL 权限数据和 Controller 入口校验。
 - 每完成一个后端业务模块，都要同步维护 `src/main/resources/db/mock/` 下真实数据库 Mock SQL，确保菜单、权限、角色、用户等关联数据自洽。
+- 文章与上传模块权限码为 `article:publish:add`、`article:publish:edit`、`article:upload`；前端按钮权限与后端接口权限应使用同一组权限码。
 - 后续接入 Spring 三层架构后端时，controller 层只处理数据形式和规范，真实业务处理放在 service 层。
 - 若后端使用 MyBatis-Plus，优先使用框架内置能力；只有复杂查询、复杂统计或复杂函数场景才自定义 SQL。
 
@@ -256,6 +260,7 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
 - 可以在 `backend-template` 数据库中执行接口联调、写接口回归和 SQL 验证。
 - 数据库测试完成后必须重新初始化 `backend-template` 数据库，执行 `Code/backend-template-java/src/main/resources/db/` 下的结构 SQL 和 Mock SQL，恢复项目标准开发数据。
 - 数据库密码等敏感信息仍只能来自环境变量或本机未追踪配置，不得写入 Git 跟踪文件、Docs 或提交信息。
+- Windows 下导入包含中文的 UTF-8 SQL 时，不要使用 PowerShell `Get-Content | mysql` 管道，容易把中文写成 `????`；应使用 `cmd /c` 原始文件重定向，并为 mysql 指定 `--default-character-set=utf8mb4`。
 
 如需启动后端，Agent 可自行执行：
 

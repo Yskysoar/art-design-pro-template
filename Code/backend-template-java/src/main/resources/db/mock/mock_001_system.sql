@@ -70,7 +70,8 @@ VALUES
   (10, '编辑文章', 'article:publish:edit', 'article', 'BOTH', 1, 'system', 'system'),
   (11, '管理菜单', 'system:menu:manage', 'system', 'ADMIN', 1, 'system', 'system'),
   (12, '查看用户', 'system:user:view', 'system', 'ADMIN', 1, 'system', 'system'),
-  (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system');
+  (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system'),
+  (14, '上传文章资源', 'article:upload', 'article', 'BOTH', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -97,7 +98,11 @@ VALUES
   (17, 3, 'MENU', 'config', 'Config', '/system/config', NULL, '配置项管理', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
   (18, 17, 'BUTTON', NULL, 'ConfigManage', NULL, NULL, '管理配置项', NULL, 'ADMIN', 'system:config:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (19, 3, 'MENU', 'org', 'Org', '/system/org', NULL, '组织管理', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
-  (20, 19, 'BUTTON', NULL, 'OrgManage', NULL, NULL, '管理组织', NULL, 'ADMIN', 'system:org:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
+  (20, 19, 'BUTTON', NULL, 'OrgManage', NULL, NULL, '管理组织', NULL, 'ADMIN', 'system:org:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (21, 8, 'BUTTON', NULL, 'ArticleAdd', NULL, NULL, '新增文章', NULL, 'BOTH', 'article:publish:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (22, 8, 'BUTTON', NULL, 'ArticleEdit', NULL, NULL, '编辑文章', NULL, 'BOTH', 'article:publish:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
+  (23, 9, 'BUTTON', NULL, 'ArticleUpload', NULL, NULL, '上传文章资源', NULL, 'BOTH', 'article:upload', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (24, 7, 'MENU', 'detail/:id', 'ArticleDetail', '/article/detail', NULL, 'menus.article.articleDetail', NULL, 'BOTH', NULL, 1, 0, 1, 0, '/article/article-list', 3, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
@@ -118,11 +123,39 @@ INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
   (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20),
-  (2, 7), (2, 8), (2, 9),
-  (3, 7), (3, 8),
-  (4, 7), (4, 8);
+  (1, 21), (1, 22), (1, 23), (1, 24),
+  (2, 7), (2, 8), (2, 9), (2, 21), (2, 22), (2, 23), (2, 24),
+  (3, 7), (3, 8), (3, 24),
+  (4, 7), (4, 8), (4, 24);
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13),
-  (2, 9), (2, 10);
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14),
+  (2, 9), (2, 10), (2, 14);
+
+INSERT INTO article_category (id, category_name, category_code, sort, enabled, create_by, update_by)
+VALUES
+  (1, '产品动态', 'PRODUCT_NEWS', 1, 1, 'system', 'system'),
+  (2, '技术文章', 'TECH_ARTICLE', 2, 1, 'system', 'system'),
+  (3, '运营公告', 'OPERATION_NOTICE', 3, 1, 'system', 'system');
+
+INSERT INTO article (
+  id, title, category_id, cover_url, summary, content_html, content_text,
+  visible, status, view_count, publish_time, create_by, update_by
+)
+VALUES
+  (
+    1,
+    '后端模板文章模块接入说明',
+    2,
+    '/src/assets/images/cover/img1.webp',
+    '记录文章与上传模块的真实接口接入范围。',
+    '<h2>文章模块</h2><p>当前文章模块已接入分类、列表、详情、发布和编辑基础能力。</p>',
+    '文章模块 当前文章模块已接入分类、列表、详情、发布和编辑基础能力。',
+    1,
+    'PUBLISHED',
+    128,
+    '2026-06-01 10:00:00',
+    'admin',
+    'admin'
+  );

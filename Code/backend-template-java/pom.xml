@@ -22,6 +22,7 @@
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <jjwt.version>0.12.5</jjwt.version>
         <mysql.version>8.3.0</mysql.version>
+        <jsoup.version>1.22.2</jsoup.version>
         <!-- 覆盖 Spring Boot 3.5.10 默认 Tomcat 10.1.50，修复 IDE 扫描到的 Tomcat CVE。 -->
         <tomcat.version>10.1.55</tomcat.version>
     </properties>
@@ -46,6 +47,12 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
             <version>${mybatis-plus.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
         </dependency>
 
         <dependency>

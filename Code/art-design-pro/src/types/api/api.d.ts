@@ -261,4 +261,91 @@ declare namespace Api {
       enabled?: boolean
     }
   }
+
+  /** 文章管理类型 */
+  namespace Article {
+    type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'OFFLINE'
+
+    interface ArticleType {
+      id: number
+      name: string
+    }
+
+    type ArticleList = Api.Common.PaginatedResponse<ArticleListItem>
+
+    interface ArticleListItem {
+      id: number
+      title: string
+      categoryId: number
+      categoryName: string
+      type_name?: string
+      coverUrl?: string
+      home_img?: string
+      summary?: string
+      status: ArticleStatus
+      visible: boolean
+      viewCount: number
+      count?: number
+      createBy: string
+      createTime: string
+      create_time?: string
+      publishTime?: string
+    }
+
+    type ArticleSearchParams = Partial<
+      Pick<ArticleListItem, 'title' | 'categoryId' | 'status'> &
+        Api.Common.CommonSearchParams & {
+          year?: number
+        }
+    >
+
+    interface ArticleAttachment {
+      id: number
+      originalName: string
+      url: string
+      size: number
+      contentType: string
+    }
+
+    interface ArticleDetail {
+      id: number
+      title: string
+      categoryId: number
+      categoryName: string
+      blog_class?: string
+      coverUrl?: string
+      summary?: string
+      contentHtml: string
+      html_content?: string
+      visible: boolean
+      status: ArticleStatus
+      viewCount: number
+      createBy: string
+      createTime: string
+      publishTime?: string
+      attachments: ArticleAttachment[]
+    }
+
+    interface ArticleSaveParams {
+      title: string
+      categoryId: number
+      coverUrl?: string
+      summary?: string
+      contentHtml: string
+      visible: boolean
+      status: ArticleStatus
+      attachmentIds: number[]
+    }
+  }
+
+  /** 上传类型 */
+  namespace Upload {
+    interface UploadResponse {
+      id: number
+      url: string
+      fileName: string
+      size: number
+      contentType: string
+    }
+  }
 }
