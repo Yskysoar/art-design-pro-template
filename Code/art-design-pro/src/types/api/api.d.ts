@@ -100,6 +100,7 @@ declare namespace Api {
       userPhone: string
       userEmail: string
       userRoles: string[]
+      orgIds: number[]
       createBy: string
       createTime: string
       updateBy: string
@@ -123,6 +124,13 @@ declare namespace Api {
       avatar?: string
       status?: string
       roleCodes: string[]
+      orgIds: number[]
+    }
+
+    /** 用户组织关系 */
+    interface UserOrg {
+      userId: number
+      orgIds: number[]
     }
 
     /** 角色列表 */

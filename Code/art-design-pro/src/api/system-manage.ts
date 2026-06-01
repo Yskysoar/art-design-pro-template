@@ -32,6 +32,19 @@ export function fetchDeleteUser(id: number) {
   })
 }
 
+export function fetchGetUserOrgs(id: number) {
+  return request.get<Api.SystemManage.UserOrg>({
+    url: `/api/user/${id}/orgs`
+  })
+}
+
+export function fetchSaveUserOrgs(id: number, orgIds: number[]) {
+  return request.put<void>({
+    url: `/api/user/${id}/orgs`,
+    data: orgIds
+  })
+}
+
 // 获取角色列表
 export function fetchGetRoleList(params: Api.SystemManage.RoleSearchParams) {
   return request.get<Api.SystemManage.RoleList>({

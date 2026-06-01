@@ -45,6 +45,8 @@ public record UserCreateRequest(
 
         String status,
 
-        List<String> roleCodes
+        List<String> roleCodes,
+
+        List<Long> orgIds
 ) {
 }

@@ -38,6 +38,8 @@ public record UserUpdateRequest(
         @Size(max = 255, message = "头像地址不能超过 255 个字符")
         String avatar,
 
-        List<String> roleCodes
+        List<String> roleCodes,
+
+        List<Long> orgIds
 ) {
 }

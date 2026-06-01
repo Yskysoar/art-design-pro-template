@@ -29,6 +29,7 @@ public record UserListItemVo(
         String userPhone,
         String userEmail,
         List<String> userRoles,
+        List<Long> orgIds,
         String createBy,
         String createTime,
         String updateBy,

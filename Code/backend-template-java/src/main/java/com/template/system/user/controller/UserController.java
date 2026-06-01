@@ -11,18 +11,21 @@ import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.service.UserService;
 import com.template.system.user.vo.UserListItemVo;
+import com.template.system.user.vo.UserOrgVo;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * 用户接口。
@@ -39,34 +42,16 @@ public class UserController {
         this.userService = userService;
     }
 
-    /**
-     * 当前用户信息。
-     *
-     * @return 用户资料、角色和按钮权限
-     */
     @GetMapping("/info")
     public ApiResponse<UserInfoResponse> getUserInfo(@AuthenticationPrincipal AppUserPrincipal principal) {
         return ApiResponse.success(authService.getUserInfo(principal.userId()));
     }
 
-    /**
-     * 查询用户分页列表。
-     *
-     * @param query 查询参数
-     * @return 用户分页列表
-     */
     @GetMapping("/list")
     public ApiResponse<PageResult<UserListItemVo>> listUsers(@ModelAttribute UserListQuery query) {
         return ApiResponse.success(userService.pageUsers(query));
     }
 
-    /**
-     * 新增用户。
-     *
-     * @param request   新增用户请求
-     * @param principal 当前登录用户
-     * @return 空响应
-     */
     @PostMapping
     public ApiResponse<Void> createUser(
             @Valid @RequestBody UserCreateRequest request,
@@ -76,14 +61,6 @@ public class UserController {
         return ApiResponse.success(null);
     }
 
-    /**
-     * 更新用户。
-     *
-     * @param id        用户 ID
-     * @param request   更新用户请求
-     * @param principal 当前登录用户
-     * @return 空响应
-     */
     @PutMapping("/{id}")
     public ApiResponse<Void> updateUser(
             @PathVariable Long id,
@@ -94,14 +71,6 @@ public class UserController {
         return ApiResponse.success(null);
     }
 
-    /**
-     * 修改用户状态。
-     *
-     * @param id        用户 ID
-     * @param request   状态请求
-     * @param principal 当前登录用户
-     * @return 空响应
-     */
     @PatchMapping("/{id}/status")
     public ApiResponse<Void> updateStatus(
             @PathVariable Long id,
@@ -112,19 +81,27 @@ public class UserController {
         return ApiResponse.success(null);
     }
 
-    /**
-     * 删除用户。
-     *
-     * @param id        用户 ID
-     * @param principal 当前登录用户
-     * @return 空响应
-     */
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteUser(
             @PathVariable Long id,
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
         userService.deleteUser(id, principal);
+        return ApiResponse.success(null);
+    }
+
+    @GetMapping("/{id}/orgs")
+    public ApiResponse<UserOrgVo> getUserOrgs(@PathVariable Long id) {
+        return ApiResponse.success(userService.getUserOrgs(id));
+    }
+
+    @PutMapping("/{id}/orgs")
+    public ApiResponse<Void> saveUserOrgs(
+            @PathVariable Long id,
+            @RequestBody List<Long> orgIds,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.saveUserOrgs(id, orgIds, principal);
         return ApiResponse.success(null);
     }
 }

@@ -7,6 +7,9 @@ import com.template.system.user.dto.UserListQuery;
 import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.vo.UserListItemVo;
+import com.template.system.user.vo.UserOrgVo;
+
+import java.util.List;
 
 /**
  * 用户业务服务。
@@ -54,4 +57,21 @@ public interface UserService {
      * @param principal 当前登录用户
      */
     void deleteUser(Long id, AppUserPrincipal principal);
+
+    /**
+     * 查询用户组织关系。
+     *
+     * @param userId 用户 ID
+     * @return 用户组织集合
+     */
+    UserOrgVo getUserOrgs(Long userId);
+
+    /**
+     * 保存用户组织关系。
+     *
+     * @param userId    用户 ID
+     * @param orgIds    组织 ID 集合
+     * @param principal 当前登录用户
+     */
+    void saveUserOrgs(Long userId, List<Long> orgIds, AppUserPrincipal principal);
 }

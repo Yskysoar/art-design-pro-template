@@ -31,6 +31,19 @@ VALUES
     'NORMAL',
     'system',
     'system'
+  ),
+  (
+    2,
+    'moderator',
+    '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2',
+    '内容版主',
+    '男',
+    '13800000002',
+    'moderator@example.com',
+    '/src/assets/images/avatar/avatar.webp',
+    'NORMAL',
+    'system',
+    'system'
   );
 
 INSERT INTO sys_role (
@@ -86,11 +99,14 @@ VALUES
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
-  (1, 1);
+  (1, 1),
+  (2, 2);
 
 INSERT INTO sys_user_org (user_id, org_id, primary_org)
 VALUES
-  (1, 1, 1);
+  (1, 1, 1),
+  (2, 2, 1),
+  (2, 3, 0);
 
 INSERT INTO sys_role_org (role_id, org_id)
 VALUES

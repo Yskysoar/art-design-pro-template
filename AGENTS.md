@@ -24,7 +24,7 @@
 - 远程仓库使用 SSH 地址：`git@github.com:Yskysoar/art-design-pro-template.git`。
 - 项目已接入 Vite middleware 本地 Mock：`Code/art-design-pro/mock/local-mock.ts`。
 - 当前后端基础联调已通过：`/api/health`、`/api/auth/login`、`/api/user/info`、`/api/v3/system/menus`。
-- 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`/api/role/list`、`POST /api/role`、`PUT /api/role/{id}`、`DELETE /api/role/{id}`、`GET /api/role/{id}/permissions`、`PUT /api/role/{id}/permissions`、`GET /api/v3/system/menus/manage`、`POST /api/v3/system/menus`、`PUT /api/v3/system/menus/{id}`、`DELETE /api/v3/system/menus/{id}`、`GET /api/org/tree`、`POST /api/org`、`PUT /api/org/{id}`、`DELETE /api/org/{id}`、`GET /api/config/list`、`POST /api/config`、`PUT /api/config/{id}`、`DELETE /api/config/{id}`。其中配置项 CRUD 和组织 CRUD 已通过真实接口回归。
+- 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`GET /api/user/{id}/orgs`、`PUT /api/user/{id}/orgs`、`/api/role/list`、`POST /api/role`、`PUT /api/role/{id}`、`DELETE /api/role/{id}`、`GET /api/role/{id}/permissions`、`PUT /api/role/{id}/permissions`、`GET /api/role/{id}/data-scope`、`PUT /api/role/{id}/data-scope`、`GET /api/v3/system/menus/manage`、`POST /api/v3/system/menus`、`PUT /api/v3/system/menus/{id}`、`DELETE /api/v3/system/menus/{id}`、`GET /api/org/tree`、`POST /api/org`、`PUT /api/org/{id}`、`DELETE /api/org/{id}`、`GET /api/config/list`、`POST /api/config`、`PUT /api/config/{id}`、`DELETE /api/config/{id}`。其中配置项、组织、角色数据权限和用户组织关系已通过真实接口回归。
 - 当前前端系统管理页已接入真实后端接口：用户、角色、菜单、配置项和组织管理 CRUD。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
@@ -244,7 +244,7 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
 
 含义：使用本机 Maven 执行后端测试，验证单元测试和测试依赖是否正确。
 
-如需启动后端，由用户在本机 PowerShell 中执行：
+如需启动后端，Agent 可在用户确认后执行：
 
 ```powershell
 $env:DB_PASSWORD="本机数据库密码"
@@ -253,6 +253,14 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
 ```
 
 含义：只在当前 PowerShell 窗口设置数据库密码环境变量，然后启动后端服务。不要把真实密码写入项目配置或文档。
+
+如果使用本机未追踪的 `application-local.yml` 保存数据库密码，可直接在 `Code/backend-template-java` 下执行：
+
+```powershell
+D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
+```
+
+含义：使用 Maven 启动后端服务，数据库密码从本机未追踪配置或环境变量读取。
 
 前后端联调时建议验证：
 

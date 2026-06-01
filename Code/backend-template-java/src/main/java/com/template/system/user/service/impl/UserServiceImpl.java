@@ -7,7 +7,14 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.system.config.entity.SysConfig;
+import com.template.system.config.mapper.SysConfigMapper;
+import com.template.system.enums.UserOrgRelationMode;
+import com.template.system.org.entity.SysOrg;
+import com.template.system.org.mapper.SysOrgMapper;
+import com.template.system.relation.entity.SysUserOrg;
 import com.template.system.relation.entity.SysUserRole;
+import com.template.system.relation.mapper.SysUserOrgMapper;
 import com.template.system.relation.mapper.SysUserRoleMapper;
 import com.template.system.role.entity.SysRole;
 import com.template.system.role.mapper.SysRoleMapper;
@@ -19,6 +26,7 @@ import com.template.system.user.entity.SysUser;
 import com.template.system.user.mapper.SysUserMapper;
 import com.template.system.user.service.UserService;
 import com.template.system.user.vo.UserListItemVo;
+import com.template.system.user.vo.UserOrgVo;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,22 +54,32 @@ public class UserServiceImpl implements UserService {
     private static final long MAX_SIZE = 100L;
     private static final String DEFAULT_PASSWORD = "admin123";
     private static final String USER_NORMAL = "NORMAL";
+    private static final String CONFIG_USER_ORG_MODE = "user_org_relation_mode";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final SysUserMapper userMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final SysUserOrgMapper userOrgMapper;
     private final SysRoleMapper roleMapper;
+    private final SysOrgMapper orgMapper;
+    private final SysConfigMapper configMapper;
     private final PasswordEncoder passwordEncoder;
 
     public UserServiceImpl(
             SysUserMapper userMapper,
             SysUserRoleMapper userRoleMapper,
+            SysUserOrgMapper userOrgMapper,
             SysRoleMapper roleMapper,
+            SysOrgMapper orgMapper,
+            SysConfigMapper configMapper,
             PasswordEncoder passwordEncoder
     ) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
+        this.userOrgMapper = userOrgMapper;
         this.roleMapper = roleMapper;
+        this.orgMapper = orgMapper;
+        this.configMapper = configMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -72,8 +90,13 @@ public class UserServiceImpl implements UserService {
 
         IPage<SysUser> page = userMapper.selectPage(Page.of(current, size), buildQueryWrapper(query));
         Map<Long, List<String>> roleMap = getUserRoleCodeMap(page.getRecords());
+        Map<Long, List<Long>> orgMap = getUserOrgIdMap(page.getRecords());
         List<UserListItemVo> records = page.getRecords().stream()
-                .map(user -> toVo(user, roleMap.getOrDefault(user.getId(), List.of())))
+                .map(user -> toVo(
+                        user,
+                        roleMap.getOrDefault(user.getId(), List.of()),
+                        orgMap.getOrDefault(user.getId(), List.of())
+                ))
                 .toList();
 
         return new PageResult<>(records, page.getCurrent(), page.getSize(), page.getTotal());
@@ -100,6 +123,7 @@ public class UserServiceImpl implements UserService {
 
         userMapper.insert(user);
         rewriteUserRoles(user.getId(), roles);
+        rewriteUserOrgs(user.getId(), normalizeOrgIds(request.orgIds()));
     }
 
     @Override
@@ -119,6 +143,7 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateById(user);
         rewriteUserRoles(id, roles);
+        rewriteUserOrgs(id, normalizeOrgIds(request.orgIds()));
     }
 
     @Override
@@ -133,13 +158,35 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long id, AppUserPrincipal principal) {
-        SysUser user = getExistingUser(id);
+        getExistingUser(id);
         if (principal.userId().equals(id)) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "不能删除当前登录用户");
         }
 
         userMapper.deleteById(id);
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id));
+        userOrgMapper.delete(new LambdaQueryWrapper<SysUserOrg>().eq(SysUserOrg::getUserId, id));
+    }
+
+    @Override
+    public UserOrgVo getUserOrgs(Long userId) {
+        getExistingUser(userId);
+        List<Long> orgIds = userOrgMapper.selectList(new LambdaQueryWrapper<SysUserOrg>()
+                        .eq(SysUserOrg::getUserId, userId))
+                .stream()
+                .map(SysUserOrg::getOrgId)
+                .toList();
+        return new UserOrgVo(userId, orgIds);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveUserOrgs(Long userId, List<Long> orgIds, AppUserPrincipal principal) {
+        getExistingUser(userId);
+        rewriteUserOrgs(userId, normalizeOrgIds(orgIds));
+        SysUser user = getExistingUser(userId);
+        user.setUpdateBy(principal.userName());
+        userMapper.updateById(user);
     }
 
     private LambdaQueryWrapper<SysUser> buildQueryWrapper(UserListQuery query) {
@@ -184,6 +231,24 @@ public class UserServiceImpl implements UserService {
                         SysUserRole::getUserId,
                         Collectors.mapping(item -> roleCodeMap.get(item.getRoleId()), Collectors.toList())
                 ));
+    }
+
+    private Map<Long, List<Long>> getUserOrgIdMap(List<SysUser> users) {
+        if (users.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> userIds = users.stream().map(SysUser::getId).toList();
+        List<SysUserOrg> userOrgs = userOrgMapper.selectList(new LambdaQueryWrapper<SysUserOrg>()
+                .in(SysUserOrg::getUserId, userIds));
+        if (userOrgs.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return userOrgs.stream().collect(Collectors.groupingBy(
+                SysUserOrg::getUserId,
+                Collectors.mapping(SysUserOrg::getOrgId, Collectors.toList())
+        ));
     }
 
     private SysUser getExistingUser(Long id) {
@@ -248,7 +313,58 @@ public class UserServiceImpl implements UserService {
         relations.forEach(userRoleMapper::insert);
     }
 
-    private UserListItemVo toVo(SysUser user, List<String> roleCodes) {
+    private void rewriteUserOrgs(Long userId, List<Long> orgIds) {
+        userOrgMapper.delete(new LambdaQueryWrapper<SysUserOrg>().eq(SysUserOrg::getUserId, userId));
+        if (orgIds.isEmpty()) {
+            return;
+        }
+
+        assertOrgRelationMode(orgIds);
+        assertOrgsExist(orgIds);
+
+        List<SysUserOrg> relations = new ArrayList<>();
+        for (int index = 0; index < orgIds.size(); index++) {
+            Long orgId = orgIds.get(index);
+            SysUserOrg relation = new SysUserOrg();
+            relation.setUserId(userId);
+            relation.setOrgId(orgId);
+            relation.setPrimaryOrg(index == 0 ? 1 : 0);
+            relations.add(relation);
+        }
+        relations.forEach(userOrgMapper::insert);
+    }
+
+    private void assertOrgRelationMode(List<Long> orgIds) {
+        String mode = getConfigValue(CONFIG_USER_ORG_MODE);
+        if (UserOrgRelationMode.ONE_TO_ONE.name().equalsIgnoreCase(mode) && orgIds.size() > 1) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "当前系统仅允许一个用户关联一个组织");
+        }
+    }
+
+    private void assertOrgsExist(List<Long> orgIds) {
+        List<SysOrg> orgs = orgMapper.selectList(new LambdaQueryWrapper<SysOrg>()
+                .in(SysOrg::getId, orgIds)
+                .eq(SysOrg::getDeleted, NOT_DELETED));
+        Set<Long> existingIds = orgs.stream().map(SysOrg::getId).collect(Collectors.toSet());
+        List<Long> missingIds = orgIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+        if (!missingIds.isEmpty()) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "组织不存在：" + missingIds);
+        }
+    }
+
+    private List<Long> normalizeOrgIds(List<Long> orgIds) {
+        if (orgIds == null) {
+            return Collections.emptyList();
+        }
+        return orgIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+    }
+
+    private UserListItemVo toVo(SysUser user, List<String> roleCodes, List<Long> orgIds) {
         return new UserListItemVo(
                 user.getId(),
                 user.getAvatar(),
@@ -259,6 +375,7 @@ public class UserServiceImpl implements UserService {
                 user.getUserPhone(),
                 user.getUserEmail(),
                 roleCodes,
+                orgIds,
                 user.getCreateBy(),
                 formatDateTime(user.getCreateTime()),
                 user.getUpdateBy(),
@@ -324,5 +441,15 @@ public class UserServiceImpl implements UserService {
             return "女";
         }
         return gender;
+    }
+
+    private String getConfigValue(String configKey) {
+        return configMapper.selectList(new LambdaQueryWrapper<SysConfig>()
+                        .eq(SysConfig::getConfigKey, configKey)
+                        .eq(SysConfig::getDeleted, NOT_DELETED))
+                .stream()
+                .map(SysConfig::getConfigValue)
+                .findFirst()
+                .orElse(UserOrgRelationMode.ONE_TO_MANY.name());
     }
 }
