@@ -50,6 +50,8 @@ import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
+import { useAppMode } from '@/hooks/core/useAppMode'
+import type { AppRouteRecord } from '@/types/router'
 import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
 
 // 路由注册器实例
@@ -57,6 +59,8 @@ let routeRegistry: RouteRegistry | null = null
 
 // 菜单处理器实例
 const menuProcessor = new MenuProcessor()
+
+class RouteInitCancelledError extends Error {}
 
 // 跟踪是否需要关闭 loading
 let pendingLoading = false
@@ -67,6 +71,15 @@ let routeInitFailed = false
 
 // 路由初始化进行中标记，防止并发请求
 let routeInitInProgress = false
+
+// 复用动态路由初始化任务，避免快速切换页面时重复请求用户信息和菜单。
+let routeInitPromise: Promise<AppRouteRecord[]> | null = null
+
+// 跟踪最新导航，防止旧导航在初始化完成后反抢新页面。
+let latestNavigationId = 0
+
+// 跟踪初始化代际，防止登出或重新登录后旧任务继续注册旧路由。
+let routeInitGeneration = 0
 
 /**
  * 获取 pendingLoading 状态
@@ -95,6 +108,9 @@ export function getRouteInitFailed(): boolean {
 export function resetRouteInitState(): void {
   routeInitFailed = false
   routeInitInProgress = false
+  routeInitPromise = null
+  latestNavigationId++
+  routeInitGeneration++
 }
 
 /**
@@ -144,6 +160,7 @@ async function handleRouteGuard(
 ): Promise<void> {
   const settingStore = useSettingStore()
   const userStore = useUserStore()
+  const navigationId = ++latestNavigationId
 
   // 启动进度条
   if (settingStore.showNprogress) {
@@ -169,13 +186,7 @@ async function handleRouteGuard(
 
   // 3. 处理动态路由注册
   if (!routeRegistry?.isRegistered() && userStore.isLogin) {
-    // 防止并发请求（快速连续导航场景）
-    if (routeInitInProgress) {
-      // 正在初始化中，等待完成后重新导航
-      next(false)
-      return
-    }
-    await handleDynamicRoutes(to, next, router)
+    await handleDynamicRoutes(to, next, router, navigationId)
     return
   }
 
@@ -255,44 +266,26 @@ function isStaticRoute(path: string): boolean {
 async function handleDynamicRoutes(
   to: RouteLocationNormalized,
   next: NavigationGuardNext,
-  router: Router
+  router: Router,
+  navigationId: number
 ): Promise<void> {
-  // 标记初始化进行中
-  routeInitInProgress = true
-
-  // 显示 loading
-  pendingLoading = true
-  loadingService.showLoading()
-
   try {
-    // 1. 获取用户信息
-    await fetchUserInfo()
+    const menuList = await ensureDynamicRoutesInitialized(router)
 
-    // 2. 获取菜单数据
-    const menuList = await menuProcessor.getMenuList()
-
-    // 3. 验证菜单数据
-    if (!menuProcessor.validateMenuList(menuList)) {
-      throw new Error('获取菜单列表失败，请重新登录')
+    const userStore = useUserStore()
+    if (!userStore.isLogin || !userStore.accessToken) {
+      next(false)
+      return
     }
 
-    // 4. 注册动态路由
-    routeRegistry?.register(menuList)
+    if (navigationId !== latestNavigationId) {
+      next(false)
+      return
+    }
 
-    // 5. 保存菜单数据到 store
-    const menuStore = useMenuStore()
-    menuStore.setMenuList(menuList)
-    menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
-
-    // 6. 保存 iframe 路由
-    IframeRouteManager.getInstance().save()
-
-    // 7. 验证工作标签页
-    useWorktabStore().validateWorktabs(router)
-
-    // 8. 静态路由不依赖菜单权限，初始化后直接恢复目标地址。
+    // 静态路由不依赖菜单权限，初始化后直接恢复目标地址。
     if (isStaticRoute(to.path)) {
-      routeInitInProgress = false
+      closeLoading()
       next({
         path: to.path,
         query: to.query,
@@ -302,7 +295,7 @@ async function handleDynamicRoutes(
       return
     }
 
-    // 8. 验证目标路径权限
+    // 验证目标路径权限
     const { homePath } = useCommon()
     const { path: validatedPath, hasPermission } = RoutePermissionValidator.validatePath(
       to.path,
@@ -310,10 +303,7 @@ async function handleDynamicRoutes(
       homePath.value || '/'
     )
 
-    // 初始化成功，重置进行中标记
-    routeInitInProgress = false
-
-    // 9. 重新导航到目标路由
+    // 重新导航到目标路由
     if (!hasPermission) {
       // 无权限访问，跳转到首页
       closeLoading()
@@ -328,6 +318,7 @@ async function handleDynamicRoutes(
       })
     } else {
       // 有权限，正常导航
+      closeLoading()
       next({
         path: to.path,
         query: to.query,
@@ -336,22 +327,24 @@ async function handleDynamicRoutes(
       })
     }
   } catch (error) {
-    console.error('[RouteGuard] 动态路由注册失败:', error)
-
     // 关闭 loading
     closeLoading()
 
     // 401 错误：axios 拦截器已处理退出登录，取消当前导航
     if (isUnauthorizedError(error)) {
-      // 重置状态，允许重新登录后再次初始化
-      routeInitInProgress = false
       next(false)
       return
     }
 
+    if (error instanceof RouteInitCancelledError) {
+      next(false)
+      return
+    }
+
+    console.error('[RouteGuard] 动态路由注册失败:', error)
+
     // 标记初始化失败，防止死循环
     routeInitFailed = true
-    routeInitInProgress = false
 
     // 输出详细错误信息，便于排查
     if (isHttpError(error)) {
@@ -361,6 +354,88 @@ async function handleDynamicRoutes(
     // 跳转到 500 页面，使用 replace 避免产生历史记录
     next({ name: 'Exception500', replace: true })
   }
+}
+
+/**
+ * 确保动态路由只初始化一次。
+ */
+async function ensureDynamicRoutesInitialized(router: Router): Promise<AppRouteRecord[]> {
+  if (routeInitPromise) {
+    return routeInitPromise
+  }
+
+  routeInitInProgress = true
+  pendingLoading = true
+  loadingService.showLoading()
+
+  const generation = routeInitGeneration
+  const startToken = useUserStore().accessToken
+  routeInitPromise = initializeDynamicRoutes(router, generation, startToken)
+
+  try {
+    return await routeInitPromise
+  } finally {
+    routeInitInProgress = false
+    routeInitPromise = null
+  }
+}
+
+/**
+ * 初始化动态路由、菜单和工作标签页。
+ */
+async function initializeDynamicRoutes(
+  router: Router,
+  generation: number,
+  startToken: string
+): Promise<AppRouteRecord[]> {
+  const menuList = await loadUserInfoAndMenus()
+
+  assertRouteInitStillValid(generation, startToken)
+
+  if (!menuProcessor.validateMenuList(menuList)) {
+    throw new Error('获取菜单列表失败，请重新登录')
+  }
+
+  routeRegistry?.register(menuList)
+
+  const menuStore = useMenuStore()
+  menuStore.setMenuList(menuList)
+  menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
+
+  IframeRouteManager.getInstance().save()
+  useWorktabStore().validateWorktabs(router)
+
+  return menuList
+}
+
+/**
+ * 确认初始化任务仍属于当前登录态。
+ */
+function assertRouteInitStillValid(generation: number, startToken: string): void {
+  const userStore = useUserStore()
+  if (
+    generation !== routeInitGeneration ||
+    !userStore.isLogin ||
+    !userStore.accessToken ||
+    userStore.accessToken !== startToken
+  ) {
+    throw new RouteInitCancelledError('路由初始化已被新的登录态取代')
+  }
+}
+
+/**
+ * 按权限模式加载用户信息和菜单。
+ */
+async function loadUserInfoAndMenus(): Promise<AppRouteRecord[]> {
+  const { isBackendMode } = useAppMode()
+
+  if (isBackendMode.value) {
+    const [, menuList] = await Promise.all([fetchUserInfo(), menuProcessor.getMenuList()])
+    return menuList
+  }
+
+  await fetchUserInfo()
+  return menuProcessor.getMenuList()
 }
 
 /**

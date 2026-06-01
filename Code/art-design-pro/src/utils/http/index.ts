@@ -30,6 +30,8 @@ const UNAUTHORIZED_DEBOUNCE_TIME = 3000
 /** 401防抖状态 */
 let isUnauthorizedErrorShown = false
 let unauthorizedTimer: NodeJS.Timeout | null = null
+let logoutTimer: NodeJS.Timeout | null = null
+let isLogoutScheduled = false
 
 /** 扩展 AxiosRequestConfig */
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
@@ -120,11 +122,17 @@ function resetUnauthorizedError() {
   isUnauthorizedErrorShown = false
   if (unauthorizedTimer) clearTimeout(unauthorizedTimer)
   unauthorizedTimer = null
+  isLogoutScheduled = false
 }
 
 /** 退出登录函数 */
 function logOut() {
-  setTimeout(() => {
+  if (isLogoutScheduled) return
+
+  isLogoutScheduled = true
+  if (logoutTimer) clearTimeout(logoutTimer)
+  logoutTimer = setTimeout(() => {
+    logoutTimer = null
     useUserStore().logOut()
   }, LOGOUT_DELAY)
 }
