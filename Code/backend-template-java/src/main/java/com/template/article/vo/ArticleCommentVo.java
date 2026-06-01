@@ -11,11 +11,11 @@ import java.util.List;
  * @param rootId     根评论 ID
  * @param content    评论内容
  * @param status     评论状态
- * @param userId     评论用户 ID
  * @param userName   评论用户名称
  * @param userAvatar 评论用户头像
  * @param replyToUserName 被回复用户名称，一级评论为空
  * @param createTime 创建时间
+ * @param mine       是否当前用户自己的评论
  * @param canHide    当前用户是否可隐藏
  * @param canRestore 当前用户是否可恢复
  * @param canDelete  当前用户是否可删除
@@ -28,11 +28,11 @@ public record ArticleCommentVo(
         Long rootId,
         String content,
         String status,
-        Long userId,
         String userName,
         String userAvatar,
         String replyToUserName,
         String createTime,
+        Boolean mine,
         Boolean canHide,
         Boolean canRestore,
         Boolean canDelete,

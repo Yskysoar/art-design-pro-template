@@ -351,11 +351,11 @@ declare namespace Api {
       rootId: number
       content: string
       status: ArticleCommentStatus
-      userId?: number
       userName: string
       userAvatar?: string
       replyToUserName?: string
       createTime: string
+      mine?: boolean
       canHide?: boolean
       canRestore?: boolean
       canDelete?: boolean

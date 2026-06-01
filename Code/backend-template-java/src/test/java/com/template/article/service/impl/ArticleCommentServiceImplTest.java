@@ -67,6 +67,8 @@ class ArticleCommentServiceImplTest {
     @DisplayName("评论列表应分页返回一级评论并挂载子回复")
     void pageCommentsShouldAttachReplies() {
         Article article = article(1L, 2L);
+        article.setVisible(1);
+        article.setStatus("PUBLISHED");
         ArticleComment root = comment(10L, 1L, 0L, 10L, "一级评论", "NORMAL");
         ArticleComment reply = comment(11L, 1L, 10L, 10L, "子回复", "NORMAL");
         ArticleComment nestedReply = comment(12L, 1L, 11L, 10L, "回复子回复", "NORMAL");
@@ -86,6 +88,45 @@ class ArticleCommentServiceImplTest {
         assertThat(result.records().get(0).replies().get(1).replyToUserName()).isEqualTo("admin");
         assertThat(result.records().get(0).canHide()).isTrue();
         assertThat(result.records().get(0).canDelete()).isTrue();
+        assertThat(result.records().get(0).mine()).isTrue();
+    }
+
+    @Test
+    @DisplayName("游客只能读取已发布且可见文章评论")
+    void pageCommentsShouldFollowArticleVisibility() {
+        Article draft = article(1L, 1L);
+        draft.setVisible(1);
+        draft.setStatus("DRAFT");
+        when(articleMapper.selectOne(anyWrapper())).thenReturn(draft);
+
+        assertThatThrownBy(() -> commentService.pageComments(new ArticleCommentListQuery(1L, 1L, 20L), null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("无权限查看该文章评论");
+
+        AppUserPrincipal manager = new AppUserPrincipal(4L, "manager", List.of("R_MODERATOR"));
+        when(commentMapper.selectPage(any(), anyWrapper())).thenReturn(Page.of(1, 20, 0));
+        commentService.pageComments(new ArticleCommentListQuery(1L, 1L, 20L), manager);
+    }
+
+    @Test
+    @DisplayName("隐藏和删除评论在公开响应中返回脱敏内容")
+    void pageCommentsShouldMaskHiddenAndDeletedContent() {
+        Article article = article(1L, 2L);
+        article.setVisible(1);
+        article.setStatus("PUBLISHED");
+        ArticleComment hidden = comment(10L, 1L, 0L, 10L, "隐藏原文", "HIDDEN");
+        ArticleComment deleted = comment(11L, 1L, 10L, 10L, "删除原文", "DELETED");
+        IPage<ArticleComment> page = Page.of(1, 20, 1);
+        page.setRecords(List.of(hidden));
+
+        when(articleMapper.selectOne(anyWrapper())).thenReturn(article);
+        when(commentMapper.selectPage(any(), anyWrapper())).thenReturn(page);
+        when(commentMapper.selectList(anyWrapper())).thenReturn(List.of(deleted));
+
+        var result = commentService.pageComments(new ArticleCommentListQuery(1L, 1L, 20L), null);
+
+        assertThat(result.records().get(0).content()).isEqualTo("该评论已隐藏");
+        assertThat(result.records().get(0).replies().get(0).content()).isEqualTo("该评论已删除");
     }
 
     @Test
@@ -103,9 +144,7 @@ class ArticleCommentServiceImplTest {
         assertThat(commentCaptor.getValue().getUserName()).isEqualTo("admin");
         assertThat(id).isEqualTo(commentCaptor.getValue().getId());
 
-        ArgumentCaptor<Article> articleCaptor = ArgumentCaptor.forClass(Article.class);
-        verify(articleMapper).updateById(articleCaptor.capture());
-        assertThat(articleCaptor.getValue().getCommentCount()).isEqualTo(1L);
+        verify(articleMapper).update(eq(null), anyWrapper());
     }
 
     @Test
@@ -156,14 +195,27 @@ class ArticleCommentServiceImplTest {
         when(articleMapper.selectOne(anyWrapper())).thenReturn(article);
 
         commentService.updateStatus(8L, new ArticleCommentStatusRequest("HIDDEN"), ADMIN);
-        verify(articleMapper, never()).updateById(article);
+        verify(articleMapper, never()).update(eq(null), anyWrapper());
 
         comment.setStatus("HIDDEN");
         commentService.updateStatus(8L, new ArticleCommentStatusRequest("DELETED"), ADMIN);
 
-        ArgumentCaptor<Article> articleCaptor = ArgumentCaptor.forClass(Article.class);
-        verify(articleMapper).updateById(articleCaptor.capture());
-        assertThat(articleCaptor.getValue().getCommentCount()).isEqualTo(2L);
+        verify(articleMapper).update(eq(null), anyWrapper());
+    }
+
+    @Test
+    @DisplayName("已删除评论不可恢复")
+    void deletedCommentShouldNotBeRestored() {
+        Article article = article(1L, 0L);
+        ArticleComment comment = comment(8L, 1L, 0L, 8L, "该评论已删除", "DELETED");
+        when(commentMapper.selectOne(anyWrapper())).thenReturn(comment);
+        when(articleMapper.selectOne(anyWrapper())).thenReturn(article);
+
+        assertThatThrownBy(() -> commentService.updateStatus(8L, new ArticleCommentStatusRequest("NORMAL"), ADMIN))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("已删除评论不可恢复");
+
+        verify(commentMapper, never()).updateById(any(ArticleComment.class));
     }
 
     @Test
@@ -184,9 +236,7 @@ class ArticleCommentServiceImplTest {
 
         commentService.deleteComment(8L, author);
 
-        ArgumentCaptor<Article> articleCaptor = ArgumentCaptor.forClass(Article.class);
-        verify(articleMapper).updateById(articleCaptor.capture());
-        assertThat(articleCaptor.getValue().getCommentCount()).isEqualTo(0L);
+        verify(articleMapper).update(eq(null), anyWrapper());
     }
 
     @Test
@@ -232,6 +282,8 @@ class ArticleCommentServiceImplTest {
         Article article = new Article();
         article.setId(id);
         article.setCommentCount(commentCount);
+        article.setVisible(1);
+        article.setStatus("PUBLISHED");
         article.setDeleted(0);
         return article;
     }

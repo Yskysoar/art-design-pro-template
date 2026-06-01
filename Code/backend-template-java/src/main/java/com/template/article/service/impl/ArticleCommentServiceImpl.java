@@ -1,6 +1,7 @@
 package com.template.article.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.article.dto.ArticleCommentListQuery;
@@ -49,10 +50,13 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     private static final String STATUS_NORMAL = "NORMAL";
     private static final String STATUS_HIDDEN = "HIDDEN";
     private static final String STATUS_DELETED = "DELETED";
+    private static final String ARTICLE_STATUS_PUBLISHED = "PUBLISHED";
     private static final String COMMENT_MANAGE_PERMISSION = "article:comment:manage";
+    private static final String ARTICLE_MANAGE_PERMISSION = "article:publish:edit";
     private static final String COMMENT_HIDE_ENABLED_KEY = "article_comment_hide_enabled";
     private static final String SUPER_ROLE_CODE = "R_SUPER";
     private static final Set<String> COMMENT_STATUSES = Set.of(STATUS_NORMAL, STATUS_HIDDEN, STATUS_DELETED);
+    private static final String HIDDEN_CONTENT = "该评论已隐藏";
     private static final String DELETED_CONTENT = "该评论已删除";
     private static final Pattern CONTROL_CHAR_PATTERN = Pattern.compile("[\\p{Cntrl}&&[^\r\n\t]]");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -77,6 +81,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     @Override
     public PageResult<ArticleCommentVo> pageComments(ArticleCommentListQuery query, AppUserPrincipal principal) {
         Article article = getExistingArticle(query.articleId());
+        assertCommentReadable(article, principal);
         long current = query.current() == null || query.current() < 1 ? DEFAULT_CURRENT : query.current();
         long size = query.size() == null || query.size() < 1 ? DEFAULT_SIZE : Math.min(query.size(), MAX_SIZE);
 
@@ -154,6 +159,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
         }
 
         Article article = getExistingArticle(comment.getArticleId());
+        assertNotDeletedStatusTransition(comment, status);
         requireStatusPermission(comment, article, status, principal);
         String oldStatus = comment.getStatus();
         comment.setStatus(status);
@@ -242,9 +248,16 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     }
 
     private void changeCommentCount(Article article, long delta) {
-        long current = article.getCommentCount() == null ? 0L : article.getCommentCount();
-        article.setCommentCount(Math.max(0L, current + delta));
-        articleMapper.updateById(article);
+        if (delta == 0L) {
+            return;
+        }
+        String updateSql = delta > 0
+                ? "comment_count = comment_count + " + delta
+                : "comment_count = GREATEST(comment_count - " + Math.abs(delta) + ", 0)";
+        articleMapper.update(null, new LambdaUpdateWrapper<Article>()
+                .eq(Article::getId, article.getId())
+                .eq(Article::getDeleted, NOT_DELETED)
+                .setSql(updateSql));
     }
 
     private Map<Long, List<ArticleComment>> loadReplies(List<ArticleComment> rootComments) {
@@ -278,7 +291,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
             boolean superAdmin,
             boolean commentManager
     ) {
-        String content = STATUS_DELETED.equals(comment.getStatus()) ? DELETED_CONTENT : comment.getContent();
+        String content = displayContent(comment);
         Map<Long, ArticleComment> replyParentMap = replies.stream()
                 .collect(Collectors.toMap(
                         ArticleComment::getId,
@@ -293,6 +306,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
         boolean canHide = canHideComment(comment, article, principal, hideEnabled, superAdmin, commentManager);
         boolean canRestore = canRestoreComment(comment, article, principal, hideEnabled, superAdmin, commentManager);
         boolean canDelete = canDeleteComment(comment, principal, superAdmin, commentManager);
+        boolean mine = isCommentOwner(comment, principal);
         return new ArticleCommentVo(
                 comment.getId(),
                 comment.getArticleId(),
@@ -300,11 +314,11 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
                 comment.getRootId(),
                 content,
                 comment.getStatus(),
-                comment.getUserId(),
                 comment.getUserName(),
                 comment.getUserAvatar(),
                 replyToUserName,
                 formatDateTime(comment.getCreateTime()),
+                mine,
                 canHide,
                 canRestore,
                 canDelete,
@@ -343,6 +357,35 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
             return;
         }
         throw new BusinessException(ApiCode.FORBIDDEN, "无权限变更该评论状态");
+    }
+
+    private void assertCommentReadable(Article article, AppUserPrincipal principal) {
+        if (isPublicArticle(article) || isSuperAdmin(principal) || hasArticleManagePermission(principal)) {
+            return;
+        }
+        throw new BusinessException(ApiCode.FORBIDDEN, "无权限查看该文章评论");
+    }
+
+    private boolean isPublicArticle(Article article) {
+        return article != null
+                && Integer.valueOf(1).equals(article.getVisible())
+                && ARTICLE_STATUS_PUBLISHED.equals(article.getStatus());
+    }
+
+    private void assertNotDeletedStatusTransition(ArticleComment comment, String targetStatus) {
+        if (STATUS_DELETED.equals(comment.getStatus()) && !STATUS_DELETED.equals(targetStatus)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "已删除评论不可恢复");
+        }
+    }
+
+    private String displayContent(ArticleComment comment) {
+        if (STATUS_DELETED.equals(comment.getStatus())) {
+            return DELETED_CONTENT;
+        }
+        if (STATUS_HIDDEN.equals(comment.getStatus())) {
+            return HIDDEN_CONTENT;
+        }
+        return comment.getContent();
     }
 
     private boolean canHideComment(
@@ -399,11 +442,19 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     }
 
     private boolean hasCommentManagePermission(AppUserPrincipal principal) {
+        return hasPermission(principal, COMMENT_MANAGE_PERMISSION);
+    }
+
+    private boolean hasArticleManagePermission(AppUserPrincipal principal) {
+        return hasPermission(principal, ARTICLE_MANAGE_PERMISSION);
+    }
+
+    private boolean hasPermission(AppUserPrincipal principal, String permissionCode) {
         if (principal == null) {
             return false;
         }
         try {
-            permissionService.requirePermission(principal, COMMENT_MANAGE_PERMISSION);
+            permissionService.requirePermission(principal, permissionCode);
             return true;
         } catch (BusinessException ex) {
             return false;
