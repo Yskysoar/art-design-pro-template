@@ -138,10 +138,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ApiCode.BAD_REQUEST, "不能删除当前登录用户");
         }
 
-        user.setDeleted(1);
-        user.setStatus("DISABLED");
-        user.setUpdateBy(principal.userName());
-        userMapper.updateById(user);
+        userMapper.deleteById(id);
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id));
     }
 

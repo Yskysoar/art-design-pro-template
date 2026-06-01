@@ -3,8 +3,10 @@ package com.template.system.role.service;
 import com.template.common.pagination.PageResult;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.system.role.dto.RoleListQuery;
+import com.template.system.role.dto.RoleDataScopeSaveRequest;
 import com.template.system.role.dto.RolePermissionSaveRequest;
 import com.template.system.role.dto.RoleSaveRequest;
+import com.template.system.role.vo.RoleDataScopeVo;
 import com.template.system.role.vo.RoleListItemVo;
 import com.template.system.role.vo.RolePermissionVo;
 
@@ -55,6 +57,14 @@ public interface RoleService {
     RolePermissionVo getRolePermissions(Long id);
 
     /**
+     * 查询角色数据权限。
+     *
+     * @param id 角色 ID
+     * @return 角色数据权限
+     */
+    RoleDataScopeVo getRoleDataScope(Long id);
+
+    /**
      * 保存角色菜单权限。
      *
      * @param id        角色 ID
@@ -62,4 +72,13 @@ public interface RoleService {
      * @param principal 当前登录用户
      */
     void saveRolePermissions(Long id, RolePermissionSaveRequest request, AppUserPrincipal principal);
+
+    /**
+     * 保存角色数据权限。
+     *
+     * @param id        角色 ID
+     * @param request   数据权限保存请求
+     * @param principal 当前登录用户
+     */
+    void saveRoleDataScope(Long id, RoleDataScopeSaveRequest request, AppUserPrincipal principal);
 }

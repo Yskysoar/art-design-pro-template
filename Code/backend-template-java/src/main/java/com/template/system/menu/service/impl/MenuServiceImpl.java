@@ -9,6 +9,7 @@ import com.template.system.menu.entity.SysMenu;
 import com.template.system.menu.mapper.SysMenuMapper;
 import com.template.system.menu.service.MenuService;
 import com.template.system.menu.vo.AppRouteMetaVo;
+import com.template.system.menu.vo.AppRouteAuthVo;
 import com.template.system.menu.vo.AppRouteVo;
 import com.template.system.relation.entity.SysRoleMenu;
 import com.template.system.relation.entity.SysUserRole;
@@ -76,12 +77,19 @@ public class MenuServiceImpl implements MenuService {
                 .in(SysMenu::getId, menuIds)
                 .eq(SysMenu::getEnabled, ENABLED)
                 .eq(SysMenu::getDeleted, NOT_DELETED));
-        Map<Long, List<SysMenu>> childrenMap = menus.stream()
+        List<SysMenu> visibleMenus = menus.stream()
+                .filter(menu -> !"BUTTON".equals(menu.getMenuType()))
+                .toList();
+        Map<Long, List<SysMenu>> childrenMap = visibleMenus.stream()
+                .sorted(Comparator.comparing(SysMenu::getSort, Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.groupingBy(SysMenu::getParentId));
+        Map<Long, List<SysMenu>> buttonMap = menus.stream()
+                .filter(menu -> "BUTTON".equals(menu.getMenuType()))
                 .sorted(Comparator.comparing(SysMenu::getSort, Comparator.nullsLast(Integer::compareTo)))
                 .collect(Collectors.groupingBy(SysMenu::getParentId));
         List<String> roleCodes = roles.stream().map(SysRole::getRoleCode).toList();
 
-        return buildRoutes(ROOT_PARENT_ID, childrenMap, roleCodes);
+        return buildRoutes(ROOT_PARENT_ID, childrenMap, buttonMap, roleCodes);
     }
 
     @Override
@@ -90,10 +98,17 @@ public class MenuServiceImpl implements MenuService {
                 .eq(SysMenu::getDeleted, NOT_DELETED)
                 .orderByAsc(SysMenu::getSort)
                 .orderByAsc(SysMenu::getId));
-        Map<Long, List<SysMenu>> childrenMap = menus.stream()
+        List<SysMenu> visibleMenus = menus.stream()
+                .filter(menu -> !"BUTTON".equals(menu.getMenuType()))
+                .toList();
+        Map<Long, List<SysMenu>> childrenMap = visibleMenus.stream()
                 .sorted(Comparator.comparing(SysMenu::getSort, Comparator.nullsLast(Integer::compareTo)))
                 .collect(Collectors.groupingBy(SysMenu::getParentId));
-        return buildRoutes(ROOT_PARENT_ID, childrenMap, List.of());
+        Map<Long, List<SysMenu>> buttonMap = menus.stream()
+                .filter(menu -> "BUTTON".equals(menu.getMenuType()))
+                .sorted(Comparator.comparing(SysMenu::getSort, Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.groupingBy(SysMenu::getParentId));
+        return buildRoutes(ROOT_PARENT_ID, childrenMap, buttonMap, List.of());
     }
 
     @Override
@@ -137,9 +152,7 @@ public class MenuServiceImpl implements MenuService {
             throw new BusinessException(ApiCode.BAD_REQUEST, "菜单已分配给角色，不能删除");
         }
 
-        menu.setDeleted(1);
-        menu.setEnabled(0);
-        menuMapper.updateById(menu);
+        menuMapper.deleteById(id);
     }
 
     private List<SysRole> getEnabledRoles(Long userId) {
@@ -161,18 +174,32 @@ public class MenuServiceImpl implements MenuService {
     private List<AppRouteVo> buildRoutes(
             Long parentId,
             Map<Long, List<SysMenu>> childrenMap,
+            Map<Long, List<SysMenu>> buttonMap,
             List<String> roleCodes
     ) {
         return childrenMap.getOrDefault(parentId, List.of()).stream()
-                .map(menu -> toRoute(menu, buildRoutes(menu.getId(), childrenMap, roleCodes), roleCodes))
+                .map(menu -> toRoute(
+                        menu,
+                        buildRoutes(menu.getId(), childrenMap, buttonMap, roleCodes),
+                        buttonMap.getOrDefault(menu.getId(), List.of()),
+                        roleCodes
+                ))
                 .toList();
     }
 
-    private AppRouteVo toRoute(SysMenu menu, List<AppRouteVo> children, List<String> roleCodes) {
+    private AppRouteVo toRoute(
+            SysMenu menu,
+            List<AppRouteVo> children,
+            List<SysMenu> buttons,
+            List<String> roleCodes
+    ) {
         AppRouteMetaVo meta = new AppRouteMetaVo(
                 menu.getTitle(),
                 menu.getIcon(),
                 roleCodes,
+                buttons.stream()
+                        .map(button -> new AppRouteAuthVo(button.getId(), button.getTitle(), button.getPermissionCode()))
+                        .toList(),
                 toBoolean(menu.getKeepAlive()),
                 toBoolean(menu.getFixedTab()),
                 toBoolean(menu.getHidden()),
@@ -184,6 +211,7 @@ public class MenuServiceImpl implements MenuService {
 
         return new AppRouteVo(
                 menu.getId(),
+                menu.getParentId(),
                 menu.getPath(),
                 menu.getName(),
                 menu.getComponent(),

@@ -46,6 +46,7 @@ export interface RouteMeta extends Record<string | number | symbol, unknown> {
   keepAlive?: boolean
   /** 操作权限 */
   authList?: Array<{
+    id?: number
     title: string
     authMark: string
   }>
@@ -73,6 +74,7 @@ export interface RouteMeta extends Record<string | number | symbol, unknown> {
  */
 export interface AppRouteRecord extends Omit<RouteRecordRaw, 'meta' | 'children' | 'component'> {
   id?: number
+  parentId?: number
   meta: RouteMeta
   children?: AppRouteRecord[]
   component?: string | (() => Promise<any>)

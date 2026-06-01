@@ -1,0 +1,5 @@
+# 本文件是本地敏感配置示例，请复制为 application-local.yml 后再填写真实值。
+# application-local.yml 已加入 .gitignore，不要提交真实数据库密码。
+spring:
+  datasource:
+    password: 本机数据库密码

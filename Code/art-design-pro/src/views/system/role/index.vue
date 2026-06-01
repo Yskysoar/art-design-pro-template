@@ -48,17 +48,24 @@
       :role-data="currentRoleData"
       @success="refreshData"
     />
+
+    <RoleDataScopeDialog
+      v-model="dataScopeDialog"
+      :role-data="currentRoleData"
+      @success="refreshData"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetRoleList } from '@/api/system-manage'
+  import { fetchDeleteRole, fetchGetRoleList } from '@/api/system-manage'
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
   import RoleSearch from './modules/role-search.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
+  import RoleDataScopeDialog from './modules/role-data-scope-dialog.vue'
   import { ElTag, ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'Role' })
@@ -81,6 +88,7 @@
 
   const dialogVisible = ref(false)
   const permissionDialog = ref(false)
+  const dataScopeDialog = ref(false)
   const currentRoleData = ref<RoleListItem | undefined>(undefined)
 
   const {
@@ -163,6 +171,11 @@
                     icon: 'ri:user-3-line'
                   },
                   {
+                    key: 'dataScope',
+                    label: '数据权限',
+                    icon: 'ri:organization-chart'
+                  },
+                  {
                     key: 'edit',
                     label: '编辑角色',
                     icon: 'ri:edit-2-line'
@@ -208,6 +221,9 @@
       case 'permission':
         showPermissionDialog(row)
         break
+      case 'dataScope':
+        showDataScopeDialog(row)
+        break
       case 'edit':
         showDialog('edit', row)
         break
@@ -222,6 +238,11 @@
     currentRoleData.value = row
   }
 
+  const showDataScopeDialog = (row?: RoleListItem) => {
+    dataScopeDialog.value = true
+    currentRoleData.value = row
+  }
+
   const deleteRole = (row: RoleListItem) => {
     ElMessageBox.confirm(`确定删除角色"${row.roleName}"吗？此操作不可恢复！`, '删除确认', {
       confirmButtonText: '确定',
@@ -229,7 +250,9 @@
       type: 'warning'
     })
       .then(() => {
-        // TODO: 调用删除接口
+        return fetchDeleteRole(row.roleId)
+      })
+      .then(() => {
         ElMessage.success('删除成功')
         refreshData()
       })

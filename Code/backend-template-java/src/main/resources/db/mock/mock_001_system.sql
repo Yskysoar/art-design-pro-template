@@ -78,7 +78,11 @@ VALUES
   (13, 5, 'BUTTON', NULL, 'RoleAdd', NULL, NULL, '新增角色', NULL, 'ADMIN', 'system:role:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (14, 5, 'BUTTON', NULL, 'RoleEdit', NULL, NULL, '编辑角色', NULL, 'ADMIN', 'system:role:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
   (15, 5, 'BUTTON', NULL, 'RolePermission', NULL, NULL, '分配角色权限', NULL, 'ADMIN', 'system:role:permission', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
-  (16, 6, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
+  (16, 6, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (17, 3, 'MENU', 'config', 'Config', '/system/config', NULL, '配置项管理', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
+  (18, 17, 'BUTTON', NULL, 'ConfigManage', NULL, NULL, '管理配置项', NULL, 'ADMIN', 'system:config:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (19, 3, 'MENU', 'org', 'Org', '/system/org', NULL, '组织管理', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
+  (20, 19, 'BUTTON', NULL, 'OrgManage', NULL, NULL, '管理组织', NULL, 'ADMIN', 'system:org:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
@@ -95,7 +99,7 @@ VALUES
 INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
-  (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
+  (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20),
   (2, 7), (2, 8), (2, 9),
   (3, 7), (3, 8),
   (4, 7), (4, 8);

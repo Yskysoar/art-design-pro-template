@@ -61,6 +61,28 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'config',
+      name: 'Config',
+      component: '/system/config',
+      meta: {
+        title: '配置项管理',
+        icon: 'ri:settings-3-line',
+        keepAlive: true,
+        roles: ['R_SUPER']
+      }
+    },
+    {
+      path: 'org',
+      name: 'Org',
+      component: '/system/org',
+      meta: {
+        title: '组织管理',
+        icon: 'ri:organization-chart',
+        keepAlive: true,
+        roles: ['R_SUPER']
+      }
+    },
+    {
       path: 'nested',
       name: 'Nested',
       component: '',

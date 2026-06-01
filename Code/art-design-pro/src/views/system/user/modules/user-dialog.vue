@@ -40,6 +40,7 @@
 
 <script setup lang="ts">
   import { ROLE_LIST_DATA } from '@/mock/temp/formData'
+  import { fetchCreateUser, fetchUpdateUser } from '@/api/system-manage'
   import type { FormInstance, FormRules } from 'element-plus'
 
   interface Props {
@@ -132,12 +133,25 @@
   const handleSubmit = async () => {
     if (!formRef.value) return
 
-    await formRef.value.validate((valid) => {
-      if (valid) {
-        ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
-        dialogVisible.value = false
-        emit('submit')
-      }
-    })
+    await formRef.value.validate()
+
+    const payload: Api.SystemManage.UserSaveParams = {
+      userName: formData.username,
+      nickName: formData.username,
+      userGender: formData.gender,
+      userPhone: formData.phone,
+      status: '1',
+      roleCodes: formData.role
+    }
+
+    if (dialogType.value === 'edit' && props.userData?.id) {
+      await fetchUpdateUser(props.userData.id, payload)
+    } else {
+      await fetchCreateUser({ ...payload, password: 'admin123' })
+    }
+
+    ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+    dialogVisible.value = false
+    emit('submit')
   }
 </script>

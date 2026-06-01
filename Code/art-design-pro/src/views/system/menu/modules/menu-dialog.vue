@@ -315,6 +315,7 @@
       form.isFullPage = row.meta?.isFullPage ?? false
     } else {
       const row = props.editData
+      form.id = row.id || 0
       form.authName = row.title || ''
       form.authLabel = row.authMark || ''
       form.authIcon = row.icon || ''

@@ -3,10 +3,12 @@ package com.template.system.role.controller;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiResponse;
 import com.template.security.auth.AppUserPrincipal;
+import com.template.system.role.dto.RoleDataScopeSaveRequest;
 import com.template.system.role.dto.RoleListQuery;
 import com.template.system.role.dto.RolePermissionSaveRequest;
 import com.template.system.role.dto.RoleSaveRequest;
 import com.template.system.role.service.RoleService;
+import com.template.system.role.vo.RoleDataScopeVo;
 import com.template.system.role.vo.RoleListItemVo;
 import com.template.system.role.vo.RolePermissionVo;
 import jakarta.validation.Valid;
@@ -107,6 +109,17 @@ public class RoleController {
     }
 
     /**
+     * 查询角色数据权限。
+     *
+     * @param id 角色 ID
+     * @return 数据权限范围和自定义组织 ID
+     */
+    @GetMapping("/{id}/data-scope")
+    public ApiResponse<RoleDataScopeVo> getRoleDataScope(@PathVariable Long id) {
+        return ApiResponse.success(roleService.getRoleDataScope(id));
+    }
+
+    /**
      * 保存角色菜单权限。
      *
      * @param id        角色 ID
@@ -121,6 +134,24 @@ public class RoleController {
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
         roleService.saveRolePermissions(id, request, principal);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 保存角色数据权限。
+     *
+     * @param id        角色 ID
+     * @param request   数据权限保存请求
+     * @param principal 当前登录用户
+     * @return 空响应
+     */
+    @PutMapping("/{id}/data-scope")
+    public ApiResponse<Void> saveRoleDataScope(
+            @PathVariable Long id,
+            @Valid @RequestBody RoleDataScopeSaveRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        roleService.saveRoleDataScope(id, request, principal);
         return ApiResponse.success(null);
     }
 }

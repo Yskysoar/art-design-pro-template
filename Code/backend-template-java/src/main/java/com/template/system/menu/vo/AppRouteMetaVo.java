@@ -12,6 +12,7 @@ public record AppRouteMetaVo(
         String title,
         String icon,
         List<String> roles,
+        List<AppRouteAuthVo> authList,
         Boolean keepAlive,
         Boolean fixedTab,
         Boolean isHide,

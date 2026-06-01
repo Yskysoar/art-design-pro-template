@@ -9,16 +9,22 @@ import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.system.menu.entity.SysMenu;
 import com.template.system.menu.mapper.SysMenuMapper;
+import com.template.system.org.entity.SysOrg;
+import com.template.system.org.mapper.SysOrgMapper;
 import com.template.system.relation.entity.SysRoleMenu;
+import com.template.system.relation.entity.SysRoleOrg;
 import com.template.system.relation.entity.SysUserRole;
 import com.template.system.relation.mapper.SysRoleMenuMapper;
+import com.template.system.relation.mapper.SysRoleOrgMapper;
 import com.template.system.relation.mapper.SysUserRoleMapper;
+import com.template.system.role.dto.RoleDataScopeSaveRequest;
 import com.template.system.role.dto.RoleListQuery;
 import com.template.system.role.dto.RolePermissionSaveRequest;
 import com.template.system.role.dto.RoleSaveRequest;
 import com.template.system.role.entity.SysRole;
 import com.template.system.role.mapper.SysRoleMapper;
 import com.template.system.role.service.RoleService;
+import com.template.system.role.vo.RoleDataScopeVo;
 import com.template.system.role.vo.RoleListItemVo;
 import com.template.system.role.vo.RolePermissionVo;
 import org.springframework.stereotype.Service;
@@ -49,22 +55,36 @@ public class RoleServiceImpl implements RoleService {
     private static final String DEFAULT_ROLE_TYPE = "BUSINESS";
     private static final String DEFAULT_ACCESS_SCOPE = "ADMIN";
     private static final String DEFAULT_DATA_SCOPE = "SELF";
+    private static final String CUSTOM_ORG_DATA_SCOPE = "CUSTOM_ORG";
+    private static final Set<String> ALLOWED_DATA_SCOPES = Set.of(
+            "ALL",
+            "SELF",
+            "CURRENT_ORG",
+            "CURRENT_ORG_AND_SUB",
+            CUSTOM_ORG_DATA_SCOPE
+    );
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
+    private final SysOrgMapper orgMapper;
     private final SysRoleMenuMapper roleMenuMapper;
+    private final SysRoleOrgMapper roleOrgMapper;
     private final SysUserRoleMapper userRoleMapper;
 
     public RoleServiceImpl(
             SysRoleMapper roleMapper,
             SysMenuMapper menuMapper,
+            SysOrgMapper orgMapper,
             SysRoleMenuMapper roleMenuMapper,
+            SysRoleOrgMapper roleOrgMapper,
             SysUserRoleMapper userRoleMapper
     ) {
         this.roleMapper = roleMapper;
         this.menuMapper = menuMapper;
+        this.orgMapper = orgMapper;
         this.roleMenuMapper = roleMenuMapper;
+        this.roleOrgMapper = roleOrgMapper;
         this.userRoleMapper = userRoleMapper;
     }
 
@@ -130,10 +150,7 @@ public class RoleServiceImpl implements RoleService {
             throw new BusinessException(ApiCode.BAD_REQUEST, "角色已分配给用户，不能删除");
         }
 
-        role.setDeleted(1);
-        role.setEnabled(0);
-        role.setUpdateBy(principal.userName());
-        roleMapper.updateById(role);
+        roleMapper.deleteById(id);
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, id));
     }
 
@@ -146,6 +163,17 @@ public class RoleServiceImpl implements RoleService {
                 .map(SysRoleMenu::getMenuId)
                 .toList();
         return new RolePermissionVo(id, menuIds);
+    }
+
+    @Override
+    public RoleDataScopeVo getRoleDataScope(Long id) {
+        SysRole role = getExistingRole(id);
+        List<Long> orgIds = roleOrgMapper.selectList(new LambdaQueryWrapper<SysRoleOrg>()
+                        .eq(SysRoleOrg::getRoleId, id))
+                .stream()
+                .map(SysRoleOrg::getOrgId)
+                .toList();
+        return new RoleDataScopeVo(id, role.getDataScope(), orgIds);
     }
 
     @Override
@@ -166,6 +194,32 @@ public class RoleServiceImpl implements RoleService {
 
         role.setUpdateBy(principal.userName());
         roleMapper.updateById(role);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveRoleDataScope(Long id, RoleDataScopeSaveRequest request, AppUserPrincipal principal) {
+        SysRole role = getExistingRole(id);
+        assertSystemRoleEditable(role);
+        String dataScope = normalizeDataScope(request.dataScope());
+        List<Long> orgIds = CUSTOM_ORG_DATA_SCOPE.equals(dataScope)
+                ? normalizeOrgIds(request.orgIds())
+                : Collections.emptyList();
+        if (CUSTOM_ORG_DATA_SCOPE.equals(dataScope)) {
+            assertOrgsExist(orgIds);
+        }
+
+        role.setDataScope(dataScope);
+        role.setUpdateBy(principal.userName());
+        roleMapper.updateById(role);
+
+        roleOrgMapper.delete(new LambdaQueryWrapper<SysRoleOrg>().eq(SysRoleOrg::getRoleId, id));
+        for (Long orgId : orgIds) {
+            SysRoleOrg relation = new SysRoleOrg();
+            relation.setRoleId(id);
+            relation.setOrgId(orgId);
+            roleOrgMapper.insert(relation);
+        }
     }
 
     private LambdaQueryWrapper<SysRole> buildQueryWrapper(RoleListQuery query) {
@@ -235,6 +289,16 @@ public class RoleServiceImpl implements RoleService {
                 .toList();
     }
 
+    private List<Long> normalizeOrgIds(List<Long> orgIds) {
+        if (orgIds == null) {
+            return Collections.emptyList();
+        }
+        return orgIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+    }
+
     private void assertMenusExist(List<Long> menuIds) {
         if (menuIds.isEmpty()) {
             return;
@@ -250,6 +314,31 @@ public class RoleServiceImpl implements RoleService {
         if (!missingIds.isEmpty()) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "菜单不存在：" + missingIds);
         }
+    }
+
+    private void assertOrgsExist(List<Long> orgIds) {
+        if (orgIds.isEmpty()) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "自定义组织数据权限至少选择一个组织");
+        }
+
+        List<SysOrg> orgs = orgMapper.selectList(new LambdaQueryWrapper<SysOrg>()
+                .in(SysOrg::getId, orgIds)
+                .eq(SysOrg::getDeleted, NOT_DELETED));
+        Set<Long> existingIds = orgs.stream().map(SysOrg::getId).collect(Collectors.toSet());
+        List<Long> missingIds = orgIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+        if (!missingIds.isEmpty()) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "组织不存在：" + missingIds);
+        }
+    }
+
+    private String normalizeDataScope(String dataScope) {
+        String normalized = StringUtils.hasText(dataScope) ? dataScope.toUpperCase() : DEFAULT_DATA_SCOPE;
+        if (!ALLOWED_DATA_SCOPES.contains(normalized)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "数据权限范围不支持：" + dataScope);
+        }
+        return normalized;
     }
 
     private int toEnabledValue(Boolean enabled) {

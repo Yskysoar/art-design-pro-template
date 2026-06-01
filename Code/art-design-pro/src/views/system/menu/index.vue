@@ -55,7 +55,12 @@
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
-  import { fetchGetMenuList } from '@/api/system-manage'
+  import {
+    fetchCreateMenu,
+    fetchDeleteMenu,
+    fetchGetManageMenuList,
+    fetchUpdateMenu
+  } from '@/api/system-manage'
   import { ElTag, ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'Menus' })
@@ -106,7 +111,7 @@
     loading.value = true
 
     try {
-      const list = await fetchGetMenuList()
+      const list = await fetchGetManageMenuList()
       tableData.value = list
     } catch (error) {
       throw error instanceof Error ? error : new Error('获取菜单失败')
@@ -205,7 +210,7 @@
             }),
             h(ArtButtonTable, {
               type: 'delete',
-              onClick: () => handleDeleteAuth()
+              onClick: () => handleDeleteAuth(row)
             })
           ])
         }
@@ -213,7 +218,7 @@
         return h('div', buttonStyle, [
           h(ArtButtonTable, {
             type: 'add',
-            onClick: () => handleAddAuth(),
+            onClick: () => handleAddAuth(row),
             title: '新增权限'
           }),
           h(ArtButtonTable, {
@@ -222,7 +227,7 @@
           }),
           h(ArtButtonTable, {
             type: 'delete',
-            onClick: () => handleDeleteMenu()
+            onClick: () => handleDeleteMenu(row)
           })
         ])
       }
@@ -290,9 +295,11 @@
 
       if (item.meta?.authList?.length) {
         const authChildren: AppRouteRecord[] = item.meta.authList.map(
-          (auth: { title: string; authMark: string }) => ({
+          (auth: { id?: number; title: string; authMark: string }) => ({
             path: `${item.path}_auth_${auth.authMark}`,
             name: `${String(item.name)}_auth_${auth.authMark}`,
+            id: auth.id,
+            parentId: typeof item.id === 'number' ? item.id : undefined,
             meta: {
               title: auth.title,
               authMark: auth.authMark,
@@ -364,9 +371,9 @@
   /**
    * 添加权限按钮
    */
-  const handleAddAuth = (): void => {
-    dialogType.value = 'menu'
-    editData.value = null
+  const handleAddAuth = (row: AppRouteRecord): void => {
+    dialogType.value = 'button'
+    editData.value = { parentId: row.id }
     lockMenuType.value = false
     dialogVisible.value = true
   }
@@ -389,6 +396,8 @@
   const handleEditAuth = (row: AppRouteRecord): void => {
     dialogType.value = 'button'
     editData.value = {
+      id: row.id,
+      parentId: row.parentId,
       title: row.meta?.title,
       authMark: row.meta?.authMark
     }
@@ -413,22 +422,27 @@
    * 提交表单数据
    * @param formData 表单数据
    */
-  const handleSubmit = (formData: MenuFormData): void => {
-    console.log('提交数据:', formData)
-    // TODO: 调用API保存数据
+  const handleSubmit = async (formData: MenuFormData): Promise<void> => {
+    const payload = toMenuSaveParams(formData)
+    if (formData.id) {
+      await fetchUpdateMenu(formData.id, payload)
+    } else {
+      await fetchCreateMenu(payload)
+    }
     getMenuList()
   }
 
   /**
    * 删除菜单
    */
-  const handleDeleteMenu = async (): Promise<void> => {
+  const handleDeleteMenu = async (row: AppRouteRecord): Promise<void> => {
     try {
       await ElMessageBox.confirm('确定要删除该菜单吗？删除后无法恢复', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
+      if (row.id) await fetchDeleteMenu(row.id)
       ElMessage.success('删除成功')
       getMenuList()
     } catch (error) {
@@ -441,13 +455,14 @@
   /**
    * 删除权限按钮
    */
-  const handleDeleteAuth = async (): Promise<void> => {
+  const handleDeleteAuth = async (row: AppRouteRecord): Promise<void> => {
     try {
       await ElMessageBox.confirm('确定要删除该权限吗？删除后无法恢复', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
+      if (row.id) await fetchDeleteMenu(row.id)
       ElMessage.success('删除成功')
       getMenuList()
     } catch (error) {
@@ -475,5 +490,28 @@
         processRows(filteredTableData.value)
       }
     })
+  }
+
+  const toMenuSaveParams = (formData: MenuFormData): Api.SystemManage.MenuSaveParams => {
+    const isButton = formData.menuType === 'button'
+    return {
+      parentId: editData.value?.parentId || 0,
+      menuType: isButton ? 'BUTTON' : formData.isIframe ? 'IFRAME' : 'MENU',
+      path: isButton ? undefined : formData.path,
+      name: isButton ? formData.authName : formData.label,
+      component: isButton ? undefined : formData.component,
+      title: isButton ? formData.authName : formData.name,
+      icon: isButton ? formData.authIcon : formData.icon,
+      accessScope: 'ADMIN',
+      permissionCode: isButton ? formData.authLabel : undefined,
+      iframeLink: formData.link,
+      keepAlive: formData.keepAlive,
+      fixedTab: formData.fixedTab,
+      hidden: isButton ? true : formData.isHide,
+      hiddenTab: isButton ? true : formData.isHideTab,
+      activePath: formData.activePath,
+      sort: isButton ? formData.authSort : formData.sort,
+      enabled: formData.isEnable
+    }
   }
 </script>

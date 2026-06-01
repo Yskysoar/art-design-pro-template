@@ -12,9 +12,8 @@
         ref="treeRef"
         :data="processedMenuList"
         show-checkbox
-        node-key="name"
+        node-key="id"
         :default-expand-all="isExpandAll"
-        :default-checked-keys="[1, 2, 3]"
         :props="defaultProps"
         @check="handleTreeCheck"
       >
@@ -43,6 +42,7 @@
 <script setup lang="ts">
   import { useMenuStore } from '@/store/modules/menu'
   import { formatMenuTitle } from '@/utils/router'
+  import { fetchGetRolePermissions, fetchSaveRolePermissions } from '@/api/system-manage'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -141,10 +141,13 @@
    */
   watch(
     () => props.modelValue,
-    (newVal) => {
+    async (newVal) => {
       if (newVal && props.roleData) {
-        // TODO: 根据角色加载对应的权限数据
-        console.log('设置权限:', props.roleData)
+        const permission = await fetchGetRolePermissions(props.roleData.roleId)
+        nextTick(() => {
+          treeRef.value?.setCheckedKeys(permission.menuIds)
+          handleTreeCheck()
+        })
       }
     }
   )
@@ -160,8 +163,13 @@
   /**
    * 保存权限配置
    */
-  const savePermission = () => {
-    // TODO: 调用保存权限接口
+  const savePermission = async () => {
+    if (!props.roleData) return
+    const tree = treeRef.value
+    const menuIds = tree ? [...tree.getCheckedKeys(), ...tree.getHalfCheckedKeys()] : []
+    await fetchSaveRolePermissions(props.roleData.roleId, {
+      menuIds: menuIds.filter((id: unknown): id is number => typeof id === 'number')
+    })
     ElMessage.success('权限保存成功')
     emit('success')
     handleClose()
@@ -205,11 +213,11 @@
    * @param nodes 节点列表
    * @returns 所有节点的 key 数组
    */
-  const getAllNodeKeys = (nodes: MenuNode[]): string[] => {
-    const keys: string[] = []
+  const getAllNodeKeys = (nodes: MenuNode[]): Array<string | number> => {
+    const keys: Array<string | number> = []
     const traverse = (nodeList: MenuNode[]): void => {
       nodeList.forEach((node) => {
-        if (node.name) keys.push(node.name)
+        if (node.id) keys.push(node.id)
         if (node.children?.length) traverse(node.children)
       })
     }

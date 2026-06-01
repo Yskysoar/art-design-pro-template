@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: backend-template-java
+  config:
+    import: optional:classpath:application-local.yml
   profiles:
     active: dev
   datasource:

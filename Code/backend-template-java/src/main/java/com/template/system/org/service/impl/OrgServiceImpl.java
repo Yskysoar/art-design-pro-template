@@ -109,9 +109,7 @@ public class OrgServiceImpl implements OrgService {
             throw new BusinessException(ApiCode.BAD_REQUEST, "组织已被角色数据权限引用，不能删除");
         }
 
-        org.setDeleted(1);
-        org.setEnabled(0);
-        orgMapper.updateById(org);
+        orgMapper.deleteById(id);
     }
 
     private List<OrgTreeVo> buildTree(Long parentId, Map<Long, List<SysOrg>> childrenMap) {

@@ -10,6 +10,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AppRouteVo(
         Long id,
+        Long parentId,
         String path,
         String name,
         String component,

@@ -24,10 +24,12 @@
 - 远程仓库使用 SSH 地址：`git@github.com:Yskysoar/art-design-pro-template.git`。
 - 项目已接入 Vite middleware 本地 Mock：`Code/art-design-pro/mock/local-mock.ts`。
 - 当前后端基础联调已通过：`/api/health`、`/api/auth/login`、`/api/user/info`、`/api/v3/system/menus`。
-- 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`/api/role/list`、`POST /api/role`、`PUT /api/role/{id}`、`DELETE /api/role/{id}`、`GET /api/role/{id}/permissions`、`PUT /api/role/{id}/permissions`、`GET /api/v3/system/menus/manage`、`POST /api/v3/system/menus`、`PUT /api/v3/system/menus/{id}`、`DELETE /api/v3/system/menus/{id}`、`GET /api/org/tree`、`POST /api/org`、`PUT /api/org/{id}`、`DELETE /api/org/{id}`。验证真实返回前需要用户手动重启后端进程。
+- 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`/api/role/list`、`POST /api/role`、`PUT /api/role/{id}`、`DELETE /api/role/{id}`、`GET /api/role/{id}/permissions`、`PUT /api/role/{id}/permissions`、`GET /api/v3/system/menus/manage`、`POST /api/v3/system/menus`、`PUT /api/v3/system/menus/{id}`、`DELETE /api/v3/system/menus/{id}`、`GET /api/org/tree`、`POST /api/org`、`PUT /api/org/{id}`、`DELETE /api/org/{id}`、`GET /api/config/list`、`POST /api/config`、`PUT /api/config/{id}`、`DELETE /api/config/{id}`。其中配置项 CRUD 和组织 CRUD 已通过真实接口回归。
+- 当前前端系统管理页已接入真实后端接口：用户、角色、菜单、配置项和组织管理 CRUD。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
-- 后端启动由用户手动执行；Agent 只在需要重启或验证时提醒用户，不再尝试代启动后端进程。
+- `Code/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
+- 后端可由 Agent 在用户确认后代为启动；如因环境限制失败，再切回由用户手动启动。
 - 数据库密码等敏感配置只通过本机环境变量传入，例如 `DB_PASSWORD`，不得写入 Git 跟踪文件、Docs 或提交信息。
 
 ## 三、代码目录规则
@@ -75,7 +77,8 @@ Docs/
 ├── 0.项目文档目录.md
 ├── 1.项目说明文档.md
 ├── 2.代码审查总结.md
-└── 3.后端开发设计方案.md
+├── 3.后端开发设计方案.md
+└── 4.后端测试设计.md
 ```
 
 维护要求：
@@ -84,6 +87,7 @@ Docs/
 - `Docs/1.项目说明文档.md` 只维护项目情况、结构、业务功能、业务逻辑、后端对接、API 设计、新增接口方法和 Mock 方案。
 - `Docs/2.代码审查总结.md` 只维护代码审查、安全风险、上线阻断项、修复优先级和整改建议。
 - `Docs/3.后端开发设计方案.md` 维护后端技术选型、架构、权限、数据权限、接口、数据库、Mock SQL 和开发阶段规划。
+- `Docs/4.后端测试设计.md` 维护后端测试分层、测试用例、测试命令和回归验证方案。
 - 修改接口契约、Mock 行为、后端对接方式或安全策略后，必须同步更新相关文档。
 
 ## 五、本地 Mock 规则
@@ -146,6 +150,7 @@ git diff --cached --name-only
 - `Code/art-design-pro/src/types/import/auto-imports.d.ts`
 - `Code/art-design-pro/src/types/import/components.d.ts`
 - `Code/backend-template-java/target/`
+- `Code/backend-template-java/src/main/resources/application-local.yml`
 - `Code/backend-template-java/uploads/`
 - `Code/backend-template-java/logs/`
 - `Code/backend-template-java/.boot-*.out`
@@ -230,6 +235,14 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd compile
 ```
 
 含义：使用本机 Maven 编译 `Code/backend-template-java`，验证 Java 源码和依赖是否正确。
+
+后端测试改动后，执行：
+
+```powershell
+D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
+```
+
+含义：使用本机 Maven 执行后端测试，验证单元测试和测试依赖是否正确。
 
 如需启动后端，由用户在本机 PowerShell 中执行：
 

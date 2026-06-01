@@ -112,6 +112,19 @@ declare namespace Api {
         Api.Common.CommonSearchParams
     >
 
+    /** 用户保存参数 */
+    interface UserSaveParams {
+      userName: string
+      password?: string
+      nickName?: string
+      userGender?: string
+      userPhone?: string
+      userEmail?: string
+      avatar?: string
+      status?: string
+      roleCodes: string[]
+    }
+
     /** 角色列表 */
     type RoleList = Api.Common.PaginatedResponse<RoleListItem>
 
@@ -133,5 +146,111 @@ declare namespace Api {
           endTime: string | null
         }
     >
+
+    /** 角色保存参数 */
+    interface RoleSaveParams {
+      roleName: string
+      roleCode: string
+      description?: string
+      enabled: boolean
+    }
+
+    /** 角色菜单权限 */
+    interface RolePermission {
+      roleId: number
+      menuIds: number[]
+    }
+
+    /** 角色菜单权限保存参数 */
+    interface RolePermissionSaveParams {
+      menuIds: number[]
+    }
+
+    /** 角色数据权限 */
+    interface RoleDataScope {
+      roleId: number
+      dataScope: string
+      orgIds: number[]
+    }
+
+    /** 角色数据权限保存参数 */
+    interface RoleDataScopeSaveParams {
+      dataScope: string
+      orgIds: number[]
+    }
+
+    /** 菜单保存参数 */
+    interface MenuSaveParams {
+      parentId?: number
+      menuType?: string
+      path?: string
+      name: string
+      component?: string
+      redirect?: string
+      title: string
+      icon?: string
+      accessScope?: string
+      permissionCode?: string
+      iframeLink?: string
+      keepAlive?: boolean
+      fixedTab?: boolean
+      hidden?: boolean
+      hiddenTab?: boolean
+      activePath?: string
+      sort?: number
+      enabled?: boolean
+    }
+
+    /** 配置项列表 */
+    type ConfigList = Api.Common.PaginatedResponse<ConfigListItem>
+
+    /** 配置项列表项 */
+    interface ConfigListItem {
+      id: number
+      configKey: string
+      configValue: string
+      description: string
+      editable: boolean
+      createBy: string
+      createTime: string
+      updateBy: string
+      updateTime: string
+    }
+
+    /** 配置项搜索参数 */
+    type ConfigSearchParams = Partial<
+      Pick<ConfigListItem, 'configKey' | 'description' | 'editable'> & Api.Common.CommonSearchParams
+    >
+
+    /** 配置项保存参数 */
+    interface ConfigSaveParams {
+      configKey: string
+      configValue: string
+      description?: string
+      editable: boolean
+    }
+
+    /** 组织树节点 */
+    interface OrgTreeItem {
+      id: number
+      parentId: number
+      ancestors: string
+      orgName: string
+      orgCode: string
+      orgType: string
+      sort: number
+      enabled: boolean
+      children?: OrgTreeItem[]
+    }
+
+    /** 组织保存参数 */
+    interface OrgSaveParams {
+      parentId?: number
+      orgName: string
+      orgCode: string
+      orgType?: string
+      sort?: number
+      enabled?: boolean
+    }
   }
 }
