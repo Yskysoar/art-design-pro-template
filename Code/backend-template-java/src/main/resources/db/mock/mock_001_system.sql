@@ -1,64 +1,39 @@
--- 系统基础 Mock 数据。
--- 说明：管理员初始密码为 admin123，password_hash 保存 BCrypt 哈希。
+-- 系统管理 Mock 数据。
+-- 说明：所有演示账号初始密码均为 admin123，password_hash 保存 BCrypt 哈希。
 
 INSERT INTO sys_config (id, config_key, config_value, description, editable, create_by, update_by)
 VALUES
-  (1, 'user_org_relation_mode', 'ONE_TO_MANY', '用户和组织默认一对多', 1, 'system', 'system'),
-  (2, 'role_level_enabled', 'true', '启用角色层级管理', 1, 'system', 'system'),
-  (3, 'anonymous_portal_access', 'true', '允许匿名访问前台公开内容', 1, 'system', 'system'),
-  (4, 'guest_admin_access', 'false', '禁止游客访问后台', 1, 'system', 'system'),
-  (5, 'article_comment_hide_enabled', 'true', '是否开启文章评论隐藏和恢复功能', 1, 'system', 'system');
+  (1, 'user_org_relation_mode', 'ONE_TO_MANY', '用户与组织关系模式：允许一个用户归属多个组织', 0, 'system', 'system'),
+  (2, 'role_level_enabled', 'true', '启用角色层级管理，低层级角色不能管理高层级角色', 0, 'system', 'system'),
+  (3, 'anonymous_portal_access', 'true', '允许匿名用户访问已发布且可见的文章内容', 1, 'system', 'system'),
+  (4, 'guest_admin_access', 'false', '禁止游客角色访问后台管理端', 1, 'system', 'system'),
+  (5, 'article_comment_hide_enabled', 'true', '开启文章评论隐藏与恢复功能', 1, 'system', 'system'),
+  (6, 'article_default_visible', 'true', '新建文章默认对前台可见', 1, 'system', 'system'),
+  (7, 'upload_max_size_mb', '10', '本地上传文件大小上限，单位 MB', 1, 'system', 'system'),
+  (8, 'system_notice', '欢迎使用 Art Design Pro 开发模板', '后台首页展示的系统提示文案', 1, 'system', 'system');
 
 INSERT INTO sys_org (id, parent_id, ancestors, org_name, org_code, org_type, sort, enabled, create_by, update_by)
 VALUES
   (1, 0, '0', '模板组织', 'ORG_TEMPLATE', 'GROUP', 1, 1, 'system', 'system'),
-  (2, 1, '0,1', '内容管理组', 'ORG_CONTENT', 'GROUP', 10, 1, 'system', 'system'),
-  (3, 1, '0,1', '运营管理组', 'ORG_OPERATION', 'GROUP', 20, 1, 'system', 'system');
+  (2, 1, '0,1', '内容中心', 'ORG_CONTENT', 'DEPT', 10, 1, 'system', 'system'),
+  (3, 2, '0,1,2', '编辑组', 'ORG_EDITOR', 'GROUP', 11, 1, 'system', 'system'),
+  (4, 2, '0,1,2', '审核组', 'ORG_REVIEW', 'GROUP', 12, 1, 'system', 'system'),
+  (5, 1, '0,1', '运营中心', 'ORG_OPERATION', 'DEPT', 20, 1, 'system', 'system'),
+  (6, 5, '0,1,5', '活动运营组', 'ORG_CAMPAIGN', 'GROUP', 21, 1, 'system', 'system'),
+  (7, 1, '0,1', '设计社群', 'ORG_DESIGN_CLUB', 'CLUB', 30, 1, 'system', 'system'),
+  (8, 1, '0,1', '示例商家', 'ORG_DEMO_MERCHANT', 'MERCHANT', 40, 0, 'system', 'system');
 
 INSERT INTO sys_user (
   id, user_name, password_hash, nick_name, user_gender, user_phone, user_email,
   avatar, status, create_by, update_by
 )
 VALUES
-  (
-    1,
-    'admin',
-    '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2',
-    '系统管理员',
-    '男',
-    '13800000001',
-    'admin@example.com',
-    '/src/assets/images/avatar/avatar.webp',
-    'NORMAL',
-    'system',
-    'system'
-  ),
-  (
-    2,
-    'moderator',
-    '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2',
-    '内容版主',
-    '男',
-    '13800000002',
-    'moderator@example.com',
-    '/src/assets/images/avatar/avatar.webp',
-    'NORMAL',
-    'system',
-    'system'
-  ),
-  (
-    3,
-    'user',
-    '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2',
-    '普通用户',
-    '女',
-    '13800000003',
-    'user@example.com',
-    '/src/assets/images/avatar/avatar.webp',
-    'NORMAL',
-    'system',
-    'system'
-  );
+  (1, 'admin', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '系统管理员', '男', '13800000001', 'admin@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
+  (2, 'moderator', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '内容版主', '男', '13800000002', 'moderator@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
+  (3, 'editor', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '文章编辑', '女', '13800000003', 'editor@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
+  (4, 'operator', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '运营同学', '女', '13800000004', 'operator@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
+  (5, 'designer', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '设计访客', '男', '13800000005', 'designer@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
+  (6, 'disabled_user', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '停用用户', '女', '13800000006', 'disabled@example.com', '/src/assets/images/avatar/avatar.webp', 'DISABLED', 'system', 'system');
 
 INSERT INTO sys_role (
   id, role_name, role_code, role_level, role_sort, role_type, access_scope,
@@ -66,9 +41,11 @@ INSERT INTO sys_role (
 )
 VALUES
   (1, '超级管理员', 'R_SUPER', 100, 1, 'SYSTEM', 'BOTH', 'ALL', 0, 1, '拥有系统全部管理权限', 'system', 'system'),
-  (2, '内容版主', 'R_MODERATOR', 60, 2, 'BUSINESS', 'BOTH', 'CURRENT_ORG_AND_SUB', 1, 1, '可管理所属组织内容', 'system', 'system'),
-  (3, '普通用户', 'R_USER', 10, 3, 'BUSINESS', 'PORTAL', 'SELF', 1, 1, '可访问前台并进行授权交互', 'system', 'system'),
-  (4, '游客', 'R_GUEST', 0, 4, 'GUEST', 'PORTAL', 'SELF', 0, 1, '只能访问前台公开只读内容', 'system', 'system');
+  (2, '内容管理员', 'R_CONTENT_ADMIN', 70, 2, 'BUSINESS', 'BOTH', 'CURRENT_ORG_AND_SUB', 1, 1, '管理文章、评论和内容审核', 'system', 'system'),
+  (3, '运营管理员', 'R_OPERATION_ADMIN', 60, 3, 'BUSINESS', 'ADMIN', 'CUSTOM', 1, 1, '管理运营组织内用户与基础配置', 'system', 'system'),
+  (4, '文章编辑', 'R_EDITOR', 40, 4, 'BUSINESS', 'BOTH', 'CURRENT_ORG', 1, 1, '创建和编辑文章内容', 'system', 'system'),
+  (5, '普通用户', 'R_USER', 10, 5, 'BUSINESS', 'PORTAL', 'SELF', 1, 1, '访问前台并参与评论互动', 'system', 'system'),
+  (6, '游客', 'R_GUEST', 0, 6, 'GUEST', 'PORTAL', 'SELF', 0, 1, '只能访问公开只读内容', 'system', 'system');
 
 INSERT INTO sys_permission (id, permission_name, permission_code, module_code, access_scope, enabled, create_by, update_by)
 VALUES
@@ -79,7 +56,7 @@ VALUES
   (5, '编辑角色', 'system:role:edit', 'system', 'ADMIN', 1, 'system', 'system'),
   (6, '分配角色权限', 'system:role:permission', 'system', 'ADMIN', 1, 'system', 'system'),
   (7, '管理组织', 'system:org:manage', 'system', 'ADMIN', 1, 'system', 'system'),
-  (8, '管理配置项', 'system:config:manage', 'system', 'ADMIN', 1, 'system', 'system'),
+  (8, '管理配置', 'system:config:manage', 'system', 'ADMIN', 1, 'system', 'system'),
   (9, '发布文章', 'article:publish:add', 'article', 'BOTH', 1, 'system', 'system'),
   (10, '编辑文章', 'article:publish:edit', 'article', 'BOTH', 1, 'system', 'system'),
   (11, '管理菜单', 'system:menu:manage', 'system', 'ADMIN', 1, 'system', 'system'),
@@ -87,7 +64,7 @@ VALUES
   (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system'),
   (14, '上传文章资源', 'article:upload', 'article', 'BOTH', 1, 'system', 'system'),
   (15, '管理文章评论', 'article:comment:manage', 'article', 'BOTH', 1, 'system', 'system'),
-  (16, '管理评论敏感词', 'article:comment:sensitive-word', 'article', 'BOTH', 1, 'system', 'system');
+  (16, '管理敏感词库', 'system:sensitive-word', 'system', 'ADMIN', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -97,94 +74,71 @@ INSERT INTO sys_menu (
 VALUES
   (1, 0, 'DIR', '/dashboard', 'Dashboard', '/index/index', NULL, 'menus.dashboard.title', 'ri:pie-chart-line', 'ADMIN', NULL, 0, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
   (2, 1, 'MENU', 'console', 'Console', '/dashboard/console', NULL, 'menus.dashboard.console', 'ri:home-smile-2-line', 'ADMIN', NULL, 0, 1, 0, 0, NULL, 1, 1, 'system', 'system'),
-  (3, 0, 'DIR', '/system', 'System', '/index/index', NULL, 'menus.system.title', 'ri:user-3-line', 'ADMIN', NULL, 0, 0, 0, 0, NULL, 10, 1, 'system', 'system'),
-  (4, 3, 'MENU', 'user', 'User', '/system/user', NULL, 'menus.system.user', 'ri:user-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
-  (5, 3, 'MENU', 'role', 'Role', '/system/role', NULL, 'menus.system.role', 'ri:user-settings-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
-  (6, 3, 'MENU', 'menu', 'Menus', '/system/menu', NULL, 'menus.system.menu', 'ri:menu-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 3, 1, 'system', 'system'),
-  (7, 0, 'DIR', '/article', 'Article', '/index/index', NULL, 'menus.article.title', 'ri:book-2-line', 'BOTH', NULL, 0, 0, 0, 0, NULL, 20, 1, 'system', 'system'),
-  (8, 7, 'MENU', 'article-list', 'ArticleList', '/article/list', NULL, 'menus.article.articleList', 'ri:article-line', 'BOTH', NULL, 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
-  (9, 7, 'MENU', 'publish', 'ArticlePublish', '/article/publish', NULL, 'menus.article.articlePublish', 'ri:telegram-2-line', 'ADMIN', 'article:publish:add', 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
-  (10, 4, 'BUTTON', NULL, 'UserAdd', NULL, NULL, '新增用户', NULL, 'ADMIN', 'system:user:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (11, 4, 'BUTTON', NULL, 'UserEdit', NULL, NULL, '编辑用户', NULL, 'ADMIN', 'system:user:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
-  (12, 4, 'BUTTON', NULL, 'UserDelete', NULL, NULL, '删除用户', NULL, 'ADMIN', 'system:user:delete', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
-  (13, 5, 'BUTTON', NULL, 'RoleAdd', NULL, NULL, '新增角色', NULL, 'ADMIN', 'system:role:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (14, 5, 'BUTTON', NULL, 'RoleEdit', NULL, NULL, '编辑角色', NULL, 'ADMIN', 'system:role:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
-  (15, 5, 'BUTTON', NULL, 'RolePermission', NULL, NULL, '分配角色权限', NULL, 'ADMIN', 'system:role:permission', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
-  (16, 6, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (17, 3, 'MENU', 'config', 'Config', '/system/config', NULL, '配置项管理', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
-  (18, 17, 'BUTTON', NULL, 'ConfigManage', NULL, NULL, '管理配置项', NULL, 'ADMIN', 'system:config:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (19, 3, 'MENU', 'org', 'Org', '/system/org', NULL, '组织管理', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
-  (20, 19, 'BUTTON', NULL, 'OrgManage', NULL, NULL, '管理组织', NULL, 'ADMIN', 'system:org:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (21, 8, 'BUTTON', NULL, 'ArticleAdd', NULL, NULL, '新增文章', NULL, 'BOTH', 'article:publish:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (22, 8, 'BUTTON', NULL, 'ArticleEdit', NULL, NULL, '编辑文章', NULL, 'BOTH', 'article:publish:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
-  (23, 9, 'BUTTON', NULL, 'ArticleUpload', NULL, NULL, '上传文章资源', NULL, 'BOTH', 'article:upload', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (24, 7, 'MENU', 'detail/:id', 'ArticleDetail', '/article/detail', NULL, 'menus.article.articleDetail', NULL, 'BOTH', NULL, 1, 0, 1, 0, '/article/article-list', 3, 1, 'system', 'system'),
-  (25, 3, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system'),
-  (26, 7, 'MENU', 'comment', 'ArticleComment', '/article/comment', NULL, '评论敏感词', 'ri:shield-keyhole-line', 'ADMIN', 'article:comment:sensitive-word', 1, 0, 0, 0, NULL, 4, 1, 'system', 'system');
+  (3, 0, 'DIR', '/article', 'Article', '/index/index', NULL, 'menus.article.title', 'ri:book-2-line', 'BOTH', NULL, 0, 0, 0, 0, NULL, 20, 1, 'system', 'system'),
+  (4, 3, 'MENU', 'article-list', 'ArticleList', '/article/list', NULL, 'menus.article.articleList', 'ri:article-line', 'BOTH', NULL, 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
+  (5, 3, 'MENU', 'publish', 'ArticlePublish', '/article/publish', NULL, 'menus.article.articlePublish', 'ri:telegram-2-line', 'ADMIN', 'article:publish:add', 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
+  (6, 3, 'MENU', 'detail/:id', 'ArticleDetail', '/article/detail', NULL, 'menus.article.articleDetail', NULL, 'BOTH', NULL, 1, 0, 1, 0, '/article/article-list', 3, 1, 'system', 'system'),
+  (7, 0, 'DIR', '/system', 'System', '/index/index', NULL, 'menus.system.title', 'ri:user-3-line', 'ADMIN', NULL, 0, 0, 0, 0, NULL, 30, 1, 'system', 'system'),
+  (9, 7, 'MENU', 'user', 'User', '/system/user', NULL, 'menus.system.user', 'ri:user-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
+  (10, 7, 'MENU', 'role', 'Role', '/system/role', NULL, 'menus.system.role', 'ri:user-settings-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
+  (11, 7, 'MENU', 'org', 'Org', '/system/org', NULL, '组织管理', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 3, 1, 'system', 'system'),
+  (12, 7, 'MENU', 'config', 'Config', '/system/config', NULL, '配置管理', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
+  (13, 7, 'MENU', 'menu', 'Menus', '/system/menu', NULL, 'menus.system.menu', 'ri:menu-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
+  (14, 7, 'MENU', 'sensitive-word', 'SensitiveWord', '/article/comment', NULL, '敏感词库', 'ri:shield-keyhole-line', 'ADMIN', 'system:sensitive-word', 0, 0, 0, 0, NULL, 6, 1, 'system', 'system'),
+  (15, 7, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system'),
+  (16, 9, 'BUTTON', NULL, 'UserAdd', NULL, NULL, '新增用户', NULL, 'ADMIN', 'system:user:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (17, 9, 'BUTTON', NULL, 'UserEdit', NULL, NULL, '编辑用户', NULL, 'ADMIN', 'system:user:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
+  (18, 9, 'BUTTON', NULL, 'UserDelete', NULL, NULL, '删除用户', NULL, 'ADMIN', 'system:user:delete', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
+  (19, 10, 'BUTTON', NULL, 'RoleAdd', NULL, NULL, '新增角色', NULL, 'ADMIN', 'system:role:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (20, 10, 'BUTTON', NULL, 'RoleEdit', NULL, NULL, '编辑角色', NULL, 'ADMIN', 'system:role:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
+  (21, 10, 'BUTTON', NULL, 'RolePermission', NULL, NULL, '分配角色权限', NULL, 'ADMIN', 'system:role:permission', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
+  (22, 11, 'BUTTON', NULL, 'OrgManage', NULL, NULL, '管理组织', NULL, 'ADMIN', 'system:org:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (23, 12, 'BUTTON', NULL, 'ConfigManage', NULL, NULL, '管理配置', NULL, 'ADMIN', 'system:config:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (24, 13, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (25, 4, 'BUTTON', NULL, 'ArticleAdd', NULL, NULL, '新增文章', NULL, 'BOTH', 'article:publish:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (26, 4, 'BUTTON', NULL, 'ArticleEdit', NULL, NULL, '编辑文章', NULL, 'BOTH', 'article:publish:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
+  (27, 5, 'BUTTON', NULL, 'ArticleUpload', NULL, NULL, '上传文章资源', NULL, 'BOTH', 'article:upload', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (28, 14, 'BUTTON', NULL, 'SensitiveWordManage', NULL, NULL, '管理敏感词库', NULL, 'ADMIN', 'system:sensitive-word', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
   (1, 1),
   (2, 2),
-  (3, 3);
+  (3, 4),
+  (4, 3),
+  (5, 5),
+  (6, 5);
 
 INSERT INTO sys_user_org (user_id, org_id, primary_org)
 VALUES
   (1, 1, 1),
   (2, 2, 1),
-  (2, 3, 0),
-  (3, 1, 1);
+  (2, 4, 0),
+  (3, 3, 1),
+  (4, 5, 1),
+  (4, 6, 0),
+  (5, 7, 1),
+  (6, 8, 1);
 
 INSERT INTO sys_role_org (role_id, org_id)
 VALUES
-  (2, 2);
+  (2, 2),
+  (3, 5),
+  (3, 6),
+  (4, 3);
 
 INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
-  (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20),
-  (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26),
-  (2, 7), (2, 8), (2, 9), (2, 21), (2, 22), (2, 23), (2, 24), (2, 25),
-  (3, 7), (3, 8), (3, 24), (3, 25),
-  (4, 7), (4, 8), (4, 24), (4, 25);
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20), (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26), (1, 27), (1, 28),
+  (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 14), (2, 15), (2, 25), (2, 26), (2, 27), (2, 28),
+  (3, 1), (3, 2), (3, 7), (3, 9), (3, 11), (3, 12), (3, 15), (3, 17), (3, 22), (3, 23),
+  (4, 3), (4, 4), (4, 5), (4, 6), (4, 15), (4, 25), (4, 26), (4, 27),
+  (5, 3), (5, 4), (5, 6), (5, 15),
+  (6, 3), (6, 4), (6, 6);
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
-  (2, 9), (2, 10), (2, 14), (2, 15);
-
-INSERT INTO article_category (id, category_name, category_code, sort, enabled, create_by, update_by)
-VALUES
-  (1, '产品动态', 'PRODUCT_NEWS', 1, 1, 'system', 'system'),
-  (2, '技术文章', 'TECH_ARTICLE', 2, 1, 'system', 'system'),
-  (3, '运营公告', 'OPERATION_NOTICE', 3, 1, 'system', 'system');
-
-INSERT INTO article (
-  id, title, category_id, cover_url, summary, content_html, content_text,
-  visible, status, view_count, comment_count, publish_time, create_by, update_by
-)
-VALUES
-  (
-    1,
-    '后端模板文章模块接入说明',
-    2,
-    '/src/assets/images/cover/img1.webp',
-    '记录文章与上传模块的真实接口接入范围。',
-    '<h2>文章模块</h2><p>当前文章模块已接入分类、列表、详情、发布和编辑基础能力。</p>',
-    '文章模块 当前文章模块已接入分类、列表、详情、发布和编辑基础能力。',
-    1,
-    'PUBLISHED',
-    128,
-    2,
-    '2026-06-01 10:00:00',
-    'admin',
-    'admin'
-  );
-
-INSERT INTO article_comment (
-  id, article_id, parent_id, root_id, content, status,
-  user_id, user_name, user_avatar, create_time
-)
-VALUES
-  (1, 1, 0, 1, '文章模块说明很清楚，后续评论区可以直接作为真实联调样例。', 'NORMAL', 2, 'moderator', '/src/assets/images/avatar/avatar.webp', '2026-06-01 10:20:00'),
-  (2, 1, 1, 1, '收到，这条回复用于验证子评论挂载。', 'NORMAL', 1, 'admin', '/src/assets/images/avatar/avatar.webp', '2026-06-01 10:25:00');
+  (2, 9), (2, 10), (2, 14), (2, 15), (2, 16),
+  (3, 2), (3, 7), (3, 8), (3, 12),
+  (4, 9), (4, 10), (4, 14);
