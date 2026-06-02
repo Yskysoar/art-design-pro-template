@@ -91,12 +91,51 @@ export class RoutePermissionValidator {
 
   /**
    * 递归匹配路由配置，支持隐藏路由和动态参数路由
+   * 使用 Set 优化查找效率
    */
   static matchRoute(targetPath: string, routes: AppRouteRecord[]): boolean {
     if (!Array.isArray(routes) || routes.length === 0) {
       return false
     }
 
+    // 构建路径集合用于快速查找
+    const pathSet = new Set<string>()
+    const dynamicRoutes: AppRouteRecord[] = []
+
+    // 扁平化路由并分类
+    this.flattenRoutes(routes, pathSet, dynamicRoutes)
+
+    // 快速查找精确匹配和前缀匹配
+    if (pathSet.has(targetPath)) {
+      return true
+    }
+
+    // 检查前缀匹配
+    for (const path of pathSet) {
+      if (targetPath.startsWith(`${path}/`)) {
+        return true
+      }
+    }
+
+    // 检查动态路由匹配
+    for (const route of dynamicRoutes) {
+      const routePath = route.path.startsWith('/') ? route.path : `/${route.path}`
+      if (this.isDynamicRouteMatch(targetPath, routePath)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /**
+   * 扁平化路由，提取所有路径到 Set 中
+   */
+  private static flattenRoutes(
+    routes: AppRouteRecord[],
+    pathSet: Set<string>,
+    dynamicRoutes: AppRouteRecord[]
+  ): void {
     for (const route of routes) {
       if (!route.path) {
         continue
@@ -104,20 +143,18 @@ export class RoutePermissionValidator {
 
       const routePath = route.path.startsWith('/') ? route.path : `/${route.path}`
 
-      if (
-        routePath === targetPath ||
-        this.isDynamicRouteMatch(targetPath, routePath) ||
-        targetPath.startsWith(`${routePath}/`)
-      ) {
-        return true
+      // 如果是动态路由，单独存储
+      if (routePath.includes(':')) {
+        dynamicRoutes.push(route)
+      } else {
+        pathSet.add(routePath)
       }
 
-      if (route.children?.length && this.matchRoute(targetPath, route.children)) {
-        return true
+      // 递归处理子路由
+      if (route.children?.length) {
+        this.flattenRoutes(route.children, pathSet, dynamicRoutes)
       }
     }
-
-    return false
   }
 
   /**

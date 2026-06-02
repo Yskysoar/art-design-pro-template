@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 路由全局前置守卫模块
  *
  * 提供完整的路由导航守卫功能
@@ -65,8 +65,7 @@ class RouteInitCancelledError extends Error {}
 // 跟踪是否需要关闭 loading
 let pendingLoading = false
 
-// 路由初始化失败标记，防止死循环
-// 一旦设置为 true，只有刷新页面或重新登录才能重置
+// Route init failure flag for status inspection only.
 let routeInitFailed = false
 
 // 路由初始化进行中标记，防止并发请求
@@ -171,31 +170,18 @@ async function handleRouteGuard(
   if (!handleLoginStatus(to, userStore, next)) {
     return
   }
-
-  // 2. 检查路由初始化是否已失败（防止死循环）
-  if (routeInitFailed) {
-    // 已经失败过，直接放行到错误页面，不再重试
-    if (to.matched.length > 0) {
-      next()
-    } else {
-      // 未匹配到路由，跳转到 500 页面
-      next({ name: 'Exception500', replace: true })
-    }
-    return
-  }
-
-  // 3. 处理动态路由注册
+  // 2. Register dynamic routes.
   if (!routeRegistry?.isRegistered() && userStore.isLogin) {
     await handleDynamicRoutes(to, next, router, navigationId)
     return
   }
 
-  // 4. 处理根路径重定向
+  // 3. 处理根路径重定向
   if (handleRootPathRedirect(to, next)) {
     return
   }
 
-  // 5. 处理已匹配的路由
+  // 4. 处理已匹配的路由
   if (to.matched.length > 0) {
     setWorktab(to)
     setPageTitle(to)
@@ -203,7 +189,7 @@ async function handleRouteGuard(
     return
   }
 
-  // 6. 未匹配到路由，跳转到 404
+  // 5. 未匹配到路由，跳转到 404
   next({ name: 'Exception404' })
 }
 
@@ -341,11 +327,10 @@ async function handleDynamicRoutes(
       return
     }
 
-    console.error('[RouteGuard] 动态路由注册失败:', error)
-
-    // 标记初始化失败，防止死循环
+    // Mark current init as failed and allow future navigation to retry.
     routeInitFailed = true
-
+    routeInitPromise = null
+    routeInitInProgress = false
     // 输出详细错误信息，便于排查
     if (isHttpError(error)) {
       console.error(`[RouteGuard] 错误码: ${error.code}, 消息: ${error.message}`)
@@ -396,6 +381,10 @@ async function initializeDynamicRoutes(
     throw new Error('获取菜单列表失败，请重新登录')
   }
 
+  // 先注入个性设置菜单项（系统管理 → 个性设置）
+  injectSettingsItem(menuList)
+
+  // 后注册路由
   routeRegistry?.register(menuList)
 
   const menuStore = useMenuStore()
@@ -406,6 +395,29 @@ async function initializeDynamicRoutes(
   useWorktabStore().validateWorktabs(router)
 
   return menuList
+}
+
+/**
+ * 注入个性设置菜单项到系统管理目录下
+ */
+function injectSettingsItem(items: AppRouteRecord[]): void {
+  for (const item of items) {
+    if ((item.name === 'System' || item.path === '/system') && item.children) {
+      item.children!.push({
+        id: 99,
+        path: 'settings',
+        name: 'SystemSettings',
+        component: '/system/settings',
+        meta: {
+          title: 'menus.system.settings',
+          icon: 'ri:settings-3-line',
+          keepAlive: false
+        }
+      })
+    }
+    const children = item.children
+    if (children) injectSettingsItem(children)
+  }
 }
 
 /**

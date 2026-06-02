@@ -10,6 +10,7 @@
  * - 动态路由注册和移除
  * - 路由移除函数管理
  * - 菜单宽度配置
+ * - 菜单数据缓存
  *
  * ## 使用场景
  *
@@ -46,6 +47,13 @@ export const useMenuStore = defineStore('menuStore', () => {
   const menuWidth = ref('')
   /** 存储路由移除函数的数组 */
   const removeRouteFns = ref<(() => void)[]>([])
+  /** 菜单缓存（用于加速登录） */
+  const menuCache = ref<AppRouteRecord[] | null>(null)
+  /** 缓存时间戳 */
+  const cacheTimestamp = ref<number>(0)
+
+  /** 缓存有效期（5分钟） */
+  const CACHE_TTL = 5 * 60 * 1000
 
   /**
    * 设置菜单列表
@@ -54,6 +62,31 @@ export const useMenuStore = defineStore('menuStore', () => {
   const setMenuList = (list: AppRouteRecord[]) => {
     menuList.value = list
     setHomePath(HOME_PAGE_PATH || getFirstMenuPath(list))
+    // 更新缓存
+    menuCache.value = list
+    cacheTimestamp.value = Date.now()
+  }
+
+  /**
+   * 获取缓存的菜单列表
+   * @returns 缓存的菜单列表，如果缓存过期则返回 null
+   */
+  const getCachedMenuList = (): AppRouteRecord[] | null => {
+    if (!menuCache.value) return null
+    if (Date.now() - cacheTimestamp.value > CACHE_TTL) {
+      // 缓存过期，清空
+      menuCache.value = null
+      return null
+    }
+    return menuCache.value
+  }
+
+  /**
+   * 清空菜单缓存
+   */
+  const clearMenuCache = () => {
+    menuCache.value = null
+    cacheTimestamp.value = 0
   }
 
   /**
@@ -103,6 +136,8 @@ export const useMenuStore = defineStore('menuStore', () => {
     setHomePath,
     addRemoveRouteFns,
     removeAllDynamicRoutes,
-    clearRemoveRouteFns
+    clearRemoveRouteFns,
+    getCachedMenuList,
+    clearMenuCache
   }
 })

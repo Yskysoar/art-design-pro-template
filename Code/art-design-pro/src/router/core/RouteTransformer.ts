@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 路由转换器
  *
  * 负责将菜单数据转换为 Vue Router 路由配置
@@ -29,13 +29,17 @@ export class RouteTransformer {
   /**
    * 转换路由配置
    */
-  transform(route: AppRouteRecord, depth = 0): ConvertedRoute {
+  transform(route: AppRouteRecord, depth = 0, parentPath = ''): ConvertedRoute {
     const { component, children, ...routeConfig } = route
 
     // 基础路由配置
     const converted: ConvertedRoute = {
       ...routeConfig,
       component: undefined
+    }
+
+    if (depth > 0 && typeof converted.path === 'string') {
+      converted.path = this.toChildRoutePath(converted.path, parentPath)
     }
 
     // 处理不同类型的路由
@@ -49,7 +53,7 @@ export class RouteTransformer {
 
     // 递归处理子路由
     if (children?.length) {
-      converted.children = children.map((child) => this.transform(child, depth + 1))
+      converted.children = children.map((child) => this.transform(child, depth + 1, route.path || ''))
     }
 
     return converted
@@ -127,5 +131,26 @@ export class RouteTransformer {
   private extractFirstSegment(path: string): string {
     const segments = path.split('/').filter(Boolean)
     return segments.length > 0 ? `/${segments[0]}` : '/'
+  }
+
+  /**
+   * Convert full menu paths to relative child route paths for Vue Router.
+   */
+  private toChildRoutePath(path: string, parentPath: string): string {
+    if (!path.startsWith('/') || !parentPath) {
+      return path
+    }
+
+    const normalizedParent = parentPath.replace(/\/$/, '')
+    if (path === normalizedParent) {
+      return ''
+    }
+
+    const parentPrefix = `${normalizedParent}/`
+    if (path.startsWith(parentPrefix)) {
+      return path.slice(parentPrefix.length)
+    }
+
+    return path.replace(/^\//, '')
   }
 }

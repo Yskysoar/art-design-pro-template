@@ -8,6 +8,7 @@
 
 import type { AppRouteRecord } from '@/types/router'
 import { useUserStore } from '@/store/modules/user'
+import { useMenuStore } from '@/store/modules/menu'
 import { useAppMode } from '@/hooks/core/useAppMode'
 import { fetchGetMenuList } from '@/api/system-manage'
 import { asyncRoutes } from '../routes/asyncRoutes'
@@ -16,10 +17,19 @@ import { formatMenuTitle } from '@/utils'
 
 export class MenuProcessor {
   /**
-   * 获取菜单数据
+   * 获取菜单数据（支持缓存）
    */
   async getMenuList(): Promise<AppRouteRecord[]> {
     const { isFrontendMode } = useAppMode()
+    const menuStore = useMenuStore()
+
+    // 尝试从缓存获取菜单（仅后端模式）
+    if (!isFrontendMode.value) {
+      const cachedMenu = menuStore.getCachedMenuList()
+      if (cachedMenu) {
+        return cachedMenu
+      }
+    }
 
     let menuList: AppRouteRecord[]
     if (isFrontendMode.value) {

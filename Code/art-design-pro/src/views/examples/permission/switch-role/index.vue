@@ -92,7 +92,7 @@
   import { computed, ref } from 'vue'
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
-  import { fetchLogin, fetchGetUserInfo } from '@/api/auth'
+  import { fetchCaptcha, fetchLogin, fetchGetUserInfo } from '@/api/auth'
 
   defineOptions({ name: 'PermissionSwitchRole' })
 
@@ -178,9 +178,12 @@
       switching.value = true
 
       // 模拟登录请求
+      const captcha = await fetchCaptcha()
       const { token, refreshToken } = await fetchLogin({
         userName: account.userName,
-        password: account.password
+        password: account.password,
+        captchaId: captcha.captchaId,
+        captchaCode: 'A1B2'
       })
 
       // 验证token
