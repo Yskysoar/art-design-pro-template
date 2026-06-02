@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
-        ApiResponse<Void> response = ApiResponse.fail(exception.getCode(), exception.getMessage());
+    public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException exception) {
+        ApiResponse<Object> response = ApiResponse.fail(exception.getCode(), exception.getMessage(), exception.getData());
         if (exception.getCode() == ApiCode.FORBIDDEN.getCode()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
