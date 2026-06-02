@@ -268,3 +268,19 @@ CREATE TABLE IF NOT EXISTS article_comment (
   KEY idx_article_comment_parent (parent_id),
   KEY idx_article_comment_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章评论表';
+
+CREATE TABLE IF NOT EXISTS comment_sensitive_word (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT 'sensitive word id',
+  word VARCHAR(100) NOT NULL COMMENT 'sensitive word',
+  match_type VARCHAR(20) NOT NULL DEFAULT 'CONTAINS' COMMENT 'match type',
+  enabled TINYINT NOT NULL DEFAULT 1 COMMENT 'enabled flag',
+  remark VARCHAR(255) DEFAULT NULL COMMENT 'remark',
+  create_by VARCHAR(50) DEFAULT NULL COMMENT 'creator',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+  update_by VARCHAR(50) DEFAULT NULL COMMENT 'updater',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT 'logic delete marker',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_comment_sensitive_word_active (word, deleted),
+  KEY idx_comment_sensitive_word_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='comment sensitive word table';

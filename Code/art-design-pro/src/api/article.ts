@@ -85,7 +85,8 @@ export function fetchArticleComments(params: Api.Article.ArticleCommentSearchPar
 export function createArticleComment(data: Api.Article.ArticleCommentSaveParams) {
   return request.post<number>({
     url: '/api/article/comment',
-    data
+    data,
+    showErrorMessage: false
   })
 }
 
@@ -106,5 +107,40 @@ export function updateArticleCommentStatus(id: number, status: Api.Article.Artic
 export function deleteArticleComment(id: number) {
   return request.del<void>({
     url: `/api/article/comment/${id}`
+  })
+}
+
+export function fetchSensitiveWords(params: Api.Article.SensitiveWordSearchParams) {
+  return request.get<Api.Article.SensitiveWordList>({
+    url: '/api/article/comment/sensitive-words',
+    params
+  })
+}
+
+export function createSensitiveWord(data: Api.Article.SensitiveWordSaveParams) {
+  return request.post<void>({
+    url: '/api/article/comment/sensitive-words',
+    data
+  })
+}
+
+export function updateSensitiveWord(id: number, data: Api.Article.SensitiveWordSaveParams) {
+  return request.put<void>({
+    url: `/api/article/comment/sensitive-words/${id}`,
+    data
+  })
+}
+
+export function updateSensitiveWordStatus(id: number, enabled: number) {
+  return request.request<void>({
+    url: `/api/article/comment/sensitive-words/${id}/status`,
+    method: 'PATCH',
+    data: { enabled }
+  })
+}
+
+export function deleteSensitiveWord(id: number) {
+  return request.del<void>({
+    url: `/api/article/comment/sensitive-words/${id}`
   })
 }

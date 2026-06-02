@@ -118,7 +118,9 @@
 
                 <div v-if="comment.replies?.length" class="reply-list">
                   <div v-for="reply in visibleReplies(comment)" :key="reply.id" class="reply-item">
-                    <div class="reply-meta">
+                    <div class="reply-header">
+                      <ElAvatar :size="28" :src="reply.userAvatar">{{ avatarText(reply.userName) }}</ElAvatar>
+                      <div class="reply-meta">
                       <span class="comment-user">{{ reply.userName }}</span>
                       <template v-if="reply.replyToUserName">
                         <span>回复</span>
@@ -127,6 +129,7 @@
                       <ElTag v-if="reply.status === 'HIDDEN'" size="small" type="warning">已隐藏</ElTag>
                       <ElTag v-if="reply.status === 'DELETED'" size="small" type="info">已删除</ElTag>
                       <span>{{ reply.createTime }}</span>
+                    </div>
                     </div>
                     <p class="comment-content">{{ displayCommentContent(reply) }}</p>
                     <div class="comment-actions">
@@ -207,6 +210,7 @@
   } from '@/api/article'
   import { useCommon } from '@/hooks/core/useCommon'
   import { useUserStore } from '@/store/modules/user'
+  import { isHttpError } from '@/utils/http/error'
   import { sanitizeRichHtml } from '@/utils/security/html'
   import { ElMessageBox } from 'element-plus'
 
@@ -296,9 +300,25 @@
       await getArticleDetail()
       await getComments()
       ElMessage.success('评论已发布')
+    } catch (error) {
+      const words = getSensitiveWords(error)
+      if (words.length > 0) {
+        ElMessage.warning(`内容包含敏感词：${words.join('、')}，请修改后再发布`)
+      } else if (isHttpError(error)) {
+        ElMessage.error(error.message)
+      } else {
+        throw error
+      }
     } finally {
       submittingComment.value = false
     }
+  }
+
+  const getSensitiveWords = (error: unknown): string[] => {
+    if (!isHttpError(error)) return []
+    const data = error.data as { sensitiveWords?: unknown } | undefined
+    if (!data || !Array.isArray(data.sensitiveWords)) return []
+    return data.sensitiveWords.filter((word): word is string => typeof word === 'string')
   }
 
   const startReply = (comment: Api.Article.ArticleCommentItem) => {

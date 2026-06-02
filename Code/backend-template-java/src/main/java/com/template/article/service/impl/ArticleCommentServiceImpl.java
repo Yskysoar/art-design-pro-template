@@ -12,7 +12,9 @@ import com.template.article.entity.ArticleComment;
 import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
 import com.template.article.service.ArticleCommentService;
+import com.template.article.service.CommentSensitiveWordService;
 import com.template.article.vo.ArticleCommentVo;
+import com.template.article.vo.SensitiveWordHitResponse;
 import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
@@ -47,6 +49,9 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     private static final long DEFAULT_SIZE = 20L;
     private static final long MAX_SIZE = 100L;
     private static final int MAX_CONTENT_LENGTH = 500;
+    private static final long RATE_LIMIT_SECONDS = 60L;
+    private static final long RATE_LIMIT_MAX_COUNT = 5L;
+    private static final long DUPLICATE_LIMIT_MINUTES = 10L;
     private static final String STATUS_NORMAL = "NORMAL";
     private static final String STATUS_HIDDEN = "HIDDEN";
     private static final String STATUS_DELETED = "DELETED";
@@ -65,17 +70,20 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     private final ArticleMapper articleMapper;
     private final PermissionService permissionService;
     private final SysConfigMapper configMapper;
+    private final CommentSensitiveWordService sensitiveWordService;
 
     public ArticleCommentServiceImpl(
             ArticleCommentMapper commentMapper,
             ArticleMapper articleMapper,
             PermissionService permissionService,
-            SysConfigMapper configMapper
+            SysConfigMapper configMapper,
+            CommentSensitiveWordService sensitiveWordService
     ) {
         this.commentMapper = commentMapper;
         this.articleMapper = articleMapper;
         this.permissionService = permissionService;
         this.configMapper = configMapper;
+        this.sensitiveWordService = sensitiveWordService;
     }
 
     @Override
@@ -120,6 +128,8 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     public Long createComment(ArticleCommentSaveRequest request, AppUserPrincipal principal) {
         Article article = getExistingArticle(request.articleId());
         String content = normalizeContent(request.content());
+        validateSensitiveWords(content);
+        validateCommentAntiSpam(article.getId(), content, principal);
         Long parentId = request.parentId() == null ? ROOT_PARENT_ID : request.parentId();
 
         ArticleComment parent = null;
@@ -223,6 +233,38 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
             throw new BusinessException(ApiCode.BAD_REQUEST, "评论内容不能超过500字");
         }
         return normalized;
+    }
+
+    private void validateSensitiveWords(String content) {
+        List<String> hits = sensitiveWordService.findHits(content);
+        if (!hits.isEmpty()) {
+            throw new BusinessException(
+                    ApiCode.BAD_REQUEST,
+                    "评论内容包含敏感词，请修改后再发布",
+                    new SensitiveWordHitResponse(hits)
+            );
+        }
+    }
+
+    private void validateCommentAntiSpam(Long articleId, String content, AppUserPrincipal principal) {
+        LocalDateTime now = LocalDateTime.now();
+        Long recentCount = commentMapper.selectCount(new LambdaQueryWrapper<ArticleComment>()
+                .eq(ArticleComment::getUserId, principal.userId())
+                .eq(ArticleComment::getDeleted, NOT_DELETED)
+                .ge(ArticleComment::getCreateTime, now.minusSeconds(RATE_LIMIT_SECONDS)));
+        if (recentCount != null && recentCount >= RATE_LIMIT_MAX_COUNT) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "评论发布过于频繁，请稍后再试");
+        }
+
+        Long duplicateCount = commentMapper.selectCount(new LambdaQueryWrapper<ArticleComment>()
+                .eq(ArticleComment::getUserId, principal.userId())
+                .eq(ArticleComment::getArticleId, articleId)
+                .eq(ArticleComment::getContent, content)
+                .eq(ArticleComment::getDeleted, NOT_DELETED)
+                .ge(ArticleComment::getCreateTime, now.minusMinutes(DUPLICATE_LIMIT_MINUTES)));
+        if (duplicateCount != null && duplicateCount > 0) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "短时间内不能重复发布相同评论");
+        }
     }
 
     private String normalizeStatus(String status) {

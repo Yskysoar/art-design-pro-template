@@ -1,132 +1,224 @@
-<!-- 留言管理页面 -->
 <template>
-  <div>
-    <h1 class="text-4xl font-medium mt-5">留言墙</h1>
-    <p class="mt-3.5 text-g-600">每一份留言都记录了您的想法，也为我们提供了珍贵的回忆</p>
+  <div class="sensitive-word-page">
+    <div class="page-header">
+      <div>
+        <h2>评论敏感词</h2>
+        <p>维护评论发布前的敏感词拦截规则，命中后评论不会写入数据库。</p>
+      </div>
+      <ElButton type="primary" @click="openDialog()">
+        <template #icon><Plus /></template>
+        新增
+      </ElButton>
+    </div>
 
-    <ul
-      class="mt-10 grid grid-cols-5 gap-5 max-2xl:grid-cols-4 max-xl:grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 mb-5"
-    >
-      <li
-        class="relative p-4 c-p aspect-16/12 duration-300 hover:-translate-y-1.5"
-        :style="{ background: item.color }"
-        v-for="item in commentsWithColors"
-        :key="item.id"
-        @click="openDrawer(item)"
-      >
-        <p class="text-g-600 text-sm">{{ item.date }}</p>
-        <p class="mt-4 text-sm text-gray-800">{{ item.content }}</p>
-        <div class="absolute bottom-4 left-0 px-4 flex-cb w-full">
-          <div class="flex-c">
-            <div class="flex-c mr-5 text-xs text-g-600">
-              <ArtSvgIcon icon="ri:heart-line" class="mr-1 text-base" />
-              <span>{{ item.collection }}</span>
-            </div>
-            <div class="flex-c mr-5 text-xs text-g-600">
-              <ArtSvgIcon icon="ri:message-3-line" class="mr-1 text-base" />
-              <span>{{ item.comment }}</span>
-            </div>
-          </div>
-          <div>
-            <span class="text-sm text-gray-700">{{ item.userName }}</span>
-          </div>
-        </div>
-      </li>
-    </ul>
+    <div class="toolbar">
+      <ElInput
+        v-model.trim="query.word"
+        class="search-input"
+        clearable
+        placeholder="搜索敏感词"
+        @keyup.enter="loadWords"
+      />
+      <ElSelect v-model="query.enabled" class="status-select" clearable placeholder="状态">
+        <ElOption label="启用" :value="1" />
+        <ElOption label="禁用" :value="0" />
+      </ElSelect>
+      <ElButton type="primary" @click="loadWords">
+        <template #icon><Search /></template>
+        查询
+      </ElButton>
+    </div>
 
-    <ElDrawer
-      lDrawer
-      v-model="showDrawer"
-      :lock-scroll="false"
-      :size="360"
-      modal-class="comment-modal"
-    >
-      <template #header>
-        <h4>详情</h4>
+    <ElTable v-loading="loading" :data="words" row-key="id">
+      <ElTableColumn prop="word" label="敏感词" min-width="180" />
+      <ElTableColumn prop="matchType" label="匹配方式" width="120" />
+      <ElTableColumn label="状态" width="120">
+        <template #default="{ row }">
+          <ElSwitch
+            :model-value="row.enabled === 1"
+            @change="(checked) => changeStatus(row as Api.Article.SensitiveWordItem, checked as boolean)"
+          />
+        </template>
+      </ElTableColumn>
+      <ElTableColumn prop="remark" label="备注" min-width="220" show-overflow-tooltip />
+      <ElTableColumn prop="updateTime" label="更新时间" width="180" />
+      <ElTableColumn label="操作" width="160" fixed="right">
+        <template #default="{ row }">
+          <ElButton link type="primary" @click="openDialog(row as Api.Article.SensitiveWordItem)">编辑</ElButton>
+          <ElButton link type="danger" @click="removeWord(row as Api.Article.SensitiveWordItem)">删除</ElButton>
+        </template>
+      </ElTableColumn>
+    </ElTable>
+
+    <div class="pagination">
+      <ElPagination
+        v-model:current-page="query.current"
+        v-model:page-size="query.size"
+        background
+        layout="total, sizes, prev, pager, next"
+        :total="total"
+        @current-change="loadWords"
+        @size-change="loadWords"
+      />
+    </div>
+
+    <ElDialog v-model="dialogVisible" :title="editingWord ? '编辑敏感词' : '新增敏感词'" width="460px">
+      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+        <ElFormItem label="敏感词" prop="word">
+          <ElInput v-model.trim="form.word" maxlength="100" show-word-limit />
+        </ElFormItem>
+        <ElFormItem label="启用状态" prop="enabled">
+          <ElSwitch v-model="form.enabled" :active-value="1" :inactive-value="0" />
+        </ElFormItem>
+        <ElFormItem label="备注" prop="remark">
+          <ElInput v-model.trim="form.remark" maxlength="255" show-word-limit type="textarea" />
+        </ElFormItem>
+      </ElForm>
+      <template #footer>
+        <ElButton @click="dialogVisible = false">取消</ElButton>
+        <ElButton type="primary" :loading="saving" @click="saveWord">保存</ElButton>
       </template>
-      <template #default>
-        <div class="drawer-default">
-          <div class="relative p-4 aspect-16/12" :style="{ background: clickItem.color }">
-            <p class="text-g-500 text-sm">{{ clickItem.date }}</p>
-            <p class="mt-4 text-sm text-gray-800">{{ clickItem.content }}</p>
-            <div class="absolute bottom-4 left-0 px-4 flex-cb w-full">
-              <div class="flex-c">
-                <div class="flex-c mr-5 text-xs text-g-600">
-                  <ArtSvgIcon icon="ri:heart-line" class="mr-1 text-base" />
-                  <span>{{ clickItem.collection }}</span>
-                </div>
-                <div class="flex-c mr-5 text-xs text-g-600">
-                  <ArtSvgIcon icon="ri:message-3-line" class="mr-1 text-base" />
-                  <span>{{ clickItem.comment }}</span>
-                </div>
-              </div>
-              <span class="text-sm text-gray-700">{{ clickItem.userName }}</span>
-            </div>
-          </div>
-
-          <!-- 评论组件 -->
-          <CommentWidget />
-        </div>
-      </template>
-    </ElDrawer>
+    </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { commentList } from '@/mock/temp/commentList'
+  import {
+    createSensitiveWord,
+    deleteSensitiveWord,
+    fetchSensitiveWords,
+    updateSensitiveWord,
+    updateSensitiveWordStatus
+  } from '@/api/article'
+  import { Plus, Search } from '@element-plus/icons-vue'
+  import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 
   defineOptions({ name: 'ArticleComment' })
 
-  interface CommentItem {
-    id: number
-    date: string
-    content: string
-    collection: number
-    comment: number
-    userName: string
-    color?: string
-  }
+  const loading = ref(false)
+  const saving = ref(false)
+  const dialogVisible = ref(false)
+  const formRef = ref<FormInstance>()
+  const words = ref<Api.Article.SensitiveWordItem[]>([])
+  const total = ref(0)
+  const editingWord = ref<Api.Article.SensitiveWordItem>()
 
-  const COLOR_LIST = ['#D8F8FF', '#FDDFD9', '#FCE6F0', '#D3F8F0', '#FFEABC', '#F5E1FF', '#E1E6FE']
-
-  const showDrawer = ref(false)
-  const clickItem = ref<CommentItem>({
-    id: 1,
-    date: '2024-9-3',
-    content: '加油！学好Node 自己写个小Demo',
-    collection: 5,
-    comment: 8,
-    userName: '匿名',
-    color: COLOR_LIST[0]
+  const query = reactive<Api.Article.SensitiveWordSearchParams>({
+    current: 1,
+    size: 10,
+    word: '',
+    enabled: undefined
   })
 
-  /**
-   * 为评论列表分配随机颜色
-   */
-  const commentsWithColors = computed(() => {
-    let lastColorIndex = -1
+  const form = reactive<Api.Article.SensitiveWordSaveParams>({
+    word: '',
+    enabled: 1,
+    remark: ''
+  })
 
-    return commentList.map((item) => {
-      let newIndex: number
+  const rules: FormRules = {
+    word: [
+      { required: true, message: '请输入敏感词', trigger: 'blur' },
+      { max: 100, message: '敏感词不能超过100字', trigger: 'blur' }
+    ]
+  }
 
-      do {
-        newIndex = Math.floor(Math.random() * COLOR_LIST.length)
-      } while (newIndex === lastColorIndex && COLOR_LIST.length > 1)
+  const loadWords = async () => {
+    loading.value = true
+    try {
+      const result = await fetchSensitiveWords(query)
+      words.value = result.records
+      total.value = result.total
+    } finally {
+      loading.value = false
+    }
+  }
 
-      lastColorIndex = newIndex
+  const openDialog = (row?: Api.Article.SensitiveWordItem) => {
+    editingWord.value = row
+    form.word = row?.word ?? ''
+    form.enabled = row?.enabled ?? 1
+    form.remark = row?.remark ?? ''
+    dialogVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
+  }
 
-      return {
-        ...item,
-        color: COLOR_LIST[newIndex]
+  const saveWord = async () => {
+    if (!formRef.value) return
+    await formRef.value.validate()
+    saving.value = true
+    try {
+      if (editingWord.value) {
+        await updateSensitiveWord(editingWord.value.id, form)
+      } else {
+        await createSensitiveWord(form)
       }
-    })
-  })
-
-  /**
-   * 打开评论详情抽屉
-   */
-  const openDrawer = (item: CommentItem) => {
-    showDrawer.value = true
-    clickItem.value = item
+      dialogVisible.value = false
+      ElMessage.success('保存成功')
+      await loadWords()
+    } finally {
+      saving.value = false
+    }
   }
+
+  const changeStatus = async (row: Api.Article.SensitiveWordItem, checked: boolean) => {
+    await updateSensitiveWordStatus(row.id, checked ? 1 : 0)
+    ElMessage.success('状态已更新')
+    await loadWords()
+  }
+
+  const removeWord = async (row: Api.Article.SensitiveWordItem) => {
+    await ElMessageBox.confirm(`确认删除敏感词“${row.word}”？`, '提示', {
+      type: 'warning'
+    })
+    await deleteSensitiveWord(row.id)
+    ElMessage.success('删除成功')
+    await loadWords()
+  }
+
+  onMounted(loadWords)
 </script>
+
+<style scoped>
+  .sensitive-word-page {
+    padding: 24px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .page-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .page-header p {
+    margin: 6px 0 0;
+    color: var(--el-text-color-secondary);
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .search-input {
+    width: 260px;
+  }
+
+  .status-select {
+    width: 140px;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+</style>

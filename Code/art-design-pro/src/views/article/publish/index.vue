@@ -82,12 +82,38 @@
 
         <div class="flex justify-end gap-3">
           <ElButton @click="router.back()">返回</ElButton>
+          <ElButton @click="previewVisible = true" :disabled="!form.title">预览</ElButton>
           <ElButton type="primary" :loading="saving" @click="submit" class="w-25">
             {{ articleId ? '保存' : '发布' }}
           </ElButton>
         </div>
       </div>
     </div>
+
+    <!-- 预览弹窗 -->
+    <ElDialog
+      v-model="previewVisible"
+      title="文章预览"
+      width="760px"
+      top="5vh"
+      align-center
+      :close-on-click-modal="false"
+    >
+      <div class="preview-body" style="max-height: 65vh; overflow-y: auto; padding: 0 4px;">
+        <h1 style="font-size: 22px; font-weight: 600; margin-bottom: 12px; line-height: 1.4;">{{ form.title }}</h1>
+        <p v-if="form.summary" style="color: #666; margin-bottom: 20px; line-height: 1.7; font-size: 14px;">{{ form.summary }}</p>
+        <div v-if="form.coverUrl" style="margin-bottom: 20px;">
+          <img :src="form.coverUrl" style="width: 100%; max-height: 340px; object-fit: cover; border-radius: 8px;" alt="封面" />
+        </div>
+        <div class="markdown-body" v-html="sanitizedPreviewHtml" style="font-size: 15px;"></div>
+      </div>
+      <template #footer>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <ElButton @click="previewVisible = false">返回</ElButton>
+          <ElButton type="primary" :loading="saving" @click="previewVisible = false; submit()">发布</ElButton>
+        </div>
+      </template>
+    </ElDialog>
   </div>
 </template>
 
@@ -119,11 +145,13 @@
   const uploadImageUrl = `${apiBase}/api/common/upload`
   const uploadHeaders = computed(() => ({ Authorization: `Bearer ${userStore.accessToken}` }))
   const articleTypes = ref<Api.Article.ArticleType[]>([])
+  const previewVisible = ref(false)
+  const sanitizedPreviewHtml = computed(() => sanitizeRichHtml(form.contentHtml || ''))
   const saving = ref(false)
   const fileList = ref<UploadUserFile[]>([])
   const form = reactive<Api.Article.ArticleSaveParams>({
     title: '',
-    categoryId: 0,
+    categoryId: null as number | null,
     coverUrl: '',
     summary: '',
     contentHtml: '',

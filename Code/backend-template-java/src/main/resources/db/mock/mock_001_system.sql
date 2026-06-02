@@ -45,6 +45,19 @@ VALUES
     'NORMAL',
     'system',
     'system'
+  ),
+  (
+    3,
+    'user',
+    '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2',
+    '普通用户',
+    '女',
+    '13800000003',
+    'user@example.com',
+    '/src/assets/images/avatar/avatar.webp',
+    'NORMAL',
+    'system',
+    'system'
   );
 
 INSERT INTO sys_role (
@@ -73,7 +86,8 @@ VALUES
   (12, '查看用户', 'system:user:view', 'system', 'ADMIN', 1, 'system', 'system'),
   (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system'),
   (14, '上传文章资源', 'article:upload', 'article', 'BOTH', 1, 'system', 'system'),
-  (15, '管理文章评论', 'article:comment:manage', 'article', 'BOTH', 1, 'system', 'system');
+  (15, '管理文章评论', 'article:comment:manage', 'article', 'BOTH', 1, 'system', 'system'),
+  (16, '管理评论敏感词', 'article:comment:sensitive-word', 'article', 'BOTH', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -105,18 +119,21 @@ VALUES
   (22, 8, 'BUTTON', NULL, 'ArticleEdit', NULL, NULL, '编辑文章', NULL, 'BOTH', 'article:publish:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
   (23, 9, 'BUTTON', NULL, 'ArticleUpload', NULL, NULL, '上传文章资源', NULL, 'BOTH', 'article:upload', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (24, 7, 'MENU', 'detail/:id', 'ArticleDetail', '/article/detail', NULL, 'menus.article.articleDetail', NULL, 'BOTH', NULL, 1, 0, 1, 0, '/article/article-list', 3, 1, 'system', 'system'),
-  (25, 3, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system');
+  (25, 3, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system'),
+  (26, 7, 'MENU', 'comment', 'ArticleComment', '/article/comment', NULL, '评论敏感词', 'ri:shield-keyhole-line', 'ADMIN', 'article:comment:sensitive-word', 1, 0, 0, 0, NULL, 4, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
   (1, 1),
-  (2, 2);
+  (2, 2),
+  (3, 3);
 
 INSERT INTO sys_user_org (user_id, org_id, primary_org)
 VALUES
   (1, 1, 1),
   (2, 2, 1),
-  (2, 3, 0);
+  (2, 3, 0),
+  (3, 1, 1);
 
 INSERT INTO sys_role_org (role_id, org_id)
 VALUES
@@ -126,14 +143,14 @@ INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
   (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20),
-  (1, 21), (1, 22), (1, 23), (1, 24), (1, 25),
+  (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26),
   (2, 7), (2, 8), (2, 9), (2, 21), (2, 22), (2, 23), (2, 24), (2, 25),
   (3, 7), (3, 8), (3, 24), (3, 25),
   (4, 7), (4, 8), (4, 24), (4, 25);
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15),
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
   (2, 9), (2, 10), (2, 14), (2, 15);
 
 INSERT INTO article_category (id, category_name, category_code, sort, enabled, create_by, update_by)

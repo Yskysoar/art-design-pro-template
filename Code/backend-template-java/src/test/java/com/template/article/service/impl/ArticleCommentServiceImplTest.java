@@ -10,6 +10,7 @@ import com.template.article.entity.Article;
 import com.template.article.entity.ArticleComment;
 import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
+import com.template.article.service.CommentSensitiveWordService;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
@@ -54,12 +55,15 @@ class ArticleCommentServiceImplTest {
     private PermissionService permissionService;
     @Mock
     private SysConfigMapper configMapper;
+    @Mock
+    private CommentSensitiveWordService sensitiveWordService;
 
     private ArticleCommentServiceImpl commentService;
 
     @BeforeEach
     void setUp() {
-        commentService = new ArticleCommentServiceImpl(commentMapper, articleMapper, permissionService, configMapper);
+        commentService = new ArticleCommentServiceImpl(commentMapper, articleMapper, permissionService, configMapper, sensitiveWordService);
+        lenient().when(sensitiveWordService.findHits(anyString())).thenReturn(List.of());
         lenient().when(permissionService.isSuperAdmin(ADMIN)).thenReturn(true);
     }
 
