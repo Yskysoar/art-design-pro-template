@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
+import com.template.system.auth.service.CaptchaService;
 import com.template.system.config.entity.SysConfig;
 import com.template.system.config.mapper.SysConfigMapper;
 import com.template.system.org.entity.SysOrg;
@@ -64,6 +65,8 @@ class UserServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private PermissionService permissionService;
+    @Mock
+    private CaptchaService captchaService;
 
     private UserServiceImpl userService;
 
@@ -77,7 +80,8 @@ class UserServiceImplTest {
                 orgMapper,
                 configMapper,
                 passwordEncoder,
-                permissionService
+                permissionService,
+                captchaService
         );
     }
 
@@ -197,7 +201,7 @@ class UserServiceImplTest {
         when(passwordEncoder.matches("wrong-pass", "old-hash")).thenReturn(false);
 
         assertThatThrownBy(() -> userService.changeCurrentUserPassword(
-                new UserPasswordChangeRequest("wrong-pass", "new-pass-123"),
+                new UserPasswordChangeRequest("wrong-pass", "new-pass-123", "captcha-id", "a1B2"),
                 ADMIN
         ))
                 .isInstanceOf(BusinessException.class)
@@ -217,7 +221,7 @@ class UserServiceImplTest {
         when(passwordEncoder.encode("new-pass-123")).thenReturn("new-hash");
 
         userService.changeCurrentUserPassword(
-                new UserPasswordChangeRequest("old-pass-123", "new-pass-123"),
+                new UserPasswordChangeRequest("old-pass-123", "new-pass-123", "captcha-id", "a1B2"),
                 ADMIN
         );
 

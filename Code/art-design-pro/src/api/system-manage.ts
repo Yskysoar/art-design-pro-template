@@ -60,6 +60,17 @@ export function fetchChangeCurrentUserPassword(data: Api.SystemManage.UserPasswo
   })
 }
 
+/**
+ * 更新当前用户个人资料
+ * @param data 个人资料参数
+ */
+export function fetchUpdateProfile(data: Api.SystemManage.ProfileUpdateParams) {
+  return request.put<void>({
+    url: '/api/user/profile',
+    data
+  })
+}
+
 // 获取角色列表
 export function fetchGetRoleList(params: Api.SystemManage.RoleSearchParams) {
   return request.get<Api.SystemManage.RoleList>({

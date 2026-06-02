@@ -5,6 +5,7 @@ import com.template.security.auth.AppUserPrincipal;
 import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
 import com.template.system.user.dto.UserPasswordChangeRequest;
+import com.template.system.user.dto.ProfileUpdateRequest;
 import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.vo.UserListItemVo;
@@ -82,5 +83,8 @@ public interface UserService {
      * @param request   修改密码请求
      * @param principal 当前登录用户
      */
-    void changeCurrentUserPassword(UserPasswordChangeRequest request, AppUserPrincipal principal);
+    void changeCurrentUserPassword(UserPasswordChangeRequest request,
+        AppUserPrincipal principal);
+
+    void updateProfile(ProfileUpdateRequest request, AppUserPrincipal principal);
 }

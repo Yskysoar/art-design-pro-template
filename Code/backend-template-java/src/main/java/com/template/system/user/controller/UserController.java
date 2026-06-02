@@ -9,6 +9,7 @@ import com.template.system.auth.vo.UserInfoResponse;
 import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
 import com.template.system.user.dto.UserPasswordChangeRequest;
+import com.template.system.user.dto.ProfileUpdateRequest;
 import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.service.UserService;
@@ -62,6 +63,18 @@ public class UserController {
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
         userService.changeCurrentUserPassword(request, principal);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 当前用户修改个人资料。
+     */
+    @PutMapping("/profile")
+    public ApiResponse<Void> updateProfile(
+            @Valid @RequestBody ProfileUpdateRequest request,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        userService.updateProfile(request, principal);
         return ApiResponse.success(null);
     }
 

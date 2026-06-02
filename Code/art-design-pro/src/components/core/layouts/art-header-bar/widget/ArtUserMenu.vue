@@ -96,6 +96,19 @@
           @keyup.enter="submitPasswordChange"
         />
       </ElFormItem>
+      <ElFormItem label="验证码" prop="captchaCode">
+        <div class="captcha-row">
+          <ElInput
+            v-model.trim="passwordForm.captchaCode"
+            maxlength="4"
+            @keyup.enter="submitPasswordChange"
+          />
+          <button class="captcha-image" type="button" @click="loadPasswordCaptcha">
+            <img v-if="passwordCaptchaImage" :src="passwordCaptchaImage" alt="captcha" />
+            <span v-else>刷新</span>
+          </button>
+        </div>
+      </ElFormItem>
     </ElForm>
     <template #footer>
       <ElButton @click="passwordDialogVisible = false">取消</ElButton>
@@ -113,6 +126,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { mittBus } from '@/utils/sys'
   import defaultAvatar from '@/assets/images/user/avatar.webp'
+  import { fetchCaptcha } from '@/api/auth'
   import { fetchChangeCurrentUserPassword } from '@/api/system-manage'
 
   defineOptions({ name: 'ArtUserMenu' })
@@ -126,10 +140,13 @@
   const passwordDialogVisible = ref(false)
   const passwordSubmitting = ref(false)
   const passwordFormRef = ref<FormInstance>()
+  const passwordCaptchaId = ref('')
+  const passwordCaptchaImage = ref('')
   const passwordForm = reactive({
     oldPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    captchaCode: ''
   })
   const userAvatar = computed(() => userInfo.value.avatar || defaultAvatar)
 
@@ -157,6 +174,10 @@
     confirmPassword: [
       { required: true, message: '请再次输入新密码', trigger: 'blur' },
       { validator: validateConfirmPassword, trigger: 'blur' }
+    ],
+    captchaCode: [
+      { required: true, message: '请输入验证码', trigger: 'blur' },
+      { min: 4, max: 4, message: '验证码为4位', trigger: 'blur' }
     ]
   }
 
@@ -170,6 +191,7 @@
   const openPasswordDialog = (): void => {
     closeUserMenu()
     passwordDialogVisible.value = true
+    loadPasswordCaptcha()
   }
 
   const lockScreen = (): void => {
@@ -181,7 +203,21 @@
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
+    passwordForm.captchaCode = ''
     passwordFormRef.value?.clearValidate()
+  }
+
+  const loadPasswordCaptcha = async (): Promise<void> => {
+    try {
+      const captcha = await fetchCaptcha()
+      passwordCaptchaId.value = captcha.captchaId
+      passwordCaptchaImage.value = captcha.imageBase64
+      passwordForm.captchaCode = ''
+    } catch {
+      console.warn('[PasswordChange] 验证码加载失败')
+      passwordCaptchaId.value = ''
+      passwordCaptchaImage.value = ''
+    }
   }
 
   const submitPasswordChange = async (): Promise<void> => {
@@ -191,12 +227,17 @@
     try {
       await fetchChangeCurrentUserPassword({
         oldPassword: passwordForm.oldPassword,
-        newPassword: passwordForm.newPassword
+        newPassword: passwordForm.newPassword,
+        captchaId: passwordCaptchaId.value,
+        captchaCode: passwordForm.captchaCode
       })
       passwordDialogVisible.value = false
       ElMessage.success('密码已修改，请使用新密码重新登录')
       userStore.logOut()
     } finally {
+      if (passwordDialogVisible.value) {
+        await loadPasswordCaptcha()
+      }
       passwordSubmitting.value = false
     }
   }
@@ -253,5 +294,28 @@
     transition-all
     duration-200
     hover:shadow-xl;
+  }
+
+  .captcha-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .captcha-image {
+    width: 112px;
+    height: 32px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--el-fill-color-light);
+    border: 1px solid var(--el-border-color);
+    border-radius: 6px;
+  }
+
+  .captcha-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 </style>

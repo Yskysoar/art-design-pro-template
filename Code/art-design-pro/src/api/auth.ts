@@ -8,9 +8,29 @@ import request from '@/utils/http'
 export function fetchLogin(params: Api.Auth.LoginParams) {
   return request.post<Api.Auth.LoginResponse>({
     url: '/api/auth/login',
-    params
+    data: params
     // showSuccessMessage: true // 显示成功消息
     // showErrorMessage: false // 不显示错误消息
+  })
+}
+
+export function fetchRegister(data: Api.Auth.RegisterParams) {
+  return request.post<void>({
+    url: '/api/auth/register',
+    data
+  })
+}
+
+export function fetchResetPassword(data: Api.Auth.ResetPasswordParams) {
+  return request.post<void>({
+    url: '/api/auth/reset-password',
+    data
+  })
+}
+
+export function fetchCaptcha() {
+  return request.get<Api.Auth.CaptchaResponse>({
+    url: '/api/auth/captcha'
   })
 }
 

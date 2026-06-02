@@ -40,7 +40,12 @@
       </div>
       <div class="flex-1 overflow-hidden max-md:w-full max-md:mt-3.5">
         <div class="art-card-sm">
-          <h1 class="p-4 text-xl font-normal border-b border-g-300">基本设置</h1>
+          <div class="flex items-center justify-between p-4 border-b border-g-300">
+            <h1 class="text-xl font-normal">基本设置</h1>
+            <ElButton size="small" :type="editing ? 'primary' : 'default'" @click="toggleEdit">
+              {{ editing ? '取消' : '编辑' }}
+            </ElButton>
+          </div>
 
           <ElForm
             ref="ruleFormRef"
@@ -54,27 +59,29 @@
               <ElFormItem label="用户名" prop="userName">
                 <ElInput :model-value="userInfo.userName || ''" disabled />
               </ElFormItem>
-              <ElFormItem label="邮箱" prop="email" class="ml-5">
-                <ElInput :model-value="userInfo.email || ''" disabled />
-              </ElFormItem>
-            </ElRow>
-
-            <ElRow>
-              <ElFormItem label="头像地址" prop="avatar">
-                <ElInput :model-value="userInfo.avatar || ''" disabled />
-              </ElFormItem>
               <ElFormItem label="用户 ID" prop="userId" class="ml-5">
                 <ElInput :model-value="String(userInfo.userId || '')" disabled />
               </ElFormItem>
             </ElRow>
 
-            <ElFormItem label="说明">
-              <ElInput
-                type="textarea"
-                :rows="4"
-                model-value="当前个人中心展示真实登录账号信息。密码修改已移动到右上角用户菜单。"
-                disabled
-              />
+            <ElRow>
+              <ElFormItem label="邮箱" prop="email">
+                <ElInput v-model="form.email" :disabled="!editing" :placeholder="editing ? '请输入邮箱' : userInfo.email || '未填写'" />
+              </ElFormItem>
+              <ElFormItem label="头像地址" prop="avatar" class="ml-5">
+                <ElInput v-model="form.avatar" :disabled="!editing" :placeholder="editing ? '请输入头像 URL' : userInfo.avatar || '未填写'" />
+              </ElFormItem>
+            </ElRow>
+
+            <ElRow>
+              <ElFormItem label="昵称" prop="nickName">
+                <ElInput v-model="form.nickName" :disabled="!editing" :placeholder="editing ? '请输入昵称' : userInfo.userName || '未填写'" />
+              </ElFormItem>
+            </ElRow>
+
+            <ElFormItem v-if="editing" label="操作">
+              <ElButton type="primary" :loading="saving" @click="saveProfile">保存修改</ElButton>
+              <ElButton :disabled="saving" @click="toggleEdit">取消</ElButton>
             </ElFormItem>
           </ElForm>
         </div>
@@ -87,15 +94,59 @@
   import { useUserStore } from '@/store/modules/user'
   import type { FormInstance, FormRules } from 'element-plus'
   import defaultAvatar from '@/assets/images/user/avatar.webp'
+  import { fetchUpdateProfile } from '@/api/system-manage'
 
   defineOptions({ name: 'UserCenter' })
 
   const userStore = useUserStore()
   const userInfo = computed(() => userStore.getUserInfo)
-  const userAvatar = computed(() => userInfo.value.avatar || defaultAvatar)
+  const userAvatar = computed(() => form.avatar || userInfo.value.avatar || defaultAvatar)
   const roleText = computed(() => userInfo.value.roles?.join('、') || '暂无角色')
   const ruleFormRef = ref<FormInstance>()
+  const editing = ref(false)
+  const saving = ref(false)
 
-  const form = reactive({})
+  const form = reactive({
+    email: '',
+    avatar: '',
+    nickName: ''
+  })
+
   const rules = reactive<FormRules>({})
+
+  const toggleEdit = () => {
+    editing.value = !editing.value
+    if (editing.value) {
+      // 切换到编辑模式时，填充当前数据
+      form.email = userInfo.value.email || ''
+      form.avatar = userInfo.value.avatar || ''
+      form.nickName = userInfo.value.userName || ''
+    } else {
+      // 取消编辑时清除验证
+      ruleFormRef.value?.clearValidate()
+    }
+  }
+
+  const saveProfile = async () => {
+    if (!ruleFormRef.value) return
+    await ruleFormRef.value.validate()
+    saving.value = true
+    try {
+      await fetchUpdateProfile({
+        nickName: form.nickName || undefined,
+        userEmail: form.email || undefined,
+        avatar: form.avatar || undefined
+      })
+      ElMessage.success('个人资料已更新')
+      editing.value = false
+      // 刷新用户信息
+      const { fetchGetUserInfo } = await import('@/api/auth')
+      const newInfo = await fetchGetUserInfo()
+      userStore.setUserInfo(newInfo)
+    } catch {
+      // 错误已由 HTTP 拦截器处理
+    } finally {
+      saving.value = false
+    }
+  }
 </script>

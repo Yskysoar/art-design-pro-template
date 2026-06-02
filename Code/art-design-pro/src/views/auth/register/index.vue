@@ -109,6 +109,7 @@
 
   const loading = ref(false)
   const formKey = ref(0)
+  const privacyDialogVisible = ref(false)
 
   // 监听语言切换，重置表单
   watch(locale, () => {

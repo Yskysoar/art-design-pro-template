@@ -403,6 +403,15 @@ function registerMockMiddleware(server: ViteDevServer): void {
 }
 
 function handleMockRequest(request: MockRequest): MockResponse | null {
+  if (request.method === 'GET' && request.pathname === '/api/auth/captcha') {
+    return ok({
+      captchaId: `local-${Date.now()}`,
+      imageBase64:
+        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTEyIDQwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iNDAiIGZpbGw9IiNmNWY4ZmMiLz48cGF0aCBkPSJNMCAxMEwxMTIgMzBNMCAzMEwxMTIgMTBNMTAgMEw5MCA0MCIgc3Ryb2tlPSIjOTRjM2U4IiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSIyMCIgeT0iMjgiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzI1NjNiZCI+QTFCMjwvdGV4dD48L3N2Zz4=',
+      expiresIn: 300
+    })
+  }
+
   if (request.method === 'POST' && request.pathname === '/api/auth/login') {
     return ok({
       token: TOKEN,

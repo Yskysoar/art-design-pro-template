@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableConfigurationProperties({SecurityProperties.class, FileStorageProperties.class})
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -46,6 +48,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/captcha",
+                                "/api/auth/register",
+                                "/api/auth/reset-password",
                                 "/api/health",
                                 "/api/portal/public/**",
                                 "/api/common/files/**",
@@ -67,3 +72,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+

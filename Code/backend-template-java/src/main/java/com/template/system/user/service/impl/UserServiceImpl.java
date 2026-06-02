@@ -19,9 +19,11 @@ import com.template.system.relation.mapper.SysUserOrgMapper;
 import com.template.system.relation.mapper.SysUserRoleMapper;
 import com.template.system.role.entity.SysRole;
 import com.template.system.role.mapper.SysRoleMapper;
+import com.template.system.auth.service.CaptchaService;
 import com.template.system.user.dto.UserCreateRequest;
 import com.template.system.user.dto.UserListQuery;
 import com.template.system.user.dto.UserPasswordChangeRequest;
+import com.template.system.user.dto.ProfileUpdateRequest;
 import com.template.system.user.dto.UserStatusRequest;
 import com.template.system.user.dto.UserUpdateRequest;
 import com.template.system.user.entity.SysUser;
@@ -67,6 +69,7 @@ public class UserServiceImpl implements UserService {
     private final SysConfigMapper configMapper;
     private final PasswordEncoder passwordEncoder;
     private final PermissionService permissionService;
+    private final CaptchaService captchaService;
 
     public UserServiceImpl(
             SysUserMapper userMapper,
@@ -76,7 +79,8 @@ public class UserServiceImpl implements UserService {
             SysOrgMapper orgMapper,
             SysConfigMapper configMapper,
             PasswordEncoder passwordEncoder,
-            PermissionService permissionService
+            PermissionService permissionService,
+            CaptchaService captchaService
     ) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
@@ -86,6 +90,7 @@ public class UserServiceImpl implements UserService {
         this.configMapper = configMapper;
         this.passwordEncoder = passwordEncoder;
         this.permissionService = permissionService;
+        this.captchaService = captchaService;
     }
 
     @Override
@@ -201,7 +206,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public void updateProfile(ProfileUpdateRequest request, AppUserPrincipal principal) {
+        SysUser user = userMapper.selectById(principal.userId());
+        if (user == null) {
+            throw new BusinessException(ApiCode.NOT_FOUND, "用户不存在");
+        }
+        if (request.nickName() != null) {
+            user.setNickName(request.nickName());
+        }
+        if (request.userEmail() != null) {
+            user.setUserEmail(request.userEmail());
+        }
+        if (request.avatar() != null) {
+            user.setAvatar(request.avatar());
+        }
+        user.setUpdateBy(principal.userName());
+        userMapper.updateById(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void changeCurrentUserPassword(UserPasswordChangeRequest request, AppUserPrincipal principal) {
+        captchaService.validateAndConsume(request.captchaId(), request.captchaCode());
         SysUser user = getExistingUser(principal.userId());
         if (!passwordEncoder.matches(request.oldPassword(), user.getPasswordHash())) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "当前密码不正确");

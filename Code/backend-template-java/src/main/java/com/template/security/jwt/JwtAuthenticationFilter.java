@@ -19,9 +19,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 /**
  * Bearer JWT 解析过滤器。
+ * <p>公开路径跳过 JWT 校验，避免干扰 permitAll() 配置。</p>
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -29,12 +31,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
+    /**
+     * 无需 JWT 校验的公开路径（完全匹配）。
+     */
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+        "/api/auth/login", "/api/auth/captcha",
+        "/api/auth/register", "/api/auth/reset-password",
+        "/api/health", "/api/article/comment/list"
+    );
+
     private final JwtTokenService jwtTokenService;
     private final ObjectMapper objectMapper;
 
     public JwtAuthenticationFilter(JwtTokenService jwtTokenService, ObjectMapper objectMapper) {
         this.jwtTokenService = jwtTokenService;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        if (PUBLIC_PATHS.contains(path)) {
+            return true;
+        }
+        // 前缀匹配的公开路径
+        return path.startsWith("/api/portal/public/")
+            || path.startsWith("/api/common/files/");
     }
 
     @Override

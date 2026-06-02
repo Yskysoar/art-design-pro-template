@@ -48,30 +48,20 @@
               />
             </ElFormItem>
 
-            <!-- 推拽验证 -->
-            <div class="relative pb-5 mt-6">
-              <div
-                class="relative z-[2] overflow-hidden select-none rounded-lg border border-transparent tad-300"
-                :class="{ '!border-[#FF4E4F]': !isPassing && isClickPass }"
-              >
-                <ArtDragVerify
-                  ref="dragVerify"
-                  v-model:value="isPassing"
-                  :text="$t('login.sliderText')"
-                  textColor="var(--art-gray-700)"
-                  :successText="$t('login.sliderSuccessText')"
-                  progressBarBg="var(--main-color)"
-                  :background="isDark ? '#26272F' : '#F1F1F4'"
-                  handlerBg="var(--default-box-color)"
+            <ElFormItem prop="captchaCode">
+              <div class="captcha-row">
+                <ElInput
+                  class="custom-height"
+                  v-model.trim="formData.captchaCode"
+                  placeholder="请输入验证码"
+                  maxlength="4"
                 />
+                <button class="captcha-image" type="button" @click="loadCaptcha">
+                  <img v-if="captchaImage" :src="captchaImage" alt="captcha" />
+                  <span v-else>刷新</span>
+                </button>
               </div>
-              <p
-                class="absolute top-0 z-[1] px-px mt-2 text-xs text-[#f56c6c] tad-300"
-                :class="{ 'translate-y-10': !isPassing && isClickPass }"
-              >
-                {{ $t('login.placeholder.slider') }}
-              </p>
-            </div>
+            </ElFormItem>
 
             <div class="flex-cb mt-2 text-sm">
               <ElCheckbox v-model="formData.rememberPassword">{{
@@ -110,17 +100,16 @@
 <script setup lang="ts">
   import AppConfig from '@/config'
   import { useUserStore } from '@/store/modules/user'
+  import { useWorktabStore } from '@/store/modules/worktab'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
-  import { fetchLogin } from '@/api/auth'
+  import { fetchCaptcha, fetchGetUserInfo, fetchLogin } from '@/api/auth'
+  const REMEMBER_PWD_KEY = 'remembered_password'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
-  import { useSettingStore } from '@/store/modules/setting'
-
   defineOptions({ name: 'Login' })
 
-  const settingStore = useSettingStore()
-  const { isDark } = storeToRefs(settingStore)
   const { t, locale } = useI18n()
+  const worktabStore = useWorktabStore()
   const formKey = ref(0)
 
   // 监听语言切换，重置表单
@@ -162,14 +151,9 @@
     }
   ])
 
-  const dragVerify = ref()
-
   const userStore = useUserStore()
   const router = useRouter()
   const route = useRoute()
-  const isPassing = ref(false)
-  const isClickPass = ref(false)
-
   const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
 
@@ -177,18 +161,38 @@
     account: '',
     username: '',
     password: '',
+    captchaCode: '',
     rememberPassword: true
   })
 
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
-    password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }]
+    password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
+    captchaCode: [
+      { required: true, message: '请输入验证码', trigger: 'blur' },
+      { min: 4, max: 4, message: '验证码为4位', trigger: 'blur' }
+    ]
   }))
 
   const loading = ref(false)
+  const captchaId = ref('')
+  const captchaImage = ref('')
 
   onMounted(() => {
     setupAccount('super')
+    loadCaptcha()
+    // 加载记住的密码
+    const saved = localStorage.getItem(REMEMBER_PWD_KEY)
+    if (saved) {
+      try {
+        const { userName, password } = JSON.parse(saved)
+        if (userName) {
+          formData.username = userName
+          formData.password = password
+          formData.rememberPassword = true
+        }
+      } catch { /* 数据损坏时忽略 */ }
+    }
   })
 
   // 设置账号
@@ -197,6 +201,19 @@
     formData.account = key
     formData.username = selectedAccount?.userName ?? ''
     formData.password = selectedAccount?.password ?? ''
+  }
+
+  const loadCaptcha = async () => {
+    try {
+      const captcha = await fetchCaptcha()
+      captchaId.value = captcha.captchaId
+      captchaImage.value = captcha.imageBase64
+      formData.captchaCode = ''
+    } catch {
+      console.warn('[Login] 验证码加载失败')
+      captchaId.value = ''
+      captchaImage.value = ''
+    }
   }
 
   // 登录
@@ -208,12 +225,6 @@
       const valid = await formRef.value.validate()
       if (!valid) return
 
-      // 拖拽验证
-      if (!isPassing.value) {
-        isClickPass.value = true
-        return
-      }
-
       loading.value = true
 
       // 登录请求
@@ -221,7 +232,9 @@
 
       const { token, refreshToken } = await fetchLogin({
         userName: username,
-        password
+        password,
+        captchaId: captchaId.value,
+        captchaCode: formData.captchaCode
       })
 
       // 验证token
@@ -233,12 +246,14 @@
       userStore.setToken(token, refreshToken)
       userStore.setLoginStatus(true)
 
-      // 登录成功处理
-      showLoginSuccessNotice()
+      // 清空工作台标签页，登录后只保留工作台
+      worktabStore.clearAll()
 
       // 获取 redirect 参数，如果存在则跳转到指定页面，否则跳转到首页
-      const redirect = route.query.redirect as string
-      router.push(redirect || '/')
+      const redirect = getSafeRedirectPath(route.query.redirect)
+      await router.push(redirect)
+      // 导航完成后显示通知，避免通知弹窗先于页面跳转
+      showLoginSuccessNotice()
     } catch (error) {
       // 处理 HttpError
       if (error instanceof HttpError) {
@@ -250,26 +265,37 @@
       }
     } finally {
       loading.value = false
-      resetDragVerify()
+      await loadCaptcha()
     }
-  }
-
-  // 重置拖拽验证
-  const resetDragVerify = () => {
-    dragVerify.value.reset()
   }
 
   // 登录成功提示
   const showLoginSuccessNotice = () => {
-    setTimeout(() => {
-      ElNotification({
+    ElNotification({
         title: t('login.success.title'),
         type: 'success',
         duration: 2500,
         zIndex: 10000,
         message: `${t('login.success.message')}, ${systemName}!`
       })
-    }, 1000)
+  }
+
+  const getSafeRedirectPath = (redirect: unknown) => {
+    const path = Array.isArray(redirect) ? redirect[0] : redirect
+    if (!path || typeof path !== 'string' || !path.startsWith('/')) {
+      return '/'
+    }
+
+    if (
+      path.startsWith('/auth/') ||
+      path === '/403' ||
+      path === '/404' ||
+      path === '/500'
+    ) {
+      return '/'
+    }
+
+    return path
   }
 </script>
 
@@ -280,5 +306,28 @@
 <style lang="scss" scoped>
   :deep(.el-select__wrapper) {
     height: 40px !important;
+  }
+
+  .captcha-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .captcha-image {
+    width: 112px;
+    height: 40px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--el-fill-color-light);
+    border: 1px solid var(--el-border-color);
+    border-radius: 6px;
+  }
+
+  .captcha-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 </style>

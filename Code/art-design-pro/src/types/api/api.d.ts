@@ -65,12 +65,34 @@ declare namespace Api {
     interface LoginParams {
       userName: string
       password: string
+      captchaId: string
+      captchaCode: string
     }
 
     /** 登录响应 */
     interface LoginResponse {
       token: string
       refreshToken: string
+    }
+
+    interface RegisterParams {
+      userName: string
+      password: string
+      captchaId: string
+      captchaCode: string
+    }
+
+    interface ResetPasswordParams {
+      userName: string
+      newPassword: string
+      captchaId: string
+      captchaCode: string
+    }
+
+    interface CaptchaResponse {
+      captchaId: string
+      imageBase64: string
+      expiresIn: number
     }
 
     /** 用户信息 */
@@ -138,9 +160,17 @@ declare namespace Api {
       orgIds: number[]
     }
 
-    interface UserPasswordChangeParams {
+        interface UserPasswordChangeParams {
       oldPassword: string
       newPassword: string
+      captchaId: string
+      captchaCode: string
+    }
+
+    interface ProfileUpdateParams {
+      nickName?: string
+      userEmail?: string
+      avatar?: string
     }
 
     /** 角色列表 */
@@ -343,7 +373,7 @@ declare namespace Api {
 
     interface ArticleSaveParams {
       title: string
-      categoryId: number
+      categoryId: number | null
       coverUrl?: string
       summary?: string
       contentHtml: string
@@ -382,6 +412,31 @@ declare namespace Api {
       articleId: number
       parentId?: number
       content: string
+    }
+
+    type SensitiveWordList = Api.Common.PaginatedResponse<SensitiveWordItem>
+
+    interface SensitiveWordItem {
+      id: number
+      word: string
+      matchType: string
+      enabled: number
+      remark?: string
+      createTime?: string
+      updateTime?: string
+    }
+
+    interface SensitiveWordSearchParams {
+      current: number
+      size: number
+      word?: string
+      enabled?: number
+    }
+
+    interface SensitiveWordSaveParams {
+      word: string
+      enabled: number
+      remark?: string
     }
   }
 
