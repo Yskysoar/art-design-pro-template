@@ -43,44 +43,6 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
-      path: 'user-center',
-      name: 'UserCenter',
-      component: '/system/user-center',
-      meta: {
-        title: 'menus.system.userCenter',
-        icon: 'ri:user-line',
-        isHide: true,
-        keepAlive: true,
-        isHideTab: true
-      }
-    },
-    {
-      path: 'menu',
-      name: 'Menus',
-      component: '/system/menu',
-      meta: {
-        title: 'menus.system.menu',
-        icon: 'ri:menu-line',
-        keepAlive: true,
-        roles: ['R_SUPER'],
-        authList: [
-          { title: '管理菜单', authMark: 'system:menu:manage' }
-        ]
-      }
-    },
-    {
-      path: 'config',
-      name: 'Config',
-      component: '/system/config',
-      meta: {
-        title: '配置项管理',
-        icon: 'ri:settings-3-line',
-        keepAlive: true,
-        roles: ['R_SUPER'],
-        authList: [{ title: '管理配置项', authMark: 'system:config:manage' }]
-      }
-    },
-    {
       path: 'org',
       name: 'Org',
       component: '/system/org',
@@ -93,89 +55,52 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
-      path: 'nested',
-      name: 'Nested',
-      component: '',
+      path: 'config',
+      name: 'Config',
+      component: '/system/config',
       meta: {
-        title: 'menus.system.nested',
-        icon: 'ri:menu-unfold-3-line',
-        keepAlive: true
-      },
-      children: [
-        {
-          path: 'menu1',
-          name: 'NestedMenu1',
-          component: '/system/nested/menu1',
-          meta: {
-            title: 'menus.system.menu1',
-            icon: 'ri:align-justify',
-            keepAlive: true
-          }
-        },
-        {
-          path: 'menu2',
-          name: 'NestedMenu2',
-          component: '',
-          meta: {
-            title: 'menus.system.menu2',
-            icon: 'ri:align-justify',
-            keepAlive: true
-          },
-          children: [
-            {
-              path: 'menu2-1',
-              name: 'NestedMenu2-1',
-              component: '/system/nested/menu2',
-              meta: {
-                title: 'menus.system.menu21',
-                icon: 'ri:align-justify',
-                keepAlive: true
-              }
-            }
-          ]
-        },
-        {
-          path: 'menu3',
-          name: 'NestedMenu3',
-          component: '',
-          meta: {
-            title: 'menus.system.menu3',
-            icon: 'ri:align-justify',
-            keepAlive: true
-          },
-          children: [
-            {
-              path: 'menu3-1',
-              name: 'NestedMenu3-1',
-              component: '/system/nested/menu3',
-              meta: {
-                title: 'menus.system.menu31',
-                keepAlive: true
-              }
-            },
-            {
-              path: 'menu3-2',
-              name: 'NestedMenu3-2',
-              component: '',
-              meta: {
-                title: 'menus.system.menu32',
-                keepAlive: true
-              },
-              children: [
-                {
-                  path: 'menu3-2-1',
-                  name: 'NestedMenu3-2-1',
-                  component: '/system/nested/menu3/menu3-2',
-                  meta: {
-                    title: 'menus.system.menu321',
-                    keepAlive: true
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
+        title: '配置管理',
+        icon: 'ri:settings-3-line',
+        keepAlive: true,
+        roles: ['R_SUPER'],
+        authList: [{ title: '管理配置', authMark: 'system:config:manage' }]
+      }
+    },
+    {
+      path: 'menu',
+      name: 'Menus',
+      component: '/system/menu',
+      meta: {
+        title: 'menus.system.menu',
+        icon: 'ri:menu-line',
+        keepAlive: true,
+        roles: ['R_SUPER'],
+        authList: [{ title: '管理菜单', authMark: 'system:menu:manage' }]
+      }
+    },
+    {
+      path: 'sensitive-word',
+      name: 'SensitiveWord',
+      component: '/article/comment',
+      meta: {
+        title: '敏感词库',
+        icon: 'ri:shield-keyhole-line',
+        keepAlive: false,
+        roles: ['R_SUPER'],
+        authList: [{ title: '管理敏感词', authMark: 'system:sensitive-word' }]
+      }
+    },
+    {
+      path: 'user-center',
+      name: 'UserCenter',
+      component: '/system/user-center',
+      meta: {
+        title: 'menus.system.userCenter',
+        icon: 'ri:user-line',
+        isHide: true,
+        keepAlive: true,
+        isHideTab: true
+      }
     }
   ]
 }

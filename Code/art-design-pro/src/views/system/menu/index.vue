@@ -200,7 +200,7 @@
       width: 180,
       align: 'right',
       formatter: (row: AppRouteRecord) => {
-        const buttonStyle = { style: 'text-align: right' }
+        const buttonStyle = { class: 'table-action-nowrap' }
 
         if (row.meta?.isAuthButton) {
           return h('div', buttonStyle, [
@@ -520,3 +520,14 @@
     }
   }
 </script>
+
+<style scoped>
+  :deep(.table-action-nowrap) {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    white-space: nowrap;
+  }
+</style>

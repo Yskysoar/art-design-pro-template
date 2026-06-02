@@ -169,10 +169,10 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 150,
+      width: 140,
       fixed: 'right',
       formatter: (row: OrgItem) =>
-        h('div', [
+        h('div', { class: 'table-action-nowrap' }, [
           h(ArtButtonTable, { type: 'add', auth: 'system:org:manage', onClick: () => showDialog('add', row) }),
           h(ArtButtonTable, { type: 'edit', auth: 'system:org:manage', onClick: () => showDialog('edit', row) }),
           h(ArtButtonTable, { type: 'delete', auth: 'system:org:manage', onClick: () => deleteOrg(row) })
@@ -280,3 +280,13 @@
     return map[type] || type
   }
 </script>
+
+<style scoped>
+  :deep(.table-action-nowrap) {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+</style>

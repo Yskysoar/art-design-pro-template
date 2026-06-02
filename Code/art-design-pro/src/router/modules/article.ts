@@ -36,16 +36,6 @@ export const articleRoutes: AppRouteRecord = {
       }
     },
     {
-      path: 'comment',
-      name: 'ArticleComment',
-      component: '/article/comment',
-      meta: {
-        title: 'menus.article.comment',
-        icon: 'ri:mail-line',
-        keepAlive: true
-      }
-    },
-    {
       path: 'publish',
       name: 'ArticlePublish',
       component: '/article/publish',

@@ -137,10 +137,10 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 130,
+          width: 120,
           fixed: 'right',
           formatter: (row) =>
-            h('div', [
+            h('div', { class: 'table-action-nowrap' }, [
               row.editable
                 ? h(ArtButtonTable, { type: 'edit', auth: 'system:config:manage', onClick: () => showDialog('edit', row) })
                 : null,
@@ -197,3 +197,13 @@
     refreshData()
   }
 </script>
+
+<style scoped>
+  :deep(.table-action-nowrap) {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+</style>

@@ -523,7 +523,13 @@
 
       .form-buttons {
         display: flex;
+        flex-wrap: nowrap;
         gap: 8px;
+
+        :deep(.el-button) {
+          flex-shrink: 0;
+          white-space: nowrap;
+        }
       }
 
       .filter-toggle {
@@ -568,6 +574,10 @@
 
           .form-buttons {
             justify-content: center;
+
+            .el-button {
+              min-width: 72px;
+            }
           }
 
           .filter-toggle {

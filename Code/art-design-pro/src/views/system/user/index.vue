@@ -160,7 +160,14 @@
             return h(ElTag, { type: statusConfig.type }, () => statusConfig.text)
           }
         },
-        { prop: 'createTime', label: '创建日期', sortable: true },
+        {
+          prop: 'createTime',
+          label: '创建日期',
+          width: 190,
+          sortable: true,
+          showOverflowTooltip: true,
+          formatter: (row) => h('span', { class: 'table-nowrap-cell' }, row.createTime || '-')
+        },
         {
           prop: 'operation',
           label: '操作',
@@ -168,7 +175,7 @@
           fixed: 'right',
           formatter: (row) => {
             const disabled = row.status === '4'
-            return h('div', [
+            return h('div', { class: 'table-action-nowrap' }, [
               h(ArtButtonTable, {
                 type: 'edit',
                 auth: 'system:user:edit',
@@ -249,3 +256,17 @@
     loadOrgNames()
   })
 </script>
+
+<style scoped>
+  :deep(.table-action-nowrap) {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  :deep(.table-nowrap-cell) {
+    white-space: nowrap;
+  }
+</style>

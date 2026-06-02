@@ -3,7 +3,7 @@
   <div
     v-if="!props.auth || hasAuth(props.auth)"
     :class="[
-      'inline-flex items-center justify-center min-w-8 h-8 px-2.5 mr-2.5 text-sm c-p rounded-md align-middle',
+      'art-table-action-button inline-flex items-center justify-center shrink-0 text-sm c-p rounded-md align-middle',
       buttonClass
     ]"
     :style="{ backgroundColor: buttonBgColor, color: iconColor }"
@@ -64,3 +64,18 @@
     emit('click')
   }
 </script>
+
+<style scoped>
+  .art-table-action-button {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+    overflow: visible;
+    line-height: 32px;
+  }
+
+  .art-table-action-button + .art-table-action-button {
+    margin-left: 8px;
+  }
+</style>

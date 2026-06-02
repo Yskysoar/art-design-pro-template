@@ -116,10 +116,10 @@ const fastEnterConfig: FastEnterConfig = {
       routeName: 'UserCenter'
     },
     {
-      name: '留言管理',
+      name: '敏感词库',
       enabled: true,
       order: 6,
-      routeName: 'ArticleComment'
+      routeName: 'SensitiveWord'
     }
   ]
 }

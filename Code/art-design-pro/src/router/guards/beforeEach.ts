@@ -170,6 +170,15 @@ async function handleRouteGuard(
   if (!handleLoginStatus(to, userStore, next)) {
     return
   }
+
+  // 静态路由不依赖动态菜单。登录页、注册页等必须直接放行，
+  // 避免 token 残留或菜单加载失败时把认证页带进 500/loading 状态。
+  if (isStaticRoute(to.path)) {
+    setPageTitle(to)
+    next()
+    return
+  }
+
   // 2. Register dynamic routes.
   if (!routeRegistry?.isRegistered() && userStore.isLogin) {
     await handleDynamicRoutes(to, next, router, navigationId)
@@ -202,6 +211,11 @@ function handleLoginStatus(
   userStore: ReturnType<typeof useUserStore>,
   next: NavigationGuardNext
 ): boolean {
+  if (userStore.isLogin && to.path === RoutesAlias.Login) {
+    next({ path: '/', replace: true })
+    return false
+  }
+
   // 已登录或访问登录页或静态路由，直接放行
   if (userStore.isLogin || to.path === RoutesAlias.Login || isStaticRoute(to.path)) {
     return true
@@ -381,10 +395,8 @@ async function initializeDynamicRoutes(
     throw new Error('获取菜单列表失败，请重新登录')
   }
 
-  // 先注入个性设置菜单项（系统管理 → 个性设置）
-  injectSettingsItem(menuList)
+  normalizeBackendMenus(menuList)
 
-  // 后注册路由
   routeRegistry?.register(menuList)
 
   const menuStore = useMenuStore()
@@ -398,26 +410,73 @@ async function initializeDynamicRoutes(
 }
 
 /**
- * 注入个性设置菜单项到系统管理目录下
+ * 兼容旧版后端菜单数据，并稳定系统菜单展示顺序。
+ *
+ * 当前标准数据已经维护在 mock SQL 中；本函数用于本地数据库尚未更新时，
+ * 将旧的“文章管理 -> 评论敏感词”映射为“系统管理 -> 敏感词库”。
  */
-function injectSettingsItem(items: AppRouteRecord[]): void {
-  for (const item of items) {
-    if ((item.name === 'System' || item.path === '/system') && item.children) {
-      item.children!.push({
-        id: 99,
-        path: 'settings',
-        name: 'SystemSettings',
-        component: '/system/settings',
-        meta: {
-          title: 'menus.system.settings',
-          icon: 'ri:settings-3-line',
-          keepAlive: false
-        }
-      })
+function normalizeBackendMenus(items: AppRouteRecord[]): void {
+  const dashboard = items.find((item) => item.name === 'Dashboard' || item.path === '/dashboard')
+  const article = items.find((item) => item.name === 'Article' || item.path === '/article')
+  const system = items.find((item) => item.name === 'System' || item.path === '/system')
+
+  if (article?.children && system) {
+    const sensitiveIndex = article.children.findIndex(
+      (child) => child.name === 'ArticleComment' || child.name === 'SensitiveWord'
+    )
+    if (sensitiveIndex >= 0) {
+      const [sensitiveRoute] = article.children.splice(sensitiveIndex, 1)
+      system.children = system.children || []
+      if (!system.children.some((child) => child.name === 'SensitiveWord')) {
+        system.children.push({
+          ...sensitiveRoute,
+          path: 'sensitive-word',
+          name: 'SensitiveWord',
+          component: '/article/comment',
+          meta: {
+            ...sensitiveRoute.meta,
+            title: '敏感词库',
+            icon: 'ri:shield-keyhole-line',
+            keepAlive: false,
+            authList: [{ title: '管理敏感词', authMark: 'system:sensitive-word' }]
+          }
+        })
+      }
     }
-    const children = item.children
-    if (children) injectSettingsItem(children)
   }
+
+  if (system) {
+    system.children = system.children || []
+    system.children = system.children.filter((child) => child.name !== 'SystemSettings')
+    system.children.sort((left, right) => systemMenuOrder(left) - systemMenuOrder(right))
+  }
+
+  items.sort((left, right) => topMenuOrder(left, dashboard, article, system) - topMenuOrder(right, dashboard, article, system))
+}
+
+function topMenuOrder(
+  route: AppRouteRecord,
+  dashboard?: AppRouteRecord,
+  article?: AppRouteRecord,
+  system?: AppRouteRecord
+): number {
+  if (route === dashboard || route.name === 'Dashboard' || route.path === '/dashboard') return 1
+  if (route === article || route.name === 'Article' || route.path === '/article') return 2
+  if (route === system || route.name === 'System' || route.path === '/system') return 3
+  return 99
+}
+
+function systemMenuOrder(route: AppRouteRecord): number {
+  const order: Record<string, number> = {
+    User: 1,
+    Role: 2,
+    Org: 3,
+    Config: 4,
+    Menus: 5,
+    SensitiveWord: 6,
+    UserCenter: 99
+  }
+  return order[String(route.name)] ?? 90
 }
 
 /**
@@ -464,18 +523,16 @@ async function fetchUserInfo(): Promise<void> {
 /**
  * 重置路由相关状态
  */
-export function resetRouterState(delay: number): void {
-  setTimeout(() => {
-    routeRegistry?.unregister()
-    IframeRouteManager.getInstance().clear()
+export function resetRouterState(_delay = 0): void {
+  routeRegistry?.unregister()
+  IframeRouteManager.getInstance().clear()
 
-    const menuStore = useMenuStore()
-    menuStore.removeAllDynamicRoutes()
-    menuStore.setMenuList([])
+  const menuStore = useMenuStore()
+  menuStore.removeAllDynamicRoutes()
+  menuStore.setMenuList([])
 
-    // 重置路由初始化状态，允许重新登录后再次初始化
-    resetRouteInitState()
-  }, delay)
+  // 重置路由初始化状态，允许重新登录后再次初始化
+  resetRouteInitState()
 }
 
 /**

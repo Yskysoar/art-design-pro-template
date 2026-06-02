@@ -62,9 +62,14 @@ export const useMenuStore = defineStore('menuStore', () => {
   const setMenuList = (list: AppRouteRecord[]) => {
     menuList.value = list
     setHomePath(HOME_PAGE_PATH || getFirstMenuPath(list))
-    // 更新缓存
-    menuCache.value = list
-    cacheTimestamp.value = Date.now()
+
+    if (list.length > 0) {
+      // 只缓存有效菜单，避免登出清空菜单时把空数组作为可用缓存。
+      menuCache.value = list
+      cacheTimestamp.value = Date.now()
+    } else {
+      clearMenuCache()
+    }
   }
 
   /**
@@ -72,7 +77,7 @@ export const useMenuStore = defineStore('menuStore', () => {
    * @returns 缓存的菜单列表，如果缓存过期则返回 null
    */
   const getCachedMenuList = (): AppRouteRecord[] | null => {
-    if (!menuCache.value) return null
+    if (!menuCache.value || menuCache.value.length === 0) return null
     if (Date.now() - cacheTimestamp.value > CACHE_TTL) {
       // 缓存过期，清空
       menuCache.value = null

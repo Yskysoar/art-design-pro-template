@@ -295,7 +295,7 @@
    * 打开设置面板
    */
   const openSetting = (): void => {
-    router.push({ name: 'SystemSettings' })
+    mittBus.emit('openSetting')
 
     // 隐藏设置引导提示
     if (showSettingGuide.value) {

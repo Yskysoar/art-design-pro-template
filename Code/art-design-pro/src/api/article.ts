@@ -112,28 +112,28 @@ export function deleteArticleComment(id: number) {
 
 export function fetchSensitiveWords(params: Api.Article.SensitiveWordSearchParams) {
   return request.get<Api.Article.SensitiveWordList>({
-    url: '/api/article/comment/sensitive-words',
+    url: '/api/system/sensitive-words',
     params
   })
 }
 
 export function createSensitiveWord(data: Api.Article.SensitiveWordSaveParams) {
   return request.post<void>({
-    url: '/api/article/comment/sensitive-words',
+    url: '/api/system/sensitive-words',
     data
   })
 }
 
 export function updateSensitiveWord(id: number, data: Api.Article.SensitiveWordSaveParams) {
   return request.put<void>({
-    url: `/api/article/comment/sensitive-words/${id}`,
+    url: `/api/system/sensitive-words/${id}`,
     data
   })
 }
 
 export function updateSensitiveWordStatus(id: number, enabled: number) {
   return request.request<void>({
-    url: `/api/article/comment/sensitive-words/${id}/status`,
+    url: `/api/system/sensitive-words/${id}/status`,
     method: 'PATCH',
     data: { enabled }
   })
@@ -141,6 +141,6 @@ export function updateSensitiveWordStatus(id: number, enabled: number) {
 
 export function deleteSensitiveWord(id: number) {
   return request.del<void>({
-    url: `/api/article/comment/sensitive-words/${id}`
+    url: `/api/system/sensitive-words/${id}`
   })
 }

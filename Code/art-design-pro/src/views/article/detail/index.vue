@@ -55,7 +55,7 @@
           <ElEmpty v-if="showCommentsEmpty" description="暂无评论" />
           <article v-for="comment in comments" :key="comment.id" class="comment-item">
             <div class="comment-main">
-              <ElAvatar :size="36" :src="comment.userAvatar">{{ avatarText(comment.userName) }}</ElAvatar>
+              <ElAvatar :size="36" :src="commentAvatar(comment)">{{ avatarText(comment.userName) }}</ElAvatar>
               <div class="comment-body">
                 <div class="comment-meta">
                   <span class="comment-user">{{ comment.userName }}</span>
@@ -119,7 +119,7 @@
                 <div v-if="comment.replies?.length" class="reply-list">
                   <div v-for="reply in visibleReplies(comment)" :key="reply.id" class="reply-item">
                     <div class="reply-header">
-                      <ElAvatar :size="28" :src="reply.userAvatar">{{ avatarText(reply.userName) }}</ElAvatar>
+                      <ElAvatar :size="28" :src="commentAvatar(reply)">{{ avatarText(reply.userName) }}</ElAvatar>
                       <div class="reply-meta">
                       <span class="comment-user">{{ reply.userName }}</span>
                       <template v-if="reply.replyToUserName">
@@ -213,6 +213,7 @@
   import { isHttpError } from '@/utils/http/error'
   import { sanitizeRichHtml } from '@/utils/security/html'
   import { ElMessageBox } from 'element-plus'
+  import defaultAvatar from '@/assets/images/user/avatar.webp'
 
   defineOptions({ name: 'ArticleDetail' })
 
@@ -382,6 +383,8 @@
     return comment.content
   }
 
+  const commentAvatar = (comment: Api.Article.ArticleCommentItem) => comment.userAvatar || defaultAvatar
+
   const avatarText = (name?: string) => name?.slice(0, 1) || '评'
 
   onMounted(() => {
@@ -516,10 +519,21 @@
       border-radius: 8px;
     }
 
+    .reply-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     .reply-item + .reply-item {
       padding-top: 12px;
       margin-top: 12px;
       border-top: 1px solid var(--el-border-color-lighter);
+    }
+
+    .reply-item > .comment-content,
+    .reply-item > .comment-actions {
+      margin-left: 38px;
     }
 
     .reply-toggle {

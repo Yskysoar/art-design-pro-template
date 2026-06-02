@@ -1,69 +1,41 @@
 <template>
-  <div class="sensitive-word-page">
-    <div class="page-header">
-      <div>
-        <h2>评论敏感词</h2>
-        <p>维护评论发布前的敏感词拦截规则，命中后评论不会写入数据库。</p>
-      </div>
-      <ElButton type="primary" @click="openDialog()">
-        <template #icon><Plus /></template>
-        新增
-      </ElButton>
-    </div>
+  <div class="sensitive-word-page art-full-height">
+    <ArtSearchBar
+      v-model="searchForm"
+      :items="formItems"
+      :showExpand="false"
+      @reset="handleReset"
+      @search="handleSearch"
+    />
 
-    <div class="toolbar">
-      <ElInput
-        v-model.trim="query.word"
-        class="search-input"
-        clearable
-        placeholder="搜索敏感词"
-        @keyup.enter="loadWords"
-      />
-      <ElSelect v-model="query.enabled" class="status-select" clearable placeholder="状态">
-        <ElOption label="启用" :value="1" />
-        <ElOption label="禁用" :value="0" />
-      </ElSelect>
-      <ElButton type="primary" @click="loadWords">
-        <template #icon><Search /></template>
-        查询
-      </ElButton>
-    </div>
-
-    <ElTable v-loading="loading" :data="words" row-key="id">
-      <ElTableColumn prop="word" label="敏感词" min-width="180" />
-      <ElTableColumn prop="matchType" label="匹配方式" width="120" />
-      <ElTableColumn label="状态" width="120">
-        <template #default="{ row }">
-          <ElSwitch
-            :model-value="row.enabled === 1"
-            @change="(checked) => changeStatus(row as Api.Article.SensitiveWordItem, checked as boolean)"
-          />
+    <ElCard class="art-table-card">
+      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+        <template #left>
+          <ElSpace wrap>
+            <ElButton v-auth="'system:sensitive-word'" @click="openDialog()" v-ripple>
+              新增敏感词
+            </ElButton>
+          </ElSpace>
         </template>
-      </ElTableColumn>
-      <ElTableColumn prop="remark" label="备注" min-width="220" show-overflow-tooltip />
-      <ElTableColumn prop="updateTime" label="更新时间" width="180" />
-      <ElTableColumn label="操作" width="160" fixed="right">
-        <template #default="{ row }">
-          <ElButton link type="primary" @click="openDialog(row as Api.Article.SensitiveWordItem)">编辑</ElButton>
-          <ElButton link type="danger" @click="removeWord(row as Api.Article.SensitiveWordItem)">删除</ElButton>
-        </template>
-      </ElTableColumn>
-    </ElTable>
+      </ArtTableHeader>
 
-    <div class="pagination">
-      <ElPagination
-        v-model:current-page="query.current"
-        v-model:page-size="query.size"
-        background
-        layout="total, sizes, prev, pager, next"
-        :total="total"
-        @current-change="loadWords"
-        @size-change="loadWords"
+      <ArtTable
+        :loading="loading"
+        :data="data"
+        :columns="columns"
+        :pagination="pagination"
+        @pagination:size-change="handleSizeChange"
+        @pagination:current-change="handleCurrentChange"
       />
-    </div>
+    </ElCard>
 
-    <ElDialog v-model="dialogVisible" :title="editingWord ? '编辑敏感词' : '新增敏感词'" width="460px">
-      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+    <ElDialog
+      v-model="dialogVisible"
+      :title="editingWord ? '编辑敏感词' : '新增敏感词'"
+      width="520px"
+      align-center
+    >
+      <ElForm ref="formRef" :model="form" :rules="rules" label-width="100px">
         <ElFormItem label="敏感词" prop="word">
           <ElInput v-model.trim="form.word" maxlength="100" show-word-limit />
         </ElFormItem>
@@ -71,7 +43,7 @@
           <ElSwitch v-model="form.enabled" :active-value="1" :inactive-value="0" />
         </ElFormItem>
         <ElFormItem label="备注" prop="remark">
-          <ElInput v-model.trim="form.remark" maxlength="255" show-word-limit type="textarea" />
+          <ElInput v-model.trim="form.remark" maxlength="255" show-word-limit type="textarea" :rows="3" />
         </ElFormItem>
       </ElForm>
       <template #footer>
@@ -83,6 +55,8 @@
 </template>
 
 <script setup lang="ts">
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import { useTable } from '@/hooks/core/useTable'
   import {
     createSensitiveWord,
     deleteSensitiveWord,
@@ -90,25 +64,39 @@
     updateSensitiveWord,
     updateSensitiveWordStatus
   } from '@/api/article'
-  import { Plus, Search } from '@element-plus/icons-vue'
-  import { ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+  import { ElMessageBox, ElTag, type FormInstance, type FormRules } from 'element-plus'
 
-  defineOptions({ name: 'ArticleComment' })
+  defineOptions({ name: 'SensitiveWord' })
 
-  const loading = ref(false)
+  type SensitiveWordItem = Api.Article.SensitiveWordItem
+
   const saving = ref(false)
   const dialogVisible = ref(false)
   const formRef = ref<FormInstance>()
-  const words = ref<Api.Article.SensitiveWordItem[]>([])
-  const total = ref(0)
-  const editingWord = ref<Api.Article.SensitiveWordItem>()
+  const editingWord = ref<SensitiveWordItem>()
 
-  const query = reactive<Api.Article.SensitiveWordSearchParams>({
+  const searchForm = reactive<Api.Article.SensitiveWordSearchParams>({
     current: 1,
-    size: 10,
-    word: '',
+    size: 20,
+    word: undefined,
     enabled: undefined
   })
+
+  const formItems = computed(() => [
+    { label: '敏感词', key: 'word', type: 'input', props: { clearable: true } },
+    {
+      label: '状态',
+      key: 'enabled',
+      type: 'select',
+      props: {
+        clearable: true,
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 0 }
+        ]
+      }
+    }
+  ])
 
   const form = reactive<Api.Article.SensitiveWordSaveParams>({
     word: '',
@@ -123,29 +111,102 @@
     ]
   }
 
-  const loadWords = async () => {
-    loading.value = true
-    try {
-      const result = await fetchSensitiveWords(query)
-      words.value = result.records
-      total.value = result.total
-    } finally {
-      loading.value = false
+  const {
+    columns,
+    columnChecks,
+    data,
+    loading,
+    pagination,
+    getData,
+    replaceSearchParams,
+    resetSearchParams,
+    handleSizeChange,
+    handleCurrentChange,
+    refreshData
+  } = useTable({
+    core: {
+      apiFn: fetchSensitiveWords,
+      apiParams: {
+        current: 1,
+        size: 20
+      },
+      columnsFactory: () => [
+        { type: 'index', width: 60, label: '序号' },
+        { prop: 'word', label: '敏感词', minWidth: 180 },
+        {
+          prop: 'matchType',
+          label: '匹配方式',
+          width: 120,
+          formatter: (row) => (row.matchType === 'CONTAINS' ? '包含匹配' : row.matchType)
+        },
+        {
+          prop: 'enabled',
+          label: '状态',
+          width: 100,
+          formatter: (row) =>
+            h(ElTag, { type: row.enabled === 1 ? 'success' : 'info' }, () =>
+              row.enabled === 1 ? '启用' : '禁用'
+            )
+        },
+        { prop: 'remark', label: '备注', minWidth: 220, showOverflowTooltip: true },
+        { prop: 'updateTime', label: '更新时间', width: 180 },
+        {
+          prop: 'operation',
+          label: '操作',
+          width: 156,
+          fixed: 'right',
+          formatter: (row) => {
+            const enabled = row.enabled === 1
+            return h('div', { class: 'table-action-nowrap' }, [
+              h(ArtButtonTable, {
+                type: 'edit',
+                auth: 'system:sensitive-word',
+                onClick: () => openDialog(row)
+              }),
+              h(ArtButtonTable, {
+                icon: enabled ? 'ri:pause-circle-line' : 'ri:play-circle-line',
+                iconClass: enabled ? 'bg-warning/12 text-warning' : 'bg-success/12 text-success',
+                auth: 'system:sensitive-word',
+                onClick: () => changeStatus(row, !enabled)
+              }),
+              h(ArtButtonTable, {
+                type: 'delete',
+                auth: 'system:sensitive-word',
+                onClick: () => removeWord(row)
+              })
+            ])
+          }
+        }
+      ]
+    },
+    transform: {
+      dataTransformer: (records) => (Array.isArray(records) ? records : [])
     }
+  })
+
+  const handleSearch = (params: Record<string, any>) => {
+    replaceSearchParams(params as Api.Article.SensitiveWordSearchParams)
+    getData()
   }
 
-  const openDialog = (row?: Api.Article.SensitiveWordItem) => {
+  const handleReset = () => {
+    resetSearchParams()
+    getData()
+  }
+
+  const openDialog = (row?: SensitiveWordItem) => {
     editingWord.value = row
-    form.word = row?.word ?? ''
-    form.enabled = row?.enabled ?? 1
-    form.remark = row?.remark ?? ''
+    Object.assign(form, {
+      word: row?.word || '',
+      enabled: row?.enabled ?? 1,
+      remark: row?.remark || ''
+    })
     dialogVisible.value = true
     nextTick(() => formRef.value?.clearValidate())
   }
 
   const saveWord = async () => {
-    if (!formRef.value) return
-    await formRef.value.validate()
+    await formRef.value?.validate()
     saving.value = true
     try {
       if (editingWord.value) {
@@ -154,71 +215,37 @@
         await createSensitiveWord(form)
       }
       dialogVisible.value = false
-      ElMessage.success('保存成功')
-      await loadWords()
+      ElMessage.success(editingWord.value ? '更新成功' : '新增成功')
+      refreshData()
     } finally {
       saving.value = false
     }
   }
 
-  const changeStatus = async (row: Api.Article.SensitiveWordItem, checked: boolean) => {
+  const changeStatus = async (row: SensitiveWordItem, checked: boolean) => {
     await updateSensitiveWordStatus(row.id, checked ? 1 : 0)
     ElMessage.success('状态已更新')
-    await loadWords()
+    refreshData()
   }
 
-  const removeWord = async (row: Api.Article.SensitiveWordItem) => {
-    await ElMessageBox.confirm(`确认删除敏感词“${row.word}”？`, '提示', {
+  const removeWord = async (row: SensitiveWordItem) => {
+    await ElMessageBox.confirm(`确定删除敏感词"${row.word}"吗？`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
       type: 'warning'
     })
     await deleteSensitiveWord(row.id)
     ElMessage.success('删除成功')
-    await loadWords()
+    refreshData()
   }
-
-  onMounted(loadWords)
 </script>
 
 <style scoped>
-  .sensitive-word-page {
-    padding: 24px;
-  }
-
-  .page-header {
-    display: flex;
+  :deep(.table-action-nowrap) {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 8px;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-
-  .page-header h2 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-  }
-
-  .page-header p {
-    margin: 6px 0 0;
-    color: var(--el-text-color-secondary);
-  }
-
-  .toolbar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .search-input {
-    width: 260px;
-  }
-
-  .status-select {
-    width: 140px;
-  }
-
-  .pagination {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
+    white-space: nowrap;
   }
 </style>
