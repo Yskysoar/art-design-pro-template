@@ -3,6 +3,7 @@ package com.template.system.org.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.enums.DataScope;
@@ -45,19 +46,22 @@ public class OrgServiceImpl implements OrgService {
     private final SysRoleOrgMapper roleOrgMapper;
     private final SysRoleMapper roleMapper;
     private final PermissionService permissionService;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
     public OrgServiceImpl(
             SysOrgMapper orgMapper,
             SysUserOrgMapper userOrgMapper,
             SysRoleOrgMapper roleOrgMapper,
             SysRoleMapper roleMapper,
-            PermissionService permissionService
+            PermissionService permissionService,
+            SensitiveWordGuard sensitiveWordGuard
     ) {
         this.orgMapper = orgMapper;
         this.userOrgMapper = userOrgMapper;
         this.roleOrgMapper = roleOrgMapper;
         this.roleMapper = roleMapper;
         this.permissionService = permissionService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -308,6 +312,11 @@ public class OrgServiceImpl implements OrgService {
     }
 
     private void applyRequest(SysOrg org, OrgSaveRequest request, String operator) {
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("组织名称", request.orgName()),
+                new SensitiveWordGuard.TextField("组织编码", request.orgCode()),
+                new SensitiveWordGuard.TextField("组织类型", request.orgType())
+        );
         org.setParentId(normalizeParentId(request.parentId()));
         org.setOrgName(request.orgName());
         org.setOrgCode(request.orgCode());

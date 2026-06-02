@@ -3,6 +3,7 @@ package com.template.system.menu.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.system.menu.dto.MenuSaveRequest;
 import com.template.system.menu.entity.SysMenu;
@@ -43,17 +44,20 @@ public class MenuServiceImpl implements MenuService {
     private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final SysRoleMenuMapper roleMenuMapper;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
     public MenuServiceImpl(
             SysMenuMapper menuMapper,
             SysRoleMapper roleMapper,
             SysUserRoleMapper userRoleMapper,
-            SysRoleMenuMapper roleMenuMapper
+            SysRoleMenuMapper roleMenuMapper,
+            SensitiveWordGuard sensitiveWordGuard
     ) {
         this.menuMapper = menuMapper;
         this.roleMapper = roleMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMenuMapper = roleMenuMapper;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -283,6 +287,12 @@ public class MenuServiceImpl implements MenuService {
     }
 
     private void applyRequest(SysMenu menu, MenuSaveRequest request, String operator) {
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("菜单路径", request.path()),
+                new SensitiveWordGuard.TextField("菜单名称", request.name()),
+                new SensitiveWordGuard.TextField("菜单标题", request.title()),
+                new SensitiveWordGuard.TextField("权限码", request.permissionCode())
+        );
         menu.setParentId(normalizeParentId(request.parentId()));
         menu.setMenuType(normalizeText(request.menuType(), DEFAULT_MENU_TYPE).toUpperCase());
         menu.setPath(request.path());

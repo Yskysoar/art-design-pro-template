@@ -2,6 +2,7 @@ package com.template.system.auth.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.template.common.exception.BusinessException;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.jwt.JwtTokenService;
 import com.template.system.auth.dto.RegisterRequest;
 import com.template.system.auth.dto.ResetPasswordRequest;
@@ -39,6 +40,7 @@ class AuthServiceImplTest {
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final JwtTokenService jwtTokenService = mock(JwtTokenService.class);
     private final CaptchaService captchaService = mock(CaptchaService.class);
+    private final SensitiveWordGuard sensitiveWordGuard = mock(SensitiveWordGuard.class);
     private final AuthServiceImpl service = new AuthServiceImpl(
             userMapper,
             roleMapper,
@@ -49,7 +51,8 @@ class AuthServiceImplTest {
             rolePermissionMapper,
             passwordEncoder,
             jwtTokenService,
-            captchaService
+            captchaService,
+            sensitiveWordGuard
     );
 
     @SuppressWarnings("unchecked")

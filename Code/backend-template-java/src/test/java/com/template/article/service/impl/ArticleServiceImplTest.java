@@ -12,6 +12,7 @@ import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
 import com.template.article.service.HtmlSanitizerService;
 import com.template.common.exception.BusinessException;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.file.entity.FileResource;
 import com.template.file.service.FileStorageService;
 import com.template.security.auth.AppUserPrincipal;
@@ -52,6 +53,8 @@ class ArticleServiceImplTest {
     private FileStorageService fileStorageService;
     @Mock
     private HtmlSanitizerService htmlSanitizerService;
+    @Mock
+    private SensitiveWordGuard sensitiveWordGuard;
 
     private ArticleServiceImpl articleService;
 
@@ -63,7 +66,8 @@ class ArticleServiceImplTest {
                 attachmentMapper,
                 commentMapper,
                 fileStorageService,
-                htmlSanitizerService
+                htmlSanitizerService,
+                sensitiveWordGuard
         );
     }
 

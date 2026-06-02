@@ -3,6 +3,7 @@ package com.template.system.auth.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.jwt.JwtTokenService;
 import com.template.system.auth.dto.LoginRequest;
 import com.template.system.auth.dto.RegisterRequest;
@@ -58,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
     private final CaptchaService captchaService;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
     public AuthServiceImpl(
             SysUserMapper userMapper,
@@ -69,7 +71,8 @@ public class AuthServiceImpl implements AuthService {
             SysRolePermissionMapper rolePermissionMapper,
             PasswordEncoder passwordEncoder,
             JwtTokenService jwtTokenService,
-            CaptchaService captchaService
+            CaptchaService captchaService,
+            SensitiveWordGuard sensitiveWordGuard
     ) {
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
@@ -81,6 +84,7 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenService = jwtTokenService;
         this.captchaService = captchaService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -101,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
     public void register(RegisterRequest request) {
         captchaService.validateAndConsume(request.captchaId(), request.captchaCode());
         assertUserNameAvailable(request.userName());
+        sensitiveWordGuard.validate("用户名", request.userName());
         SysRole role = getDefaultRegisterRole();
         SysOrg org = getDefaultRegisterOrg();
 

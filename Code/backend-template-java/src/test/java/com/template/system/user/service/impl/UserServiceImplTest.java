@@ -3,6 +3,7 @@ package com.template.system.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.auth.service.CaptchaService;
@@ -67,6 +68,8 @@ class UserServiceImplTest {
     private PermissionService permissionService;
     @Mock
     private CaptchaService captchaService;
+    @Mock
+    private SensitiveWordGuard sensitiveWordGuard;
 
     private UserServiceImpl userService;
 
@@ -81,7 +84,8 @@ class UserServiceImplTest {
                 configMapper,
                 passwordEncoder,
                 permissionService,
-                captchaService
+                captchaService,
+                sensitiveWordGuard
         );
     }
 

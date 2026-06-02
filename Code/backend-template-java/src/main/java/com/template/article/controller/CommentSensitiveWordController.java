@@ -23,13 +23,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 评论敏感词管理接口。
+ * 敏感词管理接口。
  */
 @RestController
-@RequestMapping("/api/article/comment/sensitive-words")
+@RequestMapping({"/api/system/sensitive-words", "/api/article/comment/sensitive-words"})
 public class CommentSensitiveWordController {
 
-    private static final String SENSITIVE_WORD_PERMISSION = "article:comment:sensitive-word";
+    private static final String SENSITIVE_WORD_PERMISSION = "system:sensitive-word";
 
     private final CommentSensitiveWordService wordService;
     private final PermissionService permissionService;

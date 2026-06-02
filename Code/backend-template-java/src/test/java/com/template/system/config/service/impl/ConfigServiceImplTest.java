@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
 import com.template.common.pagination.PageResult;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.dto.ConfigListQuery;
@@ -45,12 +46,14 @@ class ConfigServiceImplTest {
     private SysConfigMapper configMapper;
     @Mock
     private PermissionService permissionService;
+    @Mock
+    private SensitiveWordGuard sensitiveWordGuard;
 
     private ConfigServiceImpl configService;
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigServiceImpl(configMapper, permissionService);
+        configService = new ConfigServiceImpl(configMapper, permissionService, sensitiveWordGuard);
     }
 
     @Test

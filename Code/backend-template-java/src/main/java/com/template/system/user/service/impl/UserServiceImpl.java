@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
@@ -70,6 +71,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final PermissionService permissionService;
     private final CaptchaService captchaService;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
     public UserServiceImpl(
             SysUserMapper userMapper,
@@ -80,7 +82,8 @@ public class UserServiceImpl implements UserService {
             SysConfigMapper configMapper,
             PasswordEncoder passwordEncoder,
             PermissionService permissionService,
-            CaptchaService captchaService
+            CaptchaService captchaService,
+            SensitiveWordGuard sensitiveWordGuard
     ) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
@@ -91,6 +94,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.permissionService = permissionService;
         this.captchaService = captchaService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -118,6 +122,7 @@ public class UserServiceImpl implements UserService {
         assertUserNameUnique(request.userName(), null);
         List<SysRole> roles = getRolesByCodes(request.roleCodes());
         assertAssignableRoles(roles, principal);
+        validateUserText(request.userName(), request.nickName(), request.userPhone(), request.userEmail());
 
         SysUser user = new SysUser();
         user.setUserName(request.userName());
@@ -145,6 +150,7 @@ public class UserServiceImpl implements UserService {
         List<SysRole> roles = getRolesByCodes(request.roleCodes());
         assertTargetUserManageable(id, principal);
         assertAssignableRoles(roles, principal);
+        validateUserText(request.userName(), request.nickName(), request.userPhone(), request.userEmail());
 
         user.setUserName(request.userName());
         user.setNickName(getDefaultNickName(request.nickName(), request.userName()));
@@ -211,6 +217,10 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException(ApiCode.NOT_FOUND, "用户不存在");
         }
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("用户昵称", request.nickName()),
+                new SensitiveWordGuard.TextField("用户邮箱", request.userEmail())
+        );
         if (request.nickName() != null) {
             user.setNickName(request.nickName());
         }
@@ -324,6 +334,15 @@ public class UserServiceImpl implements UserService {
         if (count != null && count > 0) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "用户名已存在");
         }
+    }
+
+    private void validateUserText(String userName, String nickName, String phone, String email) {
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("用户名", userName),
+                new SensitiveWordGuard.TextField("用户昵称", nickName),
+                new SensitiveWordGuard.TextField("手机号", phone),
+                new SensitiveWordGuard.TextField("用户邮箱", email)
+        );
     }
 
     private List<SysRole> getRolesByCodes(List<String> roleCodes) {

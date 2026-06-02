@@ -2,6 +2,7 @@ package com.template.system.org.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.template.common.exception.BusinessException;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.org.entity.SysOrg;
@@ -48,12 +49,14 @@ class OrgServiceImplTest {
     private SysRoleMapper roleMapper;
     @Mock
     private PermissionService permissionService;
+    @Mock
+    private SensitiveWordGuard sensitiveWordGuard;
 
     private OrgServiceImpl orgService;
 
     @BeforeEach
     void setUp() {
-        orgService = new OrgServiceImpl(orgMapper, userOrgMapper, roleOrgMapper, roleMapper, permissionService);
+        orgService = new OrgServiceImpl(orgMapper, userOrgMapper, roleOrgMapper, roleMapper, permissionService, sensitiveWordGuard);
     }
 
     @Test

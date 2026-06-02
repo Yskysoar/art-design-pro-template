@@ -23,6 +23,7 @@ import com.template.article.vo.ArticleListItemVo;
 import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.file.entity.FileResource;
 import com.template.file.service.FileStorageService;
 import com.template.security.auth.AppUserPrincipal;
@@ -63,6 +64,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final ArticleCommentMapper commentMapper;
     private final FileStorageService fileStorageService;
     private final HtmlSanitizerService htmlSanitizerService;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
     public ArticleServiceImpl(
             ArticleMapper articleMapper,
@@ -70,7 +72,8 @@ public class ArticleServiceImpl implements ArticleService {
             ArticleAttachmentMapper attachmentMapper,
             ArticleCommentMapper commentMapper,
             FileStorageService fileStorageService,
-            HtmlSanitizerService htmlSanitizerService
+            HtmlSanitizerService htmlSanitizerService,
+            SensitiveWordGuard sensitiveWordGuard
     ) {
         this.articleMapper = articleMapper;
         this.categoryMapper = categoryMapper;
@@ -78,6 +81,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.commentMapper = commentMapper;
         this.fileStorageService = fileStorageService;
         this.htmlSanitizerService = htmlSanitizerService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -184,16 +188,22 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleCategory category = getExistingCategory(request.categoryId());
         String status = normalizeStatus(StringUtils.hasText(request.status()) ? request.status() : "PUBLISHED");
         String sanitizedHtml = htmlSanitizerService.sanitize(request.contentHtml());
+        String plainText = htmlSanitizerService.toPlainText(sanitizedHtml);
         if (!StringUtils.hasText(htmlSanitizerService.toPlainText(sanitizedHtml))) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "文章内容不能为空");
         }
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("文章标题", request.title()),
+                new SensitiveWordGuard.TextField("文章摘要", request.summary()),
+                new SensitiveWordGuard.TextField("文章内容", plainText)
+        );
 
         article.setTitle(request.title());
         article.setCategoryId(category.getId());
         article.setCoverUrl(request.coverUrl());
         article.setSummary(request.summary());
         article.setContentHtml(sanitizedHtml);
-        article.setContentText(htmlSanitizerService.toPlainText(sanitizedHtml));
+        article.setContentText(plainText);
         article.setVisible(Boolean.FALSE.equals(request.visible()) ? HIDDEN : VISIBLE);
         article.setStatus(status);
         article.setUpdateBy(operator);

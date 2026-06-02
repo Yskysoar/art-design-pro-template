@@ -12,16 +12,17 @@ import com.template.article.entity.ArticleComment;
 import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
 import com.template.article.service.ArticleCommentService;
-import com.template.article.service.CommentSensitiveWordService;
 import com.template.article.vo.ArticleCommentVo;
-import com.template.article.vo.SensitiveWordHitResponse;
 import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
 import com.template.system.config.mapper.SysConfigMapper;
+import com.template.system.user.entity.SysUser;
+import com.template.system.user.mapper.SysUserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -70,20 +71,23 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     private final ArticleMapper articleMapper;
     private final PermissionService permissionService;
     private final SysConfigMapper configMapper;
-    private final CommentSensitiveWordService sensitiveWordService;
+    private final SensitiveWordGuard sensitiveWordGuard;
+    private final SysUserMapper userMapper;
 
     public ArticleCommentServiceImpl(
             ArticleCommentMapper commentMapper,
             ArticleMapper articleMapper,
             PermissionService permissionService,
             SysConfigMapper configMapper,
-            CommentSensitiveWordService sensitiveWordService
+            SensitiveWordGuard sensitiveWordGuard,
+            SysUserMapper userMapper
     ) {
         this.commentMapper = commentMapper;
         this.articleMapper = articleMapper;
         this.permissionService = permissionService;
         this.configMapper = configMapper;
-        this.sensitiveWordService = sensitiveWordService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -101,6 +105,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
                 .orderByDesc(ArticleComment::getId));
 
         Map<Long, List<ArticleComment>> replies = loadReplies(page.getRecords());
+        Map<Long, String> avatarMap = loadUserAvatarMap(page.getRecords(), replies);
         boolean hideEnabled = isCommentHideEnabled();
         boolean superAdmin = isSuperAdmin(principal);
         boolean commentManager = hasCommentManagePermission(principal);
@@ -114,7 +119,8 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
                                 principal,
                                 hideEnabled,
                                 superAdmin,
-                                commentManager
+                                commentManager,
+                                avatarMap
                         ))
                         .toList(),
                 page.getCurrent(),
@@ -128,7 +134,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     public Long createComment(ArticleCommentSaveRequest request, AppUserPrincipal principal) {
         Article article = getExistingArticle(request.articleId());
         String content = normalizeContent(request.content());
-        validateSensitiveWords(content);
+        sensitiveWordGuard.validate("评论内容", content);
         validateCommentAntiSpam(article.getId(), content, principal);
         Long parentId = request.parentId() == null ? ROOT_PARENT_ID : request.parentId();
 
@@ -148,7 +154,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
         comment.setStatus(STATUS_NORMAL);
         comment.setUserId(principal.userId());
         comment.setUserName(principal.userName());
-        comment.setUserAvatar(null);
+        comment.setUserAvatar(loadUserAvatar(principal.userId()));
         comment.setDeleted(NOT_DELETED);
         commentMapper.insert(comment);
         if (parentId == ROOT_PARENT_ID) {
@@ -235,17 +241,6 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
         return normalized;
     }
 
-    private void validateSensitiveWords(String content) {
-        List<String> hits = sensitiveWordService.findHits(content);
-        if (!hits.isEmpty()) {
-            throw new BusinessException(
-                    ApiCode.BAD_REQUEST,
-                    "评论内容包含敏感词，请修改后再发布",
-                    new SensitiveWordHitResponse(hits)
-            );
-        }
-    }
-
     private void validateCommentAntiSpam(Long articleId, String content, AppUserPrincipal principal) {
         LocalDateTime now = LocalDateTime.now();
         Long recentCount = commentMapper.selectCount(new LambdaQueryWrapper<ArticleComment>()
@@ -323,6 +318,46 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
                 ));
     }
 
+    private Map<Long, String> loadUserAvatarMap(
+            List<ArticleComment> rootComments,
+            Map<Long, List<ArticleComment>> replies
+    ) {
+        List<Long> userIds = new ArrayList<>();
+        rootComments.forEach(comment -> {
+            if (comment.getUserId() != null) {
+                userIds.add(comment.getUserId());
+            }
+        });
+        replies.values().forEach(items -> items.forEach(reply -> {
+            if (reply.getUserId() != null) {
+                userIds.add(reply.getUserId());
+            }
+        }));
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+        return userMapper.selectList(new LambdaQueryWrapper<SysUser>()
+                        .in(SysUser::getId, userIds.stream().distinct().toList())
+                        .eq(SysUser::getDeleted, NOT_DELETED))
+                .stream()
+                .filter(user -> StringUtils.hasText(user.getAvatar()))
+                .collect(Collectors.toMap(
+                        SysUser::getId,
+                        SysUser::getAvatar,
+                        (left, right) -> left
+                ));
+    }
+
+    private String loadUserAvatar(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getId, userId)
+                .eq(SysUser::getDeleted, NOT_DELETED));
+        return user == null ? null : user.getAvatar();
+    }
+
     private ArticleCommentVo toVo(
             ArticleComment comment,
             List<ArticleComment> replies,
@@ -331,7 +366,8 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
             AppUserPrincipal principal,
             boolean hideEnabled,
             boolean superAdmin,
-            boolean commentManager
+            boolean commentManager,
+            Map<Long, String> avatarMap
     ) {
         String content = displayContent(comment);
         Map<Long, ArticleComment> replyParentMap = replies.stream()
@@ -357,7 +393,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
                 content,
                 comment.getStatus(),
                 comment.getUserName(),
-                comment.getUserAvatar(),
+                resolveUserAvatar(comment, avatarMap),
                 replyToUserName,
                 formatDateTime(comment.getCreateTime()),
                 mine,
@@ -372,9 +408,17 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
                         principal,
                         hideEnabled,
                         superAdmin,
-                        commentManager
+                        commentManager,
+                        avatarMap
                 )).toList()
         );
+    }
+
+    private String resolveUserAvatar(ArticleComment comment, Map<Long, String> avatarMap) {
+        if (comment.getUserId() != null && StringUtils.hasText(avatarMap.get(comment.getUserId()))) {
+            return avatarMap.get(comment.getUserId());
+        }
+        return comment.getUserAvatar();
     }
 
     private void requireStatusPermission(

@@ -10,13 +10,15 @@ import com.template.article.entity.Article;
 import com.template.article.entity.ArticleComment;
 import com.template.article.mapper.ArticleCommentMapper;
 import com.template.article.mapper.ArticleMapper;
-import com.template.article.service.CommentSensitiveWordService;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
 import com.template.system.config.mapper.SysConfigMapper;
+import com.template.system.user.entity.SysUser;
+import com.template.system.user.mapper.SysUserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,15 +58,17 @@ class ArticleCommentServiceImplTest {
     @Mock
     private SysConfigMapper configMapper;
     @Mock
-    private CommentSensitiveWordService sensitiveWordService;
+    private SensitiveWordGuard sensitiveWordGuard;
+    @Mock
+    private SysUserMapper userMapper;
 
     private ArticleCommentServiceImpl commentService;
 
     @BeforeEach
     void setUp() {
-        commentService = new ArticleCommentServiceImpl(commentMapper, articleMapper, permissionService, configMapper, sensitiveWordService);
-        lenient().when(sensitiveWordService.findHits(anyString())).thenReturn(List.of());
+        commentService = new ArticleCommentServiceImpl(commentMapper, articleMapper, permissionService, configMapper, sensitiveWordGuard, userMapper);
         lenient().when(permissionService.isSuperAdmin(ADMIN)).thenReturn(true);
+        lenient().when(userMapper.selectList(anyWrapper())).thenReturn(List.of());
     }
 
     @Test
@@ -76,12 +80,15 @@ class ArticleCommentServiceImplTest {
         ArticleComment root = comment(10L, 1L, 0L, 10L, "一级评论", "NORMAL");
         ArticleComment reply = comment(11L, 1L, 10L, 10L, "子回复", "NORMAL");
         ArticleComment nestedReply = comment(12L, 1L, 11L, 10L, "回复子回复", "NORMAL");
+        root.setUserAvatar("/old-root-avatar.webp");
+        reply.setUserAvatar("/old-reply-avatar.webp");
         IPage<ArticleComment> page = Page.of(1, 20, 1);
         page.setRecords(List.of(root));
 
         when(articleMapper.selectOne(anyWrapper())).thenReturn(article);
         when(commentMapper.selectPage(any(), anyWrapper())).thenReturn(page);
         when(commentMapper.selectList(anyWrapper())).thenReturn(List.of(reply, nestedReply));
+        when(userMapper.selectList(anyWrapper())).thenReturn(List.of(user(1L, "/current-admin-avatar.webp")));
 
         var result = commentService.pageComments(new ArticleCommentListQuery(1L, 1L, 20L), ADMIN);
 
@@ -93,6 +100,8 @@ class ArticleCommentServiceImplTest {
         assertThat(result.records().get(0).canHide()).isTrue();
         assertThat(result.records().get(0).canDelete()).isTrue();
         assertThat(result.records().get(0).mine()).isTrue();
+        assertThat(result.records().get(0).userAvatar()).isEqualTo("/current-admin-avatar.webp");
+        assertThat(result.records().get(0).replies().get(0).userAvatar()).isEqualTo("/current-admin-avatar.webp");
     }
 
     @Test
@@ -138,6 +147,7 @@ class ArticleCommentServiceImplTest {
     void createRootCommentShouldInsertAndIncrementCount() {
         Article article = article(1L, 0L);
         when(articleMapper.selectOne(anyWrapper())).thenReturn(article);
+        when(userMapper.selectOne(anyWrapper())).thenReturn(user(1L, "/current-admin-avatar.webp"));
 
         Long id = commentService.createComment(new ArticleCommentSaveRequest(1L, 0L, " 新评论 "), ADMIN);
 
@@ -146,6 +156,7 @@ class ArticleCommentServiceImplTest {
         assertThat(commentCaptor.getValue().getContent()).isEqualTo("新评论");
         assertThat(commentCaptor.getValue().getStatus()).isEqualTo("NORMAL");
         assertThat(commentCaptor.getValue().getUserName()).isEqualTo("admin");
+        assertThat(commentCaptor.getValue().getUserAvatar()).isEqualTo("/current-admin-avatar.webp");
         assertThat(id).isEqualTo(commentCaptor.getValue().getId());
 
         verify(articleMapper).update(eq(null), anyWrapper());
@@ -319,6 +330,14 @@ class ArticleCommentServiceImplTest {
         comment.setCreateTime(LocalDateTime.of(2026, 6, 1, 10, 0));
         comment.setDeleted(0);
         return comment;
+    }
+
+    private SysUser user(Long id, String avatar) {
+        SysUser user = new SysUser();
+        user.setId(id);
+        user.setAvatar(avatar);
+        user.setDeleted(0);
+        return user;
     }
 
     @SuppressWarnings("unchecked")

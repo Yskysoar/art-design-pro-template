@@ -14,6 +14,7 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.security.auth.AppUserPrincipal;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -51,7 +52,6 @@ public class CommentSensitiveWordServiceImpl implements CommentSensitiveWordServ
         IPage<CommentSensitiveWord> page = wordMapper.selectPage(Page.of(current, size), new LambdaQueryWrapper<CommentSensitiveWord>()
                 .like(StringUtils.hasText(query.word()), CommentSensitiveWord::getWord, query.word())
                 .eq(query.enabled() != null, CommentSensitiveWord::getEnabled, query.enabled())
-                .eq(CommentSensitiveWord::getDeleted, NOT_DELETED)
                 .orderByDesc(CommentSensitiveWord::getCreateTime)
                 .orderByDesc(CommentSensitiveWord::getId));
         return new PageResult<>(
@@ -113,15 +113,18 @@ public class CommentSensitiveWordServiceImpl implements CommentSensitiveWordServ
             return List.of();
         }
         String lowerContent = content.toLowerCase(Locale.ROOT);
-        return wordMapper.selectList(new LambdaQueryWrapper<CommentSensitiveWord>()
-                        .eq(CommentSensitiveWord::getEnabled, ENABLED)
-                        .eq(CommentSensitiveWord::getDeleted, NOT_DELETED))
-                .stream()
-                .map(CommentSensitiveWord::getWord)
-                .filter(StringUtils::hasText)
-                .filter(word -> lowerContent.contains(word.toLowerCase(Locale.ROOT)))
-                .distinct()
-                .toList();
+        try {
+            return wordMapper.selectList(new LambdaQueryWrapper<CommentSensitiveWord>()
+                            .eq(CommentSensitiveWord::getEnabled, ENABLED))
+                    .stream()
+                    .map(CommentSensitiveWord::getWord)
+                    .filter(StringUtils::hasText)
+                    .filter(word -> lowerContent.contains(word.toLowerCase(Locale.ROOT)))
+                    .distinct()
+                    .toList();
+        } catch (BadSqlGrammarException exception) {
+            return List.of();
+        }
     }
 
     private CommentSensitiveWord getExistingWord(Long id) {
@@ -129,8 +132,7 @@ public class CommentSensitiveWordServiceImpl implements CommentSensitiveWordServ
             throw new BusinessException(ApiCode.BAD_REQUEST, "敏感词ID不能为空");
         }
         CommentSensitiveWord entity = wordMapper.selectOne(new LambdaQueryWrapper<CommentSensitiveWord>()
-                .eq(CommentSensitiveWord::getId, id)
-                .eq(CommentSensitiveWord::getDeleted, NOT_DELETED));
+                .eq(CommentSensitiveWord::getId, id));
         if (entity == null) {
             throw new BusinessException(ApiCode.NOT_FOUND, "敏感词不存在");
         }
@@ -161,7 +163,6 @@ public class CommentSensitiveWordServiceImpl implements CommentSensitiveWordServ
     private void assertWordUnique(String word, Long excludeId) {
         Long count = wordMapper.selectCount(new LambdaQueryWrapper<CommentSensitiveWord>()
                 .eq(CommentSensitiveWord::getWord, word)
-                .eq(CommentSensitiveWord::getDeleted, NOT_DELETED)
                 .ne(excludeId != null, CommentSensitiveWord::getId, excludeId));
         if (count != null && count > 0) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "敏感词已存在");

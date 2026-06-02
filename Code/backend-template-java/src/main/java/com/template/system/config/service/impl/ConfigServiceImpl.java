@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.dto.ConfigListQuery;
@@ -53,10 +54,16 @@ public class ConfigServiceImpl implements ConfigService {
 
     private final SysConfigMapper configMapper;
     private final PermissionService permissionService;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
-    public ConfigServiceImpl(SysConfigMapper configMapper, PermissionService permissionService) {
+    public ConfigServiceImpl(
+            SysConfigMapper configMapper,
+            PermissionService permissionService,
+            SensitiveWordGuard sensitiveWordGuard
+    ) {
         this.configMapper = configMapper;
         this.permissionService = permissionService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -78,6 +85,7 @@ public class ConfigServiceImpl implements ConfigService {
     public void createConfig(ConfigSaveRequest request, AppUserPrincipal principal) {
         assertConfigKeyUnique(request.configKey(), null);
         assertConfigValueSupported(request.configKey(), request.configValue());
+        validateConfigText(request);
 
         SysConfig config = new SysConfig();
         config.setConfigKey(request.configKey());
@@ -100,6 +108,7 @@ public class ConfigServiceImpl implements ConfigService {
         assertConfigKeyUnique(request.configKey(), id);
         assertConfigValueSupported(request.configKey(), request.configValue());
         assertSuperAdminOnlyConfig(config, principal);
+        validateConfigText(request);
 
         config.setConfigKey(request.configKey());
         config.setConfigValue(request.configValue());
@@ -150,6 +159,14 @@ public class ConfigServiceImpl implements ConfigService {
         if (count != null && count > 0) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "配置键已存在");
         }
+    }
+
+    private void validateConfigText(ConfigSaveRequest request) {
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("配置键", request.configKey()),
+                new SensitiveWordGuard.TextField("配置值", request.configValue()),
+                new SensitiveWordGuard.TextField("配置说明", request.description())
+        );
     }
 
     private void assertConfigKeyNotChanged(SysConfig config, String requestConfigKey) {

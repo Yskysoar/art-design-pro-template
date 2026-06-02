@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
+import com.template.common.security.SensitiveWordGuard;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.menu.entity.SysMenu;
@@ -73,6 +74,7 @@ public class RoleServiceImpl implements RoleService {
     private final SysRoleOrgMapper roleOrgMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final PermissionService permissionService;
+    private final SensitiveWordGuard sensitiveWordGuard;
 
     public RoleServiceImpl(
             SysRoleMapper roleMapper,
@@ -81,7 +83,8 @@ public class RoleServiceImpl implements RoleService {
             SysRoleMenuMapper roleMenuMapper,
             SysRoleOrgMapper roleOrgMapper,
             SysUserRoleMapper userRoleMapper,
-            PermissionService permissionService
+            PermissionService permissionService,
+            SensitiveWordGuard sensitiveWordGuard
     ) {
         this.roleMapper = roleMapper;
         this.menuMapper = menuMapper;
@@ -90,6 +93,7 @@ public class RoleServiceImpl implements RoleService {
         this.roleOrgMapper = roleOrgMapper;
         this.userRoleMapper = userRoleMapper;
         this.permissionService = permissionService;
+        this.sensitiveWordGuard = sensitiveWordGuard;
     }
 
     @Override
@@ -111,6 +115,7 @@ public class RoleServiceImpl implements RoleService {
     public void createRole(RoleSaveRequest request, AppUserPrincipal principal) {
         assertCanCreateBusinessRole(principal);
         assertRoleCodeUnique(request.roleCode(), null);
+        validateRoleText(request);
 
         SysRole role = new SysRole();
         role.setRoleName(request.roleName());
@@ -135,6 +140,7 @@ public class RoleServiceImpl implements RoleService {
         assertSystemRoleEditable(role);
         assertRoleLevelManageable(role, principal);
         assertRoleCodeUnique(request.roleCode(), id);
+        validateRoleText(request);
 
         role.setRoleName(request.roleName());
         role.setRoleCode(request.roleCode());
@@ -280,6 +286,14 @@ public class RoleServiceImpl implements RoleService {
         if (count != null && count > 0) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "角色编码已存在");
         }
+    }
+
+    private void validateRoleText(RoleSaveRequest request) {
+        sensitiveWordGuard.validateAll(
+                new SensitiveWordGuard.TextField("角色名称", request.roleName()),
+                new SensitiveWordGuard.TextField("角色编码", request.roleCode()),
+                new SensitiveWordGuard.TextField("角色描述", request.description())
+        );
     }
 
     private void assertSystemRoleEditable(SysRole role) {
