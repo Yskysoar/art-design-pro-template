@@ -1,6 +1,6 @@
 <!-- 社交聊天页 -->
 <template>
-  <div class="social-chat page-content !p-0" :style="{ minHeight: containerMinHeight }">
+  <div class="social-chat page-content !p-0" :style="{ height: containerMinHeight }">
     <aside class="social-chat__side">
       <div class="side-toolbar">
         <ElInput
@@ -143,25 +143,6 @@
 
       <ElEmpty v-else class="chat-empty" description="选择一个用户开始聊天" />
     </main>
-
-    <aside class="social-chat__profile" v-if="selectedUser">
-      <ElAvatar :size="72" :src="selectedUser.avatar">{{ avatarText(selectedUser) }}</ElAvatar>
-      <h3>{{ displayName(selectedUser) }}</h3>
-      <p>{{ selectedUser.email || selectedUser.userName }}</p>
-      <div class="profile-tags">
-        <ElTag v-if="selectedUser.mutualFollow" type="success">互相关注</ElTag>
-        <ElTag v-else-if="selectedUser.following">我已关注</ElTag>
-        <ElTag v-if="selectedUser.followedBy" type="info">对方关注我</ElTag>
-        <ElTag v-if="selectedUser.blockedByMe" type="danger">已拉黑</ElTag>
-        <ElTag v-if="selectedUser.blockedMe" type="danger">对方已拉黑我</ElTag>
-      </div>
-      <ElDivider />
-      <div class="profile-tips">
-        <p>非互关时最多连续发送 3 条私信。</p>
-        <p>对方回复后额度恢复为 3 条。</p>
-        <p>互相关注后不限制私信额度。</p>
-      </div>
-    </aside>
   </div>
 </template>
 
@@ -362,7 +343,8 @@
 <style lang="scss" scoped>
   .social-chat {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr) 260px;
+    grid-template-columns: clamp(260px, 24vw, 320px) minmax(0, 1fr);
+    min-height: 0;
     overflow: hidden;
     background: var(--art-main-bg-color);
     border: 1px solid var(--art-card-border);
@@ -370,8 +352,9 @@
   }
 
   .social-chat__side,
-  .social-chat__profile {
+  .social-chat__main {
     min-width: 0;
+    min-height: 0;
     background: var(--art-main-bg-color);
   }
 
@@ -517,7 +500,8 @@
   .message-bubble {
     display: flex;
     flex-direction: column;
-    max-width: min(620px, 72%);
+    max-width: min(680px, 76%);
+    min-width: 0;
   }
 
   .message-meta {
@@ -535,9 +519,11 @@
   .message-bubble p {
     padding: 10px 12px;
     margin: 0;
+    overflow-wrap: anywhere;
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
+    word-break: break-word;
     background: var(--art-main-bg-color);
     border-radius: 8px;
   }
@@ -574,64 +560,27 @@
     height: 100%;
   }
 
-  .social-chat__profile {
-    padding: 24px 18px;
-    text-align: center;
-    border-left: 1px solid var(--art-card-border);
-
-    h3 {
-      margin: 12px 0 6px;
-      font-size: 17px;
-    }
-
-    p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--art-text-gray-600);
-    }
-  }
-
-  .profile-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    margin-top: 16px;
-  }
-
-  .profile-tips {
-    text-align: left;
-
-    p {
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-  }
-
-  @media screen and (width <= 1100px) {
+  @media screen and (width <= 1280px) {
     .social-chat {
-      grid-template-columns: 300px minmax(0, 1fr);
-    }
-
-    .social-chat__profile {
-      display: none;
+      grid-template-columns: clamp(240px, 26vw, 300px) minmax(0, 1fr);
     }
   }
 
-  @media screen and (width <= 760px) {
+  @media screen and (width <= 960px) {
     .social-chat {
       grid-template-columns: 1fr;
       overflow: auto;
     }
 
     .social-chat__side {
-      height: 42vh;
+      height: min(320px, 42%);
+      min-height: 220px;
       border-right: 0;
       border-bottom: 1px solid var(--art-card-border);
     }
 
     .social-chat__main {
-      min-height: 58vh;
+      min-height: 0;
     }
 
     .chat-header {
@@ -641,6 +590,21 @@
 
     .chat-actions {
       flex-wrap: wrap;
+    }
+  }
+
+  @media screen and (width <= 640px) {
+    .social-chat__side {
+      height: 36%;
+      min-height: 190px;
+    }
+
+    .message-bubble {
+      max-width: 82%;
+    }
+
+    .chat-input {
+      padding: 12px;
     }
   }
 </style>
