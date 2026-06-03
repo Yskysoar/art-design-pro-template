@@ -15,7 +15,7 @@
 
       <ElScrollbar style="height: calc(100% - 135px)">
         <ul>
-          <li v-for="menu in firstLevelMenus" :key="menu.path" @click="handleMenuJump(menu, true)">
+          <li v-for="menu in firstLevelMenus" :key="menu.path" @click="handleFirstLevelMenuClick(menu)">
             <ElTooltip
               class="box-item"
               effect="dark"
@@ -29,7 +29,7 @@
                 :class="{
                   'is-active': menu.meta.isFirstLevel
                     ? menu.path === route.path
-                    : menu.path === firstLevelMenuPath
+                    : menu.path === activeTopMenuPath
                 }"
                 :style="{
                   height: dualMenuShowText ? '60px' : '46px'
@@ -138,6 +138,7 @@
   import SidebarSubmenu from './widget/SidebarSubmenu.vue'
   import { useCommon } from '@/hooks/core/useCommon'
   import { useWindowSize, useTimeoutFn } from '@vueuse/core'
+  import type { AppRouteRecord } from '@/types/router'
 
   defineOptions({ name: 'ArtSidebarMenu' })
 
@@ -175,7 +176,9 @@
   const isMobileScreen = computed(() => width.value < MOBILE_BREAKPOINT)
 
   // 路由相关
-  const firstLevelMenuPath = computed(() => route.matched[0]?.path)
+  const routeTopMenuPath = computed(() => route.matched[0]?.path)
+  const selectedTopMenuPath = ref('')
+  const activeTopMenuPath = computed(() => selectedTopMenuPath.value || routeTopMenuPath.value)
   const routerPath = computed(() => String(route.meta.activePath || route.path))
 
   // 菜单数据
@@ -203,7 +206,7 @@
     }
 
     // 返回当前顶级路径对应的子菜单
-    const currentTopPath = `/${route.path.split('/')[1]}`
+    const currentTopPath = activeTopMenuPath.value || `/${route.path.split('/')[1]}`
     const currentMenu = allMenus.find((menu) => menu.path === currentTopPath)
     return currentMenu?.children ?? []
   })
@@ -262,6 +265,28 @@
    */
   const navigateToHome = (): void => {
     router.push(homePath.value)
+  }
+
+  /**
+   * 双列菜单一级菜单只负责切换右侧二级菜单。
+   * 若一级菜单本身就是页面且没有子菜单，则仍按原规则跳转。
+   *
+   * @param menu 一级菜单项
+   */
+  const handleFirstLevelMenuClick = (menu: AppRouteRecord): void => {
+    if (!isDualMenu.value) {
+      handleMenuJump(menu, true)
+      return
+    }
+
+    const hasVisibleChildren = !!menu.children?.some((child) => !child.meta?.isHide)
+    if (hasVisibleChildren) {
+      selectedTopMenuPath.value = menu.path
+      return
+    }
+
+    selectedTopMenuPath.value = menu.path
+    handleMenuJump(menu)
   }
 
   /**
@@ -331,6 +356,22 @@
       }
     }
   })
+
+  watch(
+    [routeTopMenuPath, firstLevelMenus],
+    ([topPath, menus]) => {
+      const currentMenuVisible = menus.some((menu) => menu.path === topPath)
+      if (currentMenuVisible) {
+        selectedTopMenuPath.value = topPath || ''
+        return
+      }
+
+      if (!selectedTopMenuPath.value && menus.length > 0) {
+        selectedTopMenuPath.value = menus[0].path
+      }
+    },
+    { immediate: true }
+  )
 </script>
 
 <style lang="scss" scoped>

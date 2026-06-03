@@ -99,28 +99,27 @@
       height: 100%;
     }
 
-    &:hover {
-      .dual-menu-collapse-btn {
-        opacity: 1 !important;
-      }
-    }
-
     .dual-menu-collapse-btn {
       position: absolute;
       top: 50%;
-      right: -11px;
+      right: -14px;
       z-index: 10;
-      width: 11px;
-      height: 50px;
+      width: 14px;
+      height: 56px;
       cursor: pointer;
       background-color: var(--default-box-color);
       border: 1px solid var(--art-card-border);
       border-radius: 0 15px 15px 0;
-      opacity: 0;
-      transition: opacity 0.2s;
+      opacity: 1;
+      transition:
+        border-color 0.2s,
+        background-color 0.2s;
       transform: translateY(-50%);
 
       &:hover {
+        background-color: var(--art-gray-200);
+        border-color: var(--theme-color);
+
         .art-svg-icon {
           color: var(--art-gray-800) !important;
         }
@@ -130,7 +129,7 @@
         position: absolute;
         top: 0;
         bottom: 0;
-        left: -4px;
+        left: -2px;
         margin: auto;
         transition: all 0.3s;
       }

@@ -34,6 +34,15 @@
           @click="visibleMenu"
         />
 
+        <!-- 双列菜单第二列按钮 -->
+        <ArtIconButton
+          v-if="isDualMenu && shouldShowMenuButton"
+          :icon="menuOpen ? 'ri:side-bar-line' : 'ri:side-bar-fill'"
+          class="ml-3 max-sm:ml-[7px]"
+          :title="menuOpen ? '收起侧边菜单' : '展开侧边菜单'"
+          @click="visibleMenu"
+        />
+
         <!-- 刷新按钮 -->
         <ArtIconButton
           v-if="shouldShowRefreshButton"
