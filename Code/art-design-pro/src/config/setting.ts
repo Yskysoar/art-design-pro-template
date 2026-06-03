@@ -28,7 +28,7 @@ import { SystemThemeEnum, MenuThemeEnum, MenuTypeEnum, ContainerWidthEnum } from
  */
 export const SETTING_DEFAULT_CONFIG = {
   /** 菜单类型 */
-  menuType: MenuTypeEnum.LEFT,
+  menuType: MenuTypeEnum.DUAL_MENU,
   /** 菜单展开宽度 */
   menuOpenWidth: 230,
   /** 菜单是否展开 */
@@ -46,7 +46,7 @@ export const SETTING_DEFAULT_CONFIG = {
   /** 是否显示菜单按钮 */
   showMenuButton: true,
   /** 是否显示快速入口 */
-  showFastEnter: true,
+  showFastEnter: false,
   /** 是否显示刷新按钮 */
   showRefreshButton: true,
   /** 是否显示面包屑 */
@@ -76,7 +76,7 @@ export const SETTING_DEFAULT_CONFIG = {
   /** 边框模式 */
   boxBorderMode: true,
   /** 页面过渡效果 */
-  pageTransition: 'slide-left',
+  pageTransition: 'fade',
   /** 标签页样式 */
   tabStyle: 'tab-default',
   /** 自定义圆角 */

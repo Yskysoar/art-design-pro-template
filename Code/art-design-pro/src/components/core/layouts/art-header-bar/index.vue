@@ -336,10 +336,10 @@
   }
 
   /**
-   * 打开聊天窗口
+   * 进入聊天页面
    */
   const openChat = (): void => {
-    mittBus.emit('openChat')
+    router.push({ name: 'SocialChat' })
   }
 </script>
 

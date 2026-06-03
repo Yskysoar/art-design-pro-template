@@ -450,4 +450,67 @@ declare namespace Api {
       contentType: string
     }
   }
+
+  namespace Social {
+    type SocialUserList = Api.Common.PaginatedResponse<SocialUser>
+    type SocialConversationList = Api.Common.PaginatedResponse<SocialConversation>
+    type SocialMessageList = Api.Common.PaginatedResponse<SocialMessage>
+
+    interface SocialSearchParams {
+      current: number
+      size: number
+      keyword?: string
+    }
+
+    interface SocialMessageSearchParams {
+      current: number
+      size: number
+    }
+
+    interface SocialUser {
+      id: number
+      userName: string
+      nickName: string
+      avatar?: string
+      email?: string
+      following: boolean
+      followedBy: boolean
+      mutualFollow: boolean
+      blockedByMe: boolean
+      blockedMe: boolean
+    }
+
+    interface SocialMessage {
+      id: number
+      conversationId: number
+      senderId: number
+      receiverId: number
+      senderName: string
+      senderAvatar?: string
+      content: string
+      messageType: 'TEXT'
+      mine: boolean
+      read: boolean
+      createTime: string
+    }
+
+    interface SocialConversation {
+      id: number
+      targetUser: SocialUser
+      lastMessage?: SocialMessage
+      unreadCount: number
+      remainingQuota: number
+      unlimited: boolean
+      lastMessageTime?: string
+    }
+
+    interface SocialMessageSendParams {
+      receiverId: number
+      content: string
+    }
+
+    interface SocialUnreadCount {
+      unreadCount: number
+    }
+  }
 }
