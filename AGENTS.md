@@ -45,6 +45,7 @@
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
 - `Code/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
+- `Code/backend-template-java/src/main/resources/application-local.yml` 内的数据库密码仅用于本机启动时读取，严禁在日志、文档、提交信息或对外回复中明文暴露。
 - 用户已授予 Agent 完全访问权限用于项目开发、前后端启动、联调测试和代码审查；后续项目开发由 Agent 自行启动前后端并完成本地联调。该授权不包含高风险操作，高风险操作仍必须先说明影响并获得用户确认。
 - 数据库密码等敏感配置只通过本机环境变量传入，例如 `DB_PASSWORD`，不得写入 Git 跟踪文件、Docs 或提交信息。
 
