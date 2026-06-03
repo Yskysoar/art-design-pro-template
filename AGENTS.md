@@ -40,7 +40,7 @@
 - 当前顶部栏用户菜单已改为真实头像渲染，保留个人中心、修改密码、锁屏和退出登录；使用文档和 GitHub 不再放在右上角用户菜单。修改密码调用 `PUT /api/user/profile/password`，校验旧密码，成功后强制重新登录。
 - 所有和当前登录用户对接的前端展示点必须优先使用 `userStore.getUserInfo` / 后端 `/api/user/info` 的真实数据渲染，例如头像、用户名、邮箱、角色、个人中心、锁屏弹窗和右上角用户菜单；只有后端未返回字段时才使用本地默认头像或空状态文案兜底。
 - 当前用户管理表格已优化：手机号单行展示，组织列通过 `/api/org/tree` 将 `orgIds` 映射为组织名称；用户状态筛选和表格状态统一使用“启用/禁用”语义；`PATCH /api/user/{id}/status` 用于临时启用或禁用账号，`DELETE /api/user/{id}` 用于逻辑删除用户，不再用“注销”表达临时停用。
-- 最近本地提交：`252a619 fix(frontend): 调整系统菜单与表格样式`、`741045d feat(backend): 增加全局敏感词校验`、`d09eab3 chore(db): 重写开发 Mock 数据`。当前工作区验证已通过：前端 `vue-tsc --noEmit`，后端 `mvn test` 结果 `Tests run: 107, Failures: 0, Errors: 0, Skipped: 0`；Lombok + MapStruct 接入后后端全量测试仍通过。
+- 最近本地提交：`92549be docs: 重构项目文档体系`、`262a073 feat(backend): 新增社交关注与聊天接口`、`9353097 feat(frontend): 新增社交聊天页面`。当前工作区验证已通过：前端 `vue-tsc --noEmit`，后端 `mvn test` 结果 `Tests run: 107, Failures: 0, Errors: 0, Skipped: 0`；Lombok + MapStruct 接入后后端全量测试仍通过，`/api/social/conversations?current=1&size=50` 经 Vite 代理返回 `200`。
 - `Docs/2.开发审查记录.md` 按业务模块维护“未修复/部分修复/持续关注在前，已修复在后”的问题台账结构；新增问题和修复记录应继续按该结构维护。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
