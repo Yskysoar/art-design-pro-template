@@ -3,6 +3,8 @@ package com.template.common.exception;
 import com.template.common.response.ApiCode;
 import com.template.common.response.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException exception) {
@@ -38,6 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ApiResponse<Void> handleException(Exception exception) {
+        LOGGER.error("Unhandled server exception", exception);
         return ApiResponse.fail(ApiCode.ERROR);
     }
 

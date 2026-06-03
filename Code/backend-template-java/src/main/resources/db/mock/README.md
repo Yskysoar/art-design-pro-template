@@ -15,3 +15,4 @@
 - `mock_001_system.sql`：系统配置、组织、用户、角色、权限、菜单和 RBAC 关联关系。
 - `mock_002_article.sql`：文章分类、文件资源、文章、附件和评论数据。
 - `mock_003_sensitive_word.sql`：敏感词库数据，用于全站文本入口拦截验证。
+- `mock_004_social.sql`：关注、粉丝、拉黑、会话、消息、未读数和私信额度用例。

@@ -284,3 +284,55 @@ CREATE TABLE IF NOT EXISTS comment_sensitive_word (
   UNIQUE KEY uk_comment_sensitive_word_active (word, deleted),
   KEY idx_comment_sensitive_word_enabled (enabled)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='comment sensitive word table';
+
+CREATE TABLE IF NOT EXISTS social_follow (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '关注关系ID',
+  follower_id BIGINT NOT NULL COMMENT '关注发起用户ID',
+  following_id BIGINT NOT NULL COMMENT '被关注用户ID',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_social_follow_active (follower_id, following_id, deleted),
+  KEY idx_social_follow_following (following_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交关注关系表';
+
+CREATE TABLE IF NOT EXISTS social_block (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '拉黑关系ID',
+  blocker_id BIGINT NOT NULL COMMENT '拉黑人用户ID',
+  blocked_id BIGINT NOT NULL COMMENT '被拉黑人用户ID',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_social_block_active (blocker_id, blocked_id, deleted),
+  KEY idx_social_block_blocked (blocked_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交拉黑关系表';
+
+CREATE TABLE IF NOT EXISTS social_conversation (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '会话ID',
+  user_a_id BIGINT NOT NULL COMMENT '较小用户ID',
+  user_b_id BIGINT NOT NULL COMMENT '较大用户ID',
+  last_message_id BIGINT DEFAULT NULL COMMENT '最后消息ID',
+  last_message_time DATETIME DEFAULT NULL COMMENT '最后消息时间',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_social_conversation_active (user_a_id, user_b_id, deleted),
+  KEY idx_social_conversation_last_time (last_message_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交聊天会话表';
+
+CREATE TABLE IF NOT EXISTS social_message (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+  conversation_id BIGINT NOT NULL COMMENT '会话ID',
+  sender_id BIGINT NOT NULL COMMENT '发送人用户ID',
+  receiver_id BIGINT NOT NULL COMMENT '接收人用户ID',
+  content VARCHAR(1000) NOT NULL COMMENT '文本内容',
+  message_type VARCHAR(20) NOT NULL DEFAULT 'TEXT' COMMENT '消息类型',
+  read_time DATETIME DEFAULT NULL COMMENT '接收方已读时间',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  PRIMARY KEY (id),
+  KEY idx_social_message_conversation_time (conversation_id, create_time),
+  KEY idx_social_message_receiver_read (receiver_id, read_time),
+  KEY idx_social_message_quota (sender_id, receiver_id, create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交聊天消息表';
