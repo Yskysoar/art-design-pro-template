@@ -53,8 +53,9 @@ public class NotificationServiceImpl implements NotificationService {
     public PageResult<NotificationItemVo> pageNotifications(NotificationListQuery query, AppUserPrincipal principal) {
         long current = query.current() == null || query.current() < 1 ? DEFAULT_CURRENT : query.current();
         long size = query.size() == null || query.size() < 1 ? DEFAULT_SIZE : Math.min(query.size(), MAX_SIZE);
+        String noticeType = normalizeNoticeType(query.noticeType());
         IPage<NotificationMessage> page = notificationMapper.selectPage(Page.of(current, size), baseWrapper(principal.userId())
-                .eq(StringUtils.hasText(query.noticeType()), NotificationMessage::getNoticeType, query.noticeType().trim().toUpperCase())
+                .eq(StringUtils.hasText(noticeType), NotificationMessage::getNoticeType, noticeType)
                 .isNull(Boolean.TRUE.equals(query.unread()), NotificationMessage::getReadTime)
                 .orderByDesc(NotificationMessage::getCreateTime)
                 .orderByDesc(NotificationMessage::getId));
@@ -225,5 +226,9 @@ public class NotificationServiceImpl implements NotificationService {
             return null;
         }
         return value.length() > 120 ? value.substring(0, 120) : value;
+    }
+
+    private String normalizeNoticeType(String noticeType) {
+        return StringUtils.hasText(noticeType) ? noticeType.trim().toUpperCase() : null;
     }
 }

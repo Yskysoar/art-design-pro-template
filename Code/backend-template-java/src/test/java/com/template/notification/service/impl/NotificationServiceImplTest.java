@@ -74,6 +74,20 @@ class NotificationServiceImplTest {
     }
 
     @Test
+    @DisplayName("分页查询通知时允许通知类型为空")
+    void pageNotificationsShouldAllowNullNoticeType() {
+        Page<NotificationMessage> page = Page.of(1, 20);
+        page.setRecords(List.of());
+        page.setTotal(0);
+        when(notificationMapper.selectPage(anyPage(), anyWrapper())).thenReturn(page);
+
+        var result = notificationService.pageNotifications(new NotificationListQuery(1L, 20L, null, false), ADMIN);
+
+        assertThat(result.records()).isEmpty();
+        assertThat(result.total()).isZero();
+    }
+
+    @Test
     @DisplayName("创建私信通知时应写入目标会话和摘要")
     void createPrivateMessageNotificationShouldInsertMessage() {
         when(userMapper.selectById(2L)).thenReturn(user(2L, "designer", "设计同学"));

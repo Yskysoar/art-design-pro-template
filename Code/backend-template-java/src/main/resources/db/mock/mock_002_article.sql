@@ -13,9 +13,9 @@ INSERT INTO file_resource (
   extension, size, sha256, storage_type, uploader_id, create_by
 )
 VALUES
-  (1, 'cover-product.webp', '20260601-cover-product.webp', 'article/2026/06/20260601-cover-product.webp', '/api/common/files/article/2026/06/20260601-cover-product.webp', 'image/webp', 'webp', 128000, '1111111111111111111111111111111111111111111111111111111111111111', 'LOCAL', 1, 'admin'),
-  (2, 'cover-tech.webp', '20260601-cover-tech.webp', 'article/2026/06/20260601-cover-tech.webp', '/api/common/files/article/2026/06/20260601-cover-tech.webp', 'image/webp', 'webp', 142000, '2222222222222222222222222222222222222222222222222222222222222222', 'LOCAL', 2, 'moderator'),
-  (3, 'design-case.webp', '20260602-design-case.webp', 'article/2026/06/20260602-design-case.webp', '/api/common/files/article/2026/06/20260602-design-case.webp', 'image/webp', 'webp', 166000, '3333333333333333333333333333333333333333333333333333333333333333', 'LOCAL', 3, 'editor');
+  (1, 'cover-product.webp', 'cover-product.webp', 'article/mock/cover-product.webp', '/src/assets/images/cover/img1.webp', 'image/webp', 'webp', 128000, '1111111111111111111111111111111111111111111111111111111111111111', 'REMOTE', 1, 'admin'),
+  (2, 'cover-tech.webp', 'cover-tech.webp', 'article/mock/cover-tech.webp', '/src/assets/images/cover/img2.webp', 'image/webp', 'webp', 142000, '2222222222222222222222222222222222222222222222222222222222222222', 'REMOTE', 2, 'moderator'),
+  (3, 'design-case.webp', 'design-case.webp', 'article/mock/design-case.webp', '/src/assets/images/cover/img3.webp', 'image/webp', 'webp', 166000, '3333333333333333333333333333333333333333333333333333333333333333', 'REMOTE', 3, 'editor');
 
 INSERT INTO article (
   id, title, category_id, cover_url, summary, content_html, content_text,
