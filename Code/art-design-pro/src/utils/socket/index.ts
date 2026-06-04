@@ -39,7 +39,7 @@ export default class WebSocketClient {
   private isReconnecting: boolean = false
 
   private constructor(options: WebSocketOptions) {
-    this.url = options.url || (process.env.VUE_APP_LOGIN_WEBSOCKET as string)
+    this.url = options.url || import.meta.env.VITE_LOGIN_WEBSOCKET || ''
     this.messageHandler = options.messageHandler
     this.reconnectInterval = options.reconnectInterval ?? 20 * 1000 // 默认20秒
     this.heartbeatInterval = options.heartbeatInterval ?? 5 * 1000 // 默认5秒
@@ -72,6 +72,11 @@ export default class WebSocketClient {
   }
 
   private connect(resetReconnectAttempts: boolean = false): void {
+    if (!this.url) {
+      console.error('WebSocket URL未配置')
+      return
+    }
+
     // 如果正在连接中，不重复连接
     if (this.isConnecting) {
       console.log('正在建立WebSocket连接中...')
