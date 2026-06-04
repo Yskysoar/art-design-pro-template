@@ -3,6 +3,8 @@ Info/
 # Original frontend reference snapshot, kept locally for recovery/comparison only.
 Code/art-design-pro-main/
 Code/art-design-pro-main.zip
+Code/基准项目/
+Code/精简版本/
 
 # Nested project runtime/build output
 Code/art-design-pro/node_modules/
