@@ -40,6 +40,7 @@
 - 当前顶部栏用户菜单已改为真实头像渲染，保留个人中心、修改密码、锁屏和退出登录；使用文档和 GitHub 不再放在右上角用户菜单。修改密码调用 `PUT /api/user/profile/password`，校验旧密码，成功后强制重新登录。
 - 所有和当前登录用户对接的前端展示点必须优先使用 `userStore.getUserInfo` / 后端 `/api/user/info` 的真实数据渲染，例如头像、用户名、邮箱、角色、个人中心、锁屏弹窗和右上角用户菜单；只有后端未返回字段时才使用本地默认头像或空状态文案兜底。
 - 当前用户管理表格已优化：手机号单行展示，组织列通过 `/api/org/tree` 将 `orgIds` 映射为组织名称；用户状态筛选和表格状态统一使用“启用/禁用”语义；`PATCH /api/user/{id}/status` 用于临时启用或禁用账号，`DELETE /api/user/{id}` 用于逻辑删除用户，不再用“注销”表达临时停用。
+- 当前前端必须同步维护中英文国际化；面包屑、工作标签页、侧边栏菜单、顶部栏、认证页、系统管理页和新增业务页的可见文案应优先使用 `src/locales/langs/zh.json` 与 `src/locales/langs/en.json`，菜单标题应优先使用 `menus.*` 键。
 - 最近本地提交：`92549be docs: 重构项目文档体系`、`262a073 feat(backend): 新增社交关注与聊天接口`、`9353097 feat(frontend): 新增社交聊天页面`。当前工作区验证已通过：前端 `vue-tsc --noEmit`，后端 `mvn test` 结果 `Tests run: 107, Failures: 0, Errors: 0, Skipped: 0`；Lombok + MapStruct 接入后后端全量测试仍通过，`/api/social/conversations?current=1&size=50` 经 Vite 代理返回 `200`。
 - `Docs/2.开发审查记录.md` 按业务模块维护“未修复/部分修复/持续关注在前，已修复在后”的问题台账结构；新增问题和修复记录应继续按该结构维护。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
@@ -76,6 +77,8 @@ Code/
 - 优先遵循现有 Vue 3 + TypeScript + Vite + Element Plus + Pinia + Vue Router 技术栈。
 - 新增业务接口优先放入 `src/api/`，类型优先维护到 `src/types/api/api.d.ts`。
 - 表格、表单、权限、请求封装优先复用现有组件和 hooks。
+- 新增或调整前端页面、菜单、弹窗、按钮、表单校验、空状态、提示信息和路由标题时，必须同步补充中文与英文国际化文案；不要在 Vue 模板和 TS 业务逻辑中长期保留裸中文/裸英文可见文案。
+- 后端菜单、Mock SQL 和动态路由标题应优先存储 `menus.*` 国际化键；如需兼容历史数据，应在前端标题格式化层集中处理，不要在各页面散落判断。
 - 后端使用 Java 17 + Spring Boot 3.x + Maven + MyBatis-Plus + Lombok + MapStruct。
 - 后端包名当前使用 `com.template`。
 - 后端当前覆盖 Tomcat 为 `10.1.55`，用于修复 IDE 扫描到的 Tomcat 传递依赖 CVE。
@@ -225,6 +228,8 @@ git push -u origin master
 - 新增和修改文件统一使用 UTF-8。
 - 中文文档、注释、日志不得出现乱码。
 - 命令说明和操作解释使用中文。
+- Windows 命令执行优先使用 PowerShell 7.6（`pwsh`）。当前已验证本机 `pwsh` 为 7.6.2，输出编码为 `utf-8`，中文输出正常。
+- 如需在当前 PowerShell 5.x 外壳中调用 PowerShell 7.6，优先使用 `pwsh -NoLogo -NoProfile -Command '...'`，涉及 `$变量` 时注意使用单引号包裹命令，避免被外层 PowerShell 提前展开。
 - 当前允许 Agent 自行启动前端、启动后端、运行测试、执行只读或常规开发联调命令。高风险操作必须先说明影响并获得用户确认。
 
 高风险操作包括：
