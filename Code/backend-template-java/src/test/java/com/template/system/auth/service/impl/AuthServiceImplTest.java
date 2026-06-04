@@ -84,7 +84,7 @@ class AuthServiceImplTest {
         when(orgMapper.selectOne(anyOrgWrapper())).thenReturn(org);
         when(passwordEncoder.encode("secret123")).thenReturn("hash");
 
-        service.register(new RegisterRequest("new_user", "secret123", "captcha-id", "a1B2"));
+        service.register(new RegisterRequest("new_user", "新用户", "secret123", "captcha-id", "a1B2"));
 
         verify(userMapper).insert(any(SysUser.class));
         verify(userRoleMapper).insert(any(SysUserRole.class));
@@ -95,7 +95,7 @@ class AuthServiceImplTest {
     void registerRejectsDuplicateUserName() {
         when(userMapper.selectCount(anyUserWrapper())).thenReturn(1L);
 
-        assertThatThrownBy(() -> service.register(new RegisterRequest("admin", "secret123", "captcha-id", "a1B2")))
+        assertThatThrownBy(() -> service.register(new RegisterRequest("admin", "管理员", "secret123", "captcha-id", "a1B2")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("用户名已存在");
     }

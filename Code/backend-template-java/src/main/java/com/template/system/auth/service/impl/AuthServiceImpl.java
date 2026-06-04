@@ -106,13 +106,14 @@ public class AuthServiceImpl implements AuthService {
         captchaService.validateAndConsume(request.captchaId(), request.captchaCode());
         assertUserNameAvailable(request.userName());
         sensitiveWordGuard.validate("用户名", request.userName());
+        sensitiveWordGuard.validate("昵称", request.nickName());
         SysRole role = getDefaultRegisterRole();
         SysOrg org = getDefaultRegisterOrg();
 
         SysUser user = new SysUser();
         user.setUserName(request.userName());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setNickName(request.userName());
+        user.setNickName(request.nickName());
         user.setStatus(USER_NORMAL);
         user.setCreateBy(SYSTEM_OPERATOR);
         user.setUpdateBy(SYSTEM_OPERATOR);

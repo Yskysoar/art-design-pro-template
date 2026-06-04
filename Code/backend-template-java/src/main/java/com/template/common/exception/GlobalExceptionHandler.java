@@ -12,6 +12,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 /**
  * 全局异常处理器，保证接口始终返回前端约定的响应结构。
@@ -38,6 +39,12 @@ public class GlobalExceptionHandler {
     })
     public ApiResponse<Void> handleBadRequest(Exception exception) {
         return ApiResponse.fail(ApiCode.BAD_REQUEST.getCode(), getReadableMessage(exception));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException exception) {
+        ApiResponse<Void> response = ApiResponse.fail(ApiCode.METHOD_NOT_ALLOWED);
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
     }
 
     @ExceptionHandler(Exception.class)
