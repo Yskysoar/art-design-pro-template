@@ -55,8 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return true;
         }
         // 前缀匹配的公开路径
-        return path.startsWith("/api/portal/public/")
-            || path.startsWith("/api/common/files/");
+        return path.startsWith("/api/portal/public/");
     }
 
     @Override

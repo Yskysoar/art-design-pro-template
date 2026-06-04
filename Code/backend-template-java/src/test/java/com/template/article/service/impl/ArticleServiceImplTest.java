@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 class ArticleServiceImplTest {
 
     private static final AppUserPrincipal ADMIN = new AppUserPrincipal(1L, "admin", List.of("R_SUPER"));
+    private static final AppUserPrincipal EDITOR = new AppUserPrincipal(2L, "editor", List.of("R_EDITOR"));
 
     @Mock
     private ArticleMapper articleMapper;
@@ -166,6 +167,26 @@ class ArticleServiceImplTest {
     }
 
     @Test
+    @DisplayName("普通用户引用他人上传附件时应拒绝")
+    void createArticleShouldRejectOtherUserAttachment() {
+        FileResource file = file(8L);
+        file.setUploaderId(99L);
+        when(categoryMapper.selectOne(anyWrapper())).thenReturn(category(2L));
+        when(htmlSanitizerService.sanitize("<p>正文</p>")).thenReturn("<p>正文</p>");
+        when(htmlSanitizerService.toPlainText("<p>正文</p>")).thenReturn("正文");
+        when(fileStorageService.getExistingFile(8L)).thenReturn(file);
+
+        assertThatThrownBy(() -> articleService.createArticle(
+                new ArticleSaveRequest("文章标题", 2L, null, null, "<p>正文</p>", true, "PUBLISHED", List.of(8L)),
+                EDITOR
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("不能引用他人上传的附件");
+
+        verify(attachmentMapper, never()).insert(any(ArticleAttachment.class));
+    }
+
+    @Test
     @DisplayName("更新文章状态为发布时应补充发布时间")
     void updateStatusShouldSetPublishTimeWhenPublish() {
         Article article = article(1L);
@@ -206,6 +227,7 @@ class ArticleServiceImplTest {
         file.setId(id);
         file.setOriginalName("demo.pdf");
         file.setUrl("/api/common/files/2026/06/01/demo.pdf");
+        file.setUploaderId(1L);
         file.setDeleted(0);
         return file;
     }

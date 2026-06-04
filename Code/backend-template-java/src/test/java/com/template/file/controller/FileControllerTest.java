@@ -1,6 +1,8 @@
 package com.template.file.controller;
 
 import com.template.common.exception.GlobalExceptionHandler;
+import com.template.file.entity.FileResource;
+import com.template.file.service.FileAccessService;
 import com.template.file.service.FileStorageService;
 import com.template.file.vo.UploadResponse;
 import com.template.security.auth.JsonAccessDeniedHandler;
@@ -20,7 +22,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,6 +56,9 @@ class FileControllerTest extends ControllerSecurityTestSupport {
 
     @MockitoBean
     private FileStorageService fileStorageService;
+
+    @MockitoBean
+    private FileAccessService fileAccessService;
 
     @MockitoBean
     private PermissionService permissionService;
@@ -89,6 +97,22 @@ class FileControllerTest extends ControllerSecurityTestSupport {
                         .header("Authorization", "Bearer " + token(jwtTokenService, ADMIN)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.url").value("/api/common/files/2026/06/01/demo.png"));
+    }
+
+    @Test
+    @DisplayName("读取文件时应经过业务访问权限校验")
+    void getFileShouldCheckBusinessAccess() throws Exception {
+        FileResource file = new FileResource();
+        file.setOriginalName("demo.png");
+        file.setContentType("image/png");
+        when(fileStorageService.getByStoragePath("2026/06/01/demo.png")).thenReturn(file);
+        when(fileStorageService.loadAsResource("2026/06/01/demo.png"))
+                .thenReturn(new org.springframework.core.io.ByteArrayResource("image".getBytes()));
+
+        mockMvc.perform(get("/api/common/files/2026/06/01/demo.png"))
+                .andExpect(status().isOk());
+
+        verify(fileAccessService).requireReadable(eq(file), any());
     }
 
     private MockMultipartFile imageFile() {

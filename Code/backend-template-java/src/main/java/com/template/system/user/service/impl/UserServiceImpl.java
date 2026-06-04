@@ -57,7 +57,6 @@ public class UserServiceImpl implements UserService {
     private static final long DEFAULT_CURRENT = 1L;
     private static final long DEFAULT_SIZE = 20L;
     private static final long MAX_SIZE = 100L;
-    private static final String DEFAULT_PASSWORD = "admin123";
     private static final String USER_NORMAL = "NORMAL";
     private static final String CONFIG_USER_ORG_MODE = "user_org_relation_mode";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -126,7 +125,7 @@ public class UserServiceImpl implements UserService {
 
         SysUser user = new SysUser();
         user.setUserName(request.userName());
-        user.setPasswordHash(passwordEncoder.encode(getInitialPassword(request.password())));
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setNickName(getDefaultNickName(request.nickName(), request.userName()));
         user.setUserGender(normalizeGender(request.userGender()));
         user.setUserPhone(request.userPhone());
@@ -538,10 +537,6 @@ public class UserServiceImpl implements UserService {
 
     private String formatDateTime(LocalDateTime dateTime) {
         return dateTime == null ? null : DATE_TIME_FORMATTER.format(dateTime);
-    }
-
-    private String getInitialPassword(String password) {
-        return StringUtils.hasText(password) ? password : DEFAULT_PASSWORD;
     }
 
     private String getDefaultNickName(String nickName, String userName) {

@@ -484,6 +484,8 @@
       "editDialog": "Edit User",
       "user": "User",
       "userName": "Username",
+      "initialPassword": "Initial Password",
+      "passwordLength": "Password length must be 6 to 72 characters",
       "phone": "Phone",
       "email": "Email",
       "gender": "Gender",
@@ -500,6 +502,7 @@
       "statusSuccess": "{action} successfully",
       "placeholders": {
         "userName": "Please enter username",
+        "initialPassword": "Please enter initial password",
         "phone": "Please enter phone",
         "email": "Please enter email",
         "org": "Please select organization",

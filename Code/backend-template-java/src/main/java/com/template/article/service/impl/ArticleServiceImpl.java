@@ -131,7 +131,7 @@ public class ArticleServiceImpl implements ArticleService {
         article.setCommentCount(0L);
         article.setDeleted(NOT_DELETED);
         articleMapper.insert(article);
-        saveAttachments(article.getId(), request.attachmentIds());
+        saveAttachments(article.getId(), request.attachmentIds(), principal);
         return article.getId();
     }
 
@@ -141,7 +141,7 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = getExistingArticle(id);
         applyArticleFields(article, request, principal.userName(), false);
         articleMapper.updateById(article);
-        saveAttachments(article.getId(), request.attachmentIds());
+        saveAttachments(article.getId(), request.attachmentIds(), principal);
     }
 
     @Override
@@ -247,19 +247,29 @@ public class ArticleServiceImpl implements ArticleService {
         return normalizedStatus;
     }
 
-    private void saveAttachments(Long articleId, List<Long> attachmentIds) {
+    private void saveAttachments(Long articleId, List<Long> attachmentIds, AppUserPrincipal principal) {
         attachmentMapper.delete(new LambdaQueryWrapper<ArticleAttachment>().eq(ArticleAttachment::getArticleId, articleId));
         List<Long> distinctIds = attachmentIds == null
                 ? List.of()
                 : new ArrayList<>(new LinkedHashSet<>(attachmentIds));
         for (int index = 0; index < distinctIds.size(); index++) {
             Long fileId = distinctIds.get(index);
-            fileStorageService.getExistingFile(fileId);
+            FileResource file = fileStorageService.getExistingFile(fileId);
+            assertAttachmentAssignable(file, principal);
             ArticleAttachment attachment = new ArticleAttachment();
             attachment.setArticleId(articleId);
             attachment.setFileId(fileId);
             attachment.setSort(index + 1);
             attachmentMapper.insert(attachment);
+        }
+    }
+
+    private void assertAttachmentAssignable(FileResource file, AppUserPrincipal principal) {
+        if (principal.roles().contains("R_SUPER")) {
+            return;
+        }
+        if (!principal.userId().equals(file.getUploaderId())) {
+            throw new BusinessException(ApiCode.FORBIDDEN, "不能引用他人上传的附件");
         }
     }
 

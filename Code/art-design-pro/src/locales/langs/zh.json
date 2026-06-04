@@ -456,6 +456,8 @@
       "editDialog": "编辑用户",
       "user": "用户",
       "userName": "用户名",
+      "initialPassword": "初始密码",
+      "passwordLength": "密码长度必须为 6 到 72 位",
       "phone": "手机号",
       "email": "邮箱",
       "gender": "性别",
@@ -472,6 +474,7 @@
       "statusSuccess": "{action}成功",
       "placeholders": {
         "userName": "请输入用户名",
+        "initialPassword": "请输入初始密码",
         "phone": "请输入手机号",
         "email": "请输入邮箱",
         "org": "请选择组织",

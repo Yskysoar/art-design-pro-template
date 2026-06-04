@@ -9,6 +9,19 @@
       <ElFormItem :label="$t('systemManage.user.userName')" prop="userName">
         <ElInput v-model="formData.userName" :placeholder="$t('systemManage.user.placeholders.userName')" />
       </ElFormItem>
+      <ElFormItem
+        v-if="dialogType === 'add'"
+        :label="$t('systemManage.user.initialPassword')"
+        prop="password"
+      >
+        <ElInput
+          v-model="formData.password"
+          type="password"
+          show-password
+          autocomplete="new-password"
+          :placeholder="$t('systemManage.user.placeholders.initialPassword')"
+        />
+      </ElFormItem>
       <ElFormItem :label="$t('systemManage.user.phone')" prop="userPhone">
         <ElInput v-model="formData.userPhone" :placeholder="$t('systemManage.user.placeholders.phone')" />
       </ElFormItem>
@@ -76,19 +89,31 @@
   const orgTree = ref<Api.SystemManage.OrgTreeItem[]>([])
   const formData = reactive({
     userName: '',
+    password: '',
     userPhone: '',
     userGender: '男',
     roleCodes: [] as string[],
     orgIds: [] as number[]
   })
 
-  const rules: FormRules = {
+  const rules = computed<FormRules>(() => ({
     userName: [{ required: true, message: t('systemManage.user.placeholders.userName'), trigger: 'blur' }],
+    password:
+      dialogType.value === 'add'
+        ? [
+            {
+              required: true,
+              message: t('systemManage.user.placeholders.initialPassword'),
+              trigger: 'blur'
+            },
+            { min: 6, max: 72, message: t('systemManage.user.passwordLength'), trigger: 'blur' }
+          ]
+        : [],
     userPhone: [{ required: true, message: t('systemManage.user.placeholders.phone'), trigger: 'blur' }],
     userGender: [{ required: true, message: t('systemManage.user.placeholders.gender'), trigger: 'change' }],
     roleCodes: [{ required: true, message: t('systemManage.user.placeholders.role'), trigger: 'change' }],
     orgIds: [{ required: true, message: t('systemManage.user.placeholders.org'), trigger: 'change' }]
-  }
+  }))
 
   const loadOptions = async () => {
     const [roles, orgs] = await Promise.all([
@@ -103,6 +128,7 @@
     const row = props.userData
     Object.assign(formData, {
       userName: row?.userName || '',
+      password: '',
       userPhone: row?.userPhone || '',
       userGender: row?.userGender || '男',
       roleCodes: Array.isArray(row?.userRoles) ? row.userRoles : [],
@@ -139,7 +165,7 @@
     if (dialogType.value === 'edit' && props.userData?.id) {
       await fetchUpdateUser(props.userData.id, payload)
     } else {
-      await fetchCreateUser({ ...payload, password: 'admin123' })
+      await fetchCreateUser({ ...payload, password: formData.password })
     }
 
     ElMessage.success(dialogType.value === 'add' ? t('common.success.add') : t('common.success.update'))

@@ -11,7 +11,7 @@ import java.util.List;
  * 新增用户请求。
  *
  * @param userName   用户名
- * @param password   初始密码，未传时使用开发期默认值
+ * @param password   初始密码
  * @param nickName   昵称
  * @param userGender 性别
  * @param userPhone  手机号
@@ -25,6 +25,7 @@ public record UserCreateRequest(
         @Size(min = 2, max = 50, message = "用户名长度必须在 2 到 50 个字符之间")
         String userName,
 
+        @NotBlank(message = "初始密码不能为空")
         @Size(min = 6, max = 72, message = "密码长度必须在 6 到 72 个字符之间")
         String password,
 

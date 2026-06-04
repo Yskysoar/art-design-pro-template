@@ -2,6 +2,7 @@ package com.template.file.controller;
 
 import com.template.common.response.ApiResponse;
 import com.template.file.entity.FileResource;
+import com.template.file.service.FileAccessService;
 import com.template.file.service.FileStorageService;
 import com.template.file.vo.UploadResponse;
 import com.template.file.vo.WangEditorUploadResponse;
@@ -30,10 +31,16 @@ public class FileController {
     private static final String ARTICLE_UPLOAD_PERMISSION = "article:upload";
 
     private final FileStorageService fileStorageService;
+    private final FileAccessService fileAccessService;
     private final PermissionService permissionService;
 
-    public FileController(FileStorageService fileStorageService, PermissionService permissionService) {
+    public FileController(
+            FileStorageService fileStorageService,
+            FileAccessService fileAccessService,
+            PermissionService permissionService
+    ) {
         this.fileStorageService = fileStorageService;
+        this.fileAccessService = fileAccessService;
         this.permissionService = permissionService;
     }
 
@@ -119,10 +126,12 @@ public class FileController {
             @PathVariable String year,
             @PathVariable String month,
             @PathVariable String day,
-            @PathVariable String fileName
+            @PathVariable String fileName,
+            @AuthenticationPrincipal AppUserPrincipal principal
     ) {
         String storagePath = "%s/%s/%s/%s".formatted(year, month, day, fileName);
         FileResource file = fileStorageService.getByStoragePath(storagePath);
+        fileAccessService.requireReadable(file, principal);
         Resource resource = fileStorageService.loadAsResource(storagePath);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getOriginalName() + "\"")
