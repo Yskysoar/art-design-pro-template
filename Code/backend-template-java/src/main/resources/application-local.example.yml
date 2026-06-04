@@ -3,3 +3,9 @@
 spring:
   datasource:
     password: 本机数据库密码
+
+app:
+  security:
+    # 生产环境必须替换为真实前端域名，多个来源用英文逗号分隔。
+    cors:
+      allowed-origins: http://localhost:5173,http://127.0.0.1:5173
