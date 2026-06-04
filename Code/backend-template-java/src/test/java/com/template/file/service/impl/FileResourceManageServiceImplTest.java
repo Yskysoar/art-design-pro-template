@@ -112,6 +112,34 @@ class FileResourceManageServiceImplTest {
     }
 
     @Test
+    @DisplayName("按引用状态筛选时应返回过滤后的分页总数")
+    void pageResourcesShouldReturnAccurateTotalWhenFilteringReferenceState() {
+        FileResource referenced = imageResource(10L);
+        FileResource unreferenced = imageResource(11L);
+        unreferenced.setOriginalName("unused-banner.png");
+        unreferenced.setUrl("/api/common/files/article/20260604/unused-banner.png");
+        SysUser uploader = new SysUser();
+        uploader.setId(2L);
+        uploader.setUserName("designer");
+        uploader.setNickName("设计同学");
+
+        when(fileResourceMapper.selectList(anyWrapper())).thenReturn(List.of(referenced, unreferenced));
+        when(userMapper.selectList(anyUserWrapper())).thenReturn(List.of(uploader));
+        when(articleAttachmentMapper.selectCount(anyArticleAttachmentWrapper())).thenReturn(1L, 0L);
+        when(articleMapper.selectCount(anyArticleWrapper())).thenReturn(0L, 0L, 0L, 0L);
+        when(socialMessageMapper.selectCount(anySocialMessageWrapper())).thenReturn(0L, 0L);
+
+        PageResult<FileResourceItemVo> result = fileResourceManageService.pageResources(
+                new FileResourceListQuery(1L, 20L, null, null, null, null, null, true, null, null, null, null)
+        );
+
+        assertThat(result.total()).isEqualTo(1L);
+        assertThat(result.records()).hasSize(1);
+        assertThat(result.records().get(0).id()).isEqualTo(10L);
+        assertThat(result.records().get(0).referenced()).isTrue();
+    }
+
+    @Test
     @DisplayName("删除未引用文件资源时应删除台账记录")
     void deleteResourceShouldDeleteUnreferencedResource() {
         FileResource resource = imageResource(10L);

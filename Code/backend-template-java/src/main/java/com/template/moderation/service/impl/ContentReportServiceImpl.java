@@ -41,6 +41,19 @@ public class ContentReportServiceImpl implements ContentReportService {
     private static final int NOT_DELETED_INT = 0;
     private static final String STATUS_PENDING = "PENDING";
     private static final Set<String> TARGET_TYPES = Set.of("ARTICLE", "COMMENT", "PRIVATE_MESSAGE");
+    private static final Set<String> REPORT_REASONS = Set.of(
+            "SPAM",
+            "HARASSMENT",
+            "PERSONAL_INFO",
+            "COPYRIGHT",
+            "FRAUD",
+            "MISLEADING",
+            "FILE_RISK",
+            "OUTDATED",
+            "OFF_TOPIC",
+            "LOW_QUALITY",
+            "OTHER"
+    );
     private static final Set<String> HANDLE_STATUSES = Set.of("PROCESSING", "RESOLVED", "REJECTED");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -66,7 +79,7 @@ public class ContentReportServiceImpl implements ContentReportService {
     public Long createReport(ContentReportCreateRequest request, AppUserPrincipal principal) {
         String targetType = normalizeTargetType(request.targetType());
         String reasonType = normalizeReasonType(request.reasonType());
-        assertTargetExists(targetType, request.targetId());
+        assertTargetExists(targetType, request.targetId(), principal);
         ContentReport report = new ContentReport();
         report.setTargetType(targetType);
         report.setTargetId(request.targetId());
@@ -131,7 +144,7 @@ public class ContentReportServiceImpl implements ContentReportService {
         return report;
     }
 
-    private void assertTargetExists(String targetType, Long targetId) {
+    private void assertTargetExists(String targetType, Long targetId, AppUserPrincipal principal) {
         if (targetId == null) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "举报目标ID不能为空");
         }
@@ -144,6 +157,10 @@ public class ContentReportServiceImpl implements ContentReportService {
                     .eq(ArticleComment::getDeleted, NOT_DELETED_INT)) > 0;
             case "PRIVATE_MESSAGE" -> messageMapper.selectCount(new LambdaQueryWrapper<SocialMessage>()
                     .eq(SocialMessage::getId, targetId)
+                    .and(wrapper -> wrapper
+                            .eq(SocialMessage::getSenderId, principal.userId())
+                            .or()
+                            .eq(SocialMessage::getReceiverId, principal.userId()))
                     .eq(SocialMessage::getDeleted, NOT_DELETED_LONG)) > 0;
             default -> false;
         };
@@ -180,7 +197,11 @@ public class ContentReportServiceImpl implements ContentReportService {
     }
 
     private String normalizeReasonType(String reasonType) {
-        return normalizeRequired(reasonType, "举报原因不能为空");
+        String normalized = normalizeRequired(reasonType, "举报原因不能为空");
+        if (!REPORT_REASONS.contains(normalized)) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "不支持的举报原因");
+        }
+        return normalized;
     }
 
     private String normalizeHandleStatus(String status) {

@@ -86,7 +86,29 @@ class ContentReportServiceImplTest {
     void createReportShouldRejectMissingTarget() {
         when(commentMapper.selectCount(anyCommentWrapper())).thenReturn(0L);
 
-        assertThatThrownBy(() -> reportService.createReport(new ContentReportCreateRequest("COMMENT", 99L, "ABUSE", null), ADMIN))
+        assertThatThrownBy(() -> reportService.createReport(new ContentReportCreateRequest("COMMENT", 99L, "SPAM", null), ADMIN))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("举报目标不存在");
+
+        verify(reportMapper, never()).insert(any(ContentReport.class));
+    }
+
+    @Test
+    @DisplayName("创建举报时非法原因应拒绝")
+    void createReportShouldRejectUnsupportedReason() {
+        assertThatThrownBy(() -> reportService.createReport(new ContentReportCreateRequest("ARTICLE", 10L, "ABUSE", null), ADMIN))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("不支持的举报原因");
+
+        verify(reportMapper, never()).insert(any(ContentReport.class));
+    }
+
+    @Test
+    @DisplayName("创建私信举报时应要求举报人与消息有关")
+    void createPrivateMessageReportShouldRequireParticipant() {
+        when(messageMapper.selectCount(anyMessageWrapper())).thenReturn(0L);
+
+        assertThatThrownBy(() -> reportService.createReport(new ContentReportCreateRequest("PRIVATE_MESSAGE", 99L, "SPAM", null), ADMIN))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("举报目标不存在");
 
@@ -173,6 +195,11 @@ class ContentReportServiceImplTest {
 
     @SuppressWarnings("unchecked")
     private Wrapper<ArticleComment> anyCommentWrapper() {
+        return any(Wrapper.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Wrapper<SocialMessage> anyMessageWrapper() {
         return any(Wrapper.class);
     }
 }

@@ -151,6 +151,21 @@ class ConfigServiceImplTest {
     }
 
     @Test
+    @DisplayName("新增上传大小配置项时应校验固定档位")
+    void createConfigShouldRejectUnsupportedUploadSize() {
+        when(configMapper.selectCount(anyWrapper())).thenReturn(0L);
+
+        assertThatThrownBy(() -> configService.createConfig(
+                new ConfigSaveRequest("upload_max_size_mb", "15", "本地上传大小上限", true),
+                ADMIN
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("配置值不支持：15");
+
+        verify(configMapper, never()).insert(any(SysConfig.class));
+    }
+
+    @Test
     @DisplayName("更新可编辑配置项时应保留主键并更新业务字段")
     void updateConfigShouldUpdateEditableConfig() {
         SysConfig existing = editableConfig(2L, "guest_admin_access", "false");

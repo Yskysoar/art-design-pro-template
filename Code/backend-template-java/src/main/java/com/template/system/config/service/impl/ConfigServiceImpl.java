@@ -41,14 +41,18 @@ public class ConfigServiceImpl implements ConfigService {
             "role_level_enabled",
             "anonymous_portal_access",
             "guest_admin_access",
-            "article_comment_hide_enabled"
+            "article_comment_hide_enabled",
+            "article_default_visible",
+            "upload_max_size_mb"
     );
     private static final Map<String, Set<String>> ALLOWED_VALUES = Map.of(
             "user_org_relation_mode", Set.of("ONE_TO_ONE", "ONE_TO_MANY"),
             "role_level_enabled", Set.of("true", "false"),
             "anonymous_portal_access", Set.of("true", "false"),
             "guest_admin_access", Set.of("true", "false"),
-            "article_comment_hide_enabled", Set.of("true", "false")
+            "article_comment_hide_enabled", Set.of("true", "false"),
+            "article_default_visible", Set.of("true", "false"),
+            "upload_max_size_mb", Set.of("5", "10", "20", "50")
     );
     private static final String ARTICLE_COMMENT_HIDE_ENABLED = "article_comment_hide_enabled";
 

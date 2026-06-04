@@ -68,11 +68,13 @@ public class FileResourceManageServiceImpl implements FileResourceManageService 
     public PageResult<FileResourceItemVo> pageResources(FileResourceListQuery query) {
         long current = query.current() == null || query.current() < 1 ? DEFAULT_CURRENT : query.current();
         long size = query.size() == null || query.size() < 1 ? DEFAULT_SIZE : Math.min(query.size(), MAX_SIZE);
+        if (query.referenced() != null) {
+            return pageResourcesByReferenceState(query, current, size);
+        }
         IPage<FileResource> page = fileResourceMapper.selectPage(Page.of(current, size), buildQueryWrapper(query));
         Map<Long, String> userNameMap = loadUserNameMap(page.getRecords());
         List<FileResourceItemVo> records = page.getRecords().stream()
                 .map(resource -> toVo(resource, userNameMap))
-                .filter(vo -> query.referenced() == null || query.referenced().equals(vo.referenced()))
                 .toList();
         return new PageResult<>(records, page.getCurrent(), page.getSize(), page.getTotal());
     }
@@ -111,6 +113,19 @@ public class FileResourceManageServiceImpl implements FileResourceManageService 
                 .ge(startTime != null, FileResource::getCreateTime, startTime)
                 .le(endTime != null, FileResource::getCreateTime, endTime)
                 .orderByDesc(FileResource::getCreateTime);
+    }
+
+    private PageResult<FileResourceItemVo> pageResourcesByReferenceState(FileResourceListQuery query, long current, long size) {
+        List<FileResource> resources = fileResourceMapper.selectList(buildQueryWrapper(query));
+        Map<Long, String> userNameMap = loadUserNameMap(resources);
+        List<FileResourceItemVo> filtered = resources.stream()
+                .map(resource -> toVo(resource, userNameMap))
+                .filter(vo -> query.referenced().equals(vo.referenced()))
+                .toList();
+        long fromIndex = Math.min((current - 1) * size, filtered.size());
+        long toIndex = Math.min(fromIndex + size, filtered.size());
+        List<FileResourceItemVo> pageRecords = filtered.subList((int) fromIndex, (int) toIndex);
+        return new PageResult<>(pageRecords, current, size, filtered.size());
     }
 
     private FileResource getExistingResource(Long id) {
