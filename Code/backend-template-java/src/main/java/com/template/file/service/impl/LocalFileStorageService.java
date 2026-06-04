@@ -40,6 +40,8 @@ public class LocalFileStorageService implements FileStorageService {
     private static final int NOT_DELETED = 0;
     private static final long IMAGE_MAX_SIZE = 5L * 1024 * 1024;
     private static final long FILE_MAX_SIZE = 20L * 1024 * 1024;
+    private static final long SOCIAL_IMAGE_MAX_SIZE = 5L * 1024 * 1024;
+    private static final long SOCIAL_FILE_MAX_SIZE = 50L * 1024 * 1024;
     private static final Set<String> IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
     private static final Set<String> FILE_EXTENSIONS = Set.of(
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "zip"
@@ -83,6 +85,18 @@ public class LocalFileStorageService implements FileStorageService {
         Set<String> contentTypes = new HashSet<>(IMAGE_CONTENT_TYPES);
         contentTypes.addAll(FILE_CONTENT_TYPES);
         return save(file, principal, extensions, contentTypes, FILE_MAX_SIZE);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UploadResponse uploadSocialImage(MultipartFile file, AppUserPrincipal principal) {
+        return save(file, principal, IMAGE_EXTENSIONS, IMAGE_CONTENT_TYPES, SOCIAL_IMAGE_MAX_SIZE);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UploadResponse uploadSocialFile(MultipartFile file, AppUserPrincipal principal) {
+        return save(file, principal, FILE_EXTENSIONS, FILE_CONTENT_TYPES, SOCIAL_FILE_MAX_SIZE);
     }
 
     @Override

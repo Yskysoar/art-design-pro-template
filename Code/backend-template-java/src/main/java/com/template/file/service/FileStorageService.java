@@ -30,6 +30,24 @@ public interface FileStorageService {
     UploadResponse uploadFile(MultipartFile file, AppUserPrincipal principal);
 
     /**
+     * 上传社交图片。
+     *
+     * @param file      图片文件
+     * @param principal 当前用户
+     * @return 上传响应
+     */
+    UploadResponse uploadSocialImage(MultipartFile file, AppUserPrincipal principal);
+
+    /**
+     * 上传社交附件。
+     *
+     * @param file      附件文件
+     * @param principal 当前用户
+     * @return 上传响应
+     */
+    UploadResponse uploadSocialFile(MultipartFile file, AppUserPrincipal principal);
+
+    /**
      * 获取文件资源。
      *
      * @param id 文件 ID

@@ -2,6 +2,8 @@ package com.template.social.controller;
 
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiResponse;
+import com.template.file.service.FileStorageService;
+import com.template.file.vo.UploadResponse;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.social.dto.SocialMessageQuery;
 import com.template.social.dto.SocialMessageSendRequest;
@@ -20,7 +22,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 社交关注与聊天接口。
@@ -30,9 +34,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class SocialController {
 
     private final SocialService socialService;
+    private final FileStorageService fileStorageService;
 
-    public SocialController(SocialService socialService) {
+    public SocialController(SocialService socialService, FileStorageService fileStorageService) {
         this.socialService = socialService;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -190,6 +196,28 @@ public class SocialController {
             @AuthenticationPrincipal AppUserPrincipal principal
     ) {
         return ApiResponse.success(socialService.sendMessage(request, principal));
+    }
+
+    /**
+     * 上传社交图片。
+     */
+    @PostMapping("/upload/image")
+    public ApiResponse<UploadResponse> uploadImage(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        return ApiResponse.success(fileStorageService.uploadSocialImage(file, principal));
+    }
+
+    /**
+     * 上传社交附件。
+     */
+    @PostMapping("/upload/file")
+    public ApiResponse<UploadResponse> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal AppUserPrincipal principal
+    ) {
+        return ApiResponse.success(fileStorageService.uploadSocialFile(file, principal));
     }
 
     /**

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.template.common.exception.BusinessException;
 import com.template.common.security.SensitiveWordGuard;
+import com.template.file.service.FileStorageService;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.social.convert.SocialStructMapper;
 import com.template.social.dto.SocialMessageSendRequest;
@@ -64,6 +65,8 @@ class SocialServiceImplTest {
     private SocialStructMapper socialStructMapper;
     @Mock
     private SensitiveWordGuard sensitiveWordGuard;
+    @Mock
+    private FileStorageService fileStorageService;
 
     private SocialServiceImpl socialService;
 
@@ -71,7 +74,7 @@ class SocialServiceImplTest {
     void setUp() {
         initTableInfo(SocialFollow.class);
         initTableInfo(SocialMessage.class);
-        socialService = new SocialServiceImpl(userMapper, followMapper, blockMapper, conversationMapper, messageMapper, socialStructMapper, sensitiveWordGuard);
+        socialService = new SocialServiceImpl(userMapper, followMapper, blockMapper, conversationMapper, messageMapper, socialStructMapper, sensitiveWordGuard, fileStorageService);
     }
 
     @Test
@@ -121,7 +124,7 @@ class SocialServiceImplTest {
         when(messageMapper.selectOne(anyWrapper())).thenReturn(null);
         when(messageMapper.selectCount(anyWrapper())).thenReturn(3L);
 
-        assertThatThrownBy(() -> socialService.sendMessage(new SocialMessageSendRequest(TARGET_ID, "第四条消息"), ADMIN))
+        assertThatThrownBy(() -> socialService.sendMessage(new SocialMessageSendRequest(TARGET_ID, "TEXT", "第四条消息", null), ADMIN))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("对方回复前最多发送3条私信")
                 .extracting(error -> ((BusinessException) error).getData())
@@ -155,13 +158,18 @@ class SocialServiceImplTest {
                             null,
                             message.getContent(),
                             message.getMessageType(),
+                            message.getFileId(),
+                            message.getFileUrl(),
+                            message.getFileName(),
+                            message.getFileSize(),
+                            message.getFileContentType(),
                             true,
                             false,
                             createTime
                     );
                 });
 
-        var result = socialService.sendMessage(new SocialMessageSendRequest(TARGET_ID, "你好，项目已更新"), ADMIN);
+        var result = socialService.sendMessage(new SocialMessageSendRequest(TARGET_ID, "TEXT", "你好，项目已更新", null), ADMIN);
 
         assertThat(result.id()).isEqualTo(99L);
         assertThat(result.content()).isEqualTo("你好，项目已更新");
@@ -180,7 +188,7 @@ class SocialServiceImplTest {
                 .when(sensitiveWordGuard)
                 .validate(eq("私信内容"), any());
 
-        assertThatThrownBy(() -> socialService.sendMessage(new SocialMessageSendRequest(TARGET_ID, "敏感内容"), ADMIN))
+        assertThatThrownBy(() -> socialService.sendMessage(new SocialMessageSendRequest(TARGET_ID, "TEXT", "敏感内容", null), ADMIN))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("私信内容包含敏感词");
 

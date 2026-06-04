@@ -12,6 +12,11 @@ public record SocialMessageVo(
         String senderAvatar,
         String content,
         String messageType,
+        Long fileId,
+        String fileUrl,
+        String fileName,
+        Long fileSize,
+        String fileContentType,
         boolean mine,
         boolean read,
         String createTime

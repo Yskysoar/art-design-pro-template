@@ -8,6 +8,8 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.common.security.SensitiveWordGuard;
+import com.template.file.entity.FileResource;
+import com.template.file.service.FileStorageService;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.social.convert.SocialStructMapper;
 import com.template.social.dto.SocialMessageQuery;
@@ -55,6 +57,10 @@ public class SocialServiceImpl implements SocialService {
     private static final long NOT_DELETED = 0L;
     private static final String USER_NORMAL = "NORMAL";
     private static final String MESSAGE_TYPE_TEXT = "TEXT";
+    private static final String MESSAGE_TYPE_IMAGE = "IMAGE";
+    private static final String MESSAGE_TYPE_FILE = "FILE";
+    private static final long SOCIAL_IMAGE_MAX_SIZE = 5L * 1024 * 1024;
+    private static final long SOCIAL_FILE_MAX_SIZE = 50L * 1024 * 1024;
     private static final int WAIT_REPLY_QUOTA = 3;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -65,6 +71,7 @@ public class SocialServiceImpl implements SocialService {
     private final SocialMessageMapper messageMapper;
     private final SocialStructMapper socialStructMapper;
     private final SensitiveWordGuard sensitiveWordGuard;
+    private final FileStorageService fileStorageService;
 
     public SocialServiceImpl(
             SysUserMapper userMapper,
@@ -73,7 +80,8 @@ public class SocialServiceImpl implements SocialService {
             SocialConversationMapper conversationMapper,
             SocialMessageMapper messageMapper,
             SocialStructMapper socialStructMapper,
-            SensitiveWordGuard sensitiveWordGuard
+            SensitiveWordGuard sensitiveWordGuard,
+            FileStorageService fileStorageService
     ) {
         this.userMapper = userMapper;
         this.followMapper = followMapper;
@@ -82,6 +90,7 @@ public class SocialServiceImpl implements SocialService {
         this.messageMapper = messageMapper;
         this.socialStructMapper = socialStructMapper;
         this.sensitiveWordGuard = sensitiveWordGuard;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
@@ -248,8 +257,19 @@ public class SocialServiceImpl implements SocialService {
         assertNotSelf(senderId, receiverId, "不能给自己发送私信");
         getActiveUser(receiverId);
         assertMessageAllowed(senderId, receiverId);
-        String content = normalizeContent(request.content());
-        sensitiveWordGuard.validate("私信内容", content);
+        String messageType = normalizeMessageType(request.messageType());
+        String content = null;
+        FileResource file = null;
+        if (MESSAGE_TYPE_TEXT.equals(messageType)) {
+            content = normalizeContent(request.content());
+            sensitiveWordGuard.validate("私信内容", content);
+        } else {
+            if (!isMutualFollow(senderId, receiverId)) {
+                throw new BusinessException(ApiCode.BAD_REQUEST, "非互关只能发送文本消息");
+            }
+            file = validateMessageFile(request.fileId(), senderId, messageType);
+            content = normalizeOptionalContent(request.content());
+        }
         int remainingQuota = remainingQuota(senderId, receiverId);
         if (remainingQuota <= 0) {
             throw new BusinessException(
@@ -266,7 +286,14 @@ public class SocialServiceImpl implements SocialService {
         message.setSenderId(senderId);
         message.setReceiverId(receiverId);
         message.setContent(content);
-        message.setMessageType(MESSAGE_TYPE_TEXT);
+        message.setMessageType(messageType);
+        if (file != null) {
+            message.setFileId(file.getId());
+            message.setFileUrl(file.getUrl());
+            message.setFileName(file.getOriginalName());
+            message.setFileSize(file.getSize());
+            message.setFileContentType(file.getContentType());
+        }
         message.setCreateTime(now);
         message.setDeleted(NOT_DELETED);
         messageMapper.insert(message);
@@ -442,6 +469,52 @@ public class SocialServiceImpl implements SocialService {
             throw new BusinessException(ApiCode.BAD_REQUEST, "消息内容不能超过1000字");
         }
         return normalized;
+    }
+
+    private String normalizeOptionalContent(String content) {
+        if (!StringUtils.hasText(content)) {
+            return null;
+        }
+        String normalized = content.trim();
+        if (normalized.length() > 1000) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "消息内容不能超过1000字");
+        }
+        return normalized;
+    }
+
+    private String normalizeMessageType(String messageType) {
+        if (!StringUtils.hasText(messageType)) {
+            return MESSAGE_TYPE_TEXT;
+        }
+        String normalized = messageType.trim().toUpperCase();
+        if (MESSAGE_TYPE_TEXT.equals(normalized) || MESSAGE_TYPE_IMAGE.equals(normalized) || MESSAGE_TYPE_FILE.equals(normalized)) {
+            return normalized;
+        }
+        throw new BusinessException(ApiCode.BAD_REQUEST, "不支持的消息类型");
+    }
+
+    private FileResource validateMessageFile(Long fileId, Long senderId, String messageType) {
+        FileResource file = fileStorageService.getExistingFile(fileId);
+        if (!senderId.equals(file.getUploaderId())) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "不能引用他人上传的文件");
+        }
+        String contentType = file.getContentType();
+        if (MESSAGE_TYPE_IMAGE.equals(messageType)) {
+            if (file.getSize() == null || file.getSize() > SOCIAL_IMAGE_MAX_SIZE) {
+                throw new BusinessException(ApiCode.BAD_REQUEST, "图片大小不能超过5MB");
+            }
+            if (!StringUtils.hasText(contentType) || !contentType.toLowerCase().startsWith("image/")) {
+                throw new BusinessException(ApiCode.BAD_REQUEST, "图片消息只能引用图片文件");
+            }
+            return file;
+        }
+        if (file.getSize() == null || file.getSize() > SOCIAL_FILE_MAX_SIZE) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "附件大小不能超过50MB");
+        }
+        if (StringUtils.hasText(contentType) && contentType.toLowerCase().startsWith("image/")) {
+            throw new BusinessException(ApiCode.BAD_REQUEST, "图片请使用图片消息发送");
+        }
+        return file;
     }
 
     private boolean isFollowing(Long followerId, Long followingId) {
