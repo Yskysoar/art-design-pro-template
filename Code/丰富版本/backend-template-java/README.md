@@ -4,7 +4,7 @@ Java 17 + Spring Boot 3.x + MySQL + MyBatis-Plus 后端模板。
 
 ## 当前定位
 
-- 工程目录：`Code/backend-template-java`
+- 工程目录：`Code/丰富版本/backend-template-java`
 - Java 包名：`com.template`
 - 构建工具：Maven
 - 工程形态：单体分模块，后期可升级 Maven 多模块单体

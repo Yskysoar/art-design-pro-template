@@ -1,40 +1,38 @@
 Info/
 
-# Original frontend reference snapshot, kept locally for recovery/comparison only.
-Code/art-design-pro-main/
-Code/art-design-pro-main.zip
+# Reference/template variants, kept locally for recovery/comparison only.
 Code/基准项目/
 Code/精简版本/
 
 # Nested project runtime/build output
-Code/art-design-pro/node_modules/
-Code/art-design-pro/dist/
-Code/art-design-pro/dist-ssr/
-Code/art-design-pro/.vite-mock.out
-Code/art-design-pro/.vite-mock.err
-Code/art-design-pro/.vite-dev.out
-Code/art-design-pro/.vite-dev.err
-Code/art-design-pro/.frontend-dev.out
-Code/art-design-pro/.frontend-dev.err
+Code/丰富版本/art-design-pro/node_modules/
+Code/丰富版本/art-design-pro/dist/
+Code/丰富版本/art-design-pro/dist-ssr/
+Code/丰富版本/art-design-pro/.vite-mock.out
+Code/丰富版本/art-design-pro/.vite-mock.err
+Code/丰富版本/art-design-pro/.vite-dev.out
+Code/丰富版本/art-design-pro/.vite-dev.err
+Code/丰富版本/art-design-pro/.frontend-dev.out
+Code/丰富版本/art-design-pro/.frontend-dev.err
 
 # Local environment files. Keep examples/docs instead of committing real values.
-Code/art-design-pro/.env
-Code/art-design-pro/.env.development
-Code/art-design-pro/.env.production
-Code/art-design-pro/*.local
+Code/丰富版本/art-design-pro/.env
+Code/丰富版本/art-design-pro/.env.development
+Code/丰富版本/art-design-pro/.env.production
+Code/丰富版本/art-design-pro/*.local
 
 # Generated type/import files
-Code/art-design-pro/.auto-import.json
-Code/art-design-pro/src/types/import/auto-imports.d.ts
-Code/art-design-pro/src/types/import/components.d.ts
+Code/丰富版本/art-design-pro/.auto-import.json
+Code/丰富版本/art-design-pro/src/types/import/auto-imports.d.ts
+Code/丰富版本/art-design-pro/src/types/import/components.d.ts
 
 # Java backend runtime/build output
-Code/backend-template-java/src/main/resources/application-local.yml
-Code/backend-template-java/target/
-Code/backend-template-java/uploads/
-Code/backend-template-java/logs/
-Code/backend-template-java/.boot-*.out
-Code/backend-template-java/.boot-*.err
+Code/丰富版本/backend-template-java/src/main/resources/application-local.yml
+Code/丰富版本/backend-template-java/target/
+Code/丰富版本/backend-template-java/uploads/
+Code/丰富版本/backend-template-java/logs/
+Code/丰富版本/backend-template-java/.boot-*.out
+Code/丰富版本/backend-template-java/.boot-*.err
 .boot-*.out
 .boot-*.err
 

@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 本文件是当前项目的协作与工程维护规则。后续 AI Agent、脚本或人工协作时，应优先遵守本文件。
 
@@ -16,14 +16,14 @@
 
 ## 二、当前项目状态
 
-- 当前前端项目位于 `Code/art-design-pro/`。
-- 当前后端项目位于 `Code/backend-template-java/`。
-- `Code/art-design-pro-main/` 和 `Code/art-design-pro-main.zip` 是原始前端项目参考快照，只用于当前模板出现巨大混乱时对照修复；不得作为当前项目源码开发、修改、提交或打包对象。
+- 当前前端项目位于 `Code/丰富版本/art-design-pro/`。
+- 当前后端项目位于 `Code/丰富版本/backend-template-java/`。
+- `Code/基准项目/` 和 `Code/精简版本/` 是参考版本目录，只用于当前模板出现巨大混乱时对照修复；不得作为当前项目源码开发、修改、提交或打包对象。
 - 当前文档位于 `Docs/`。
 - 根目录已经作为新的 Git 仓库使用，管理 `Code/`、`Docs/` 和根级配置。
-- 原 `Code/art-design-pro/.git` 已移除，不再保留原开源仓库历史和远程地址。
+- 原 `Code/丰富版本/art-design-pro/.git` 已移除，不再保留原开源仓库历史和远程地址。
 - 远程仓库使用 SSH 地址：`git@github.com:Yskysoar/art-design-pro-template.git`。
-- 项目已接入 Vite middleware 本地 Mock：`Code/art-design-pro/mock/local-mock.ts`。
+- 项目已接入 Vite middleware 本地 Mock：`Code/丰富版本/art-design-pro/mock/local-mock.ts`。
 - 当前后端基础联调已通过：`/api/health`、`/api/auth/login`、`/api/user/info`、`/api/v3/system/menus`。
 - 当前后端已开发并编译通过：`/api/user/list`、`POST /api/user`、`PUT /api/user/{id}`、`PATCH /api/user/{id}/status`、`DELETE /api/user/{id}`、`GET /api/user/{id}/orgs`、`PUT /api/user/{id}/orgs`、`/api/role/list`、`POST /api/role`、`PUT /api/role/{id}`、`DELETE /api/role/{id}`、`GET /api/role/{id}/permissions`、`PUT /api/role/{id}/permissions`、`GET /api/role/{id}/data-scope`、`PUT /api/role/{id}/data-scope`、`GET /api/v3/system/menus/manage`、`POST /api/v3/system/menus`、`PUT /api/v3/system/menus/{id}`、`DELETE /api/v3/system/menus/{id}`、`GET /api/org/tree`、`POST /api/org`、`PUT /api/org/{id}`、`DELETE /api/org/{id}`、`GET /api/config/list`、`POST /api/config`、`PUT /api/config/{id}`、`DELETE /api/config/{id}`。其中配置项、组织、角色数据权限和用户组织关系已通过真实接口回归。
 - 当前前端系统管理页已接入真实后端接口：用户、角色、菜单、配置项和组织管理 CRUD。
@@ -48,8 +48,8 @@
 - `Docs/2.开发审查记录.md` 按业务模块维护“未修复/部分修复/持续关注在前，已修复在后”的问题台账结构；新增问题和修复记录应继续按该结构维护。
 - 当前前端联调账号为 `admin/admin123`，仅用于模板和开发环境。
 - `.env`、`.env.development`、`.env.production` 属于本地环境文件，不得提交。
-- `Code/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
-- `Code/backend-template-java/src/main/resources/application-local.yml` 内的数据库密码仅用于本机启动时读取，严禁在日志、文档、提交信息或对外回复中明文暴露。
+- `Code/丰富版本/backend-template-java/src/main/resources/application-local.yml` 属于本机后端敏感配置文件，不得提交；如需本地固定数据库密码，可复制 `application-local.example.yml` 后填写真实值。
+- `Code/丰富版本/backend-template-java/src/main/resources/application-local.yml` 内的数据库密码仅用于本机启动时读取，严禁在日志、文档、提交信息或对外回复中明文暴露。
 - 用户已授予 Agent 完全访问权限用于项目开发、前后端启动、联调测试和代码审查；后续项目开发由 Agent 自行启动前后端并完成本地联调。该授权不包含高风险操作，高风险操作仍必须先说明影响并获得用户确认。
 - 数据库密码等敏感配置只通过本机环境变量传入，例如 `DB_PASSWORD`，不得写入 Git 跟踪文件、Docs 或提交信息。
 
@@ -59,20 +59,21 @@
 
 ```text
 Code/
-├── art-design-pro/
-│   ├── mock/
-│   ├── public/
-│   ├── scripts/
-│   ├── src/
-│   ├── vite.config.ts
-│   ├── package.json
-│   └── pnpm-lock.yaml
-├── art-design-pro-main/        # 原始前端参考快照，禁止提交和日常开发修改
-├── art-design-pro-main.zip     # 原始前端参考压缩包，禁止提交
-└── backend-template-java/
-    ├── pom.xml
-    ├── README.md
-    └── src/
+├── 丰富版本/
+│   ├── art-design-pro/
+│   │   ├── mock/
+│   │   ├── public/
+│   │   ├── scripts/
+│   │   ├── src/
+│   │   ├── vite.config.ts
+│   │   ├── package.json
+│   │   └── pnpm-lock.yaml
+│   └── backend-template-java/
+│       ├── pom.xml
+│       ├── README.md
+│       └── src/
+├── 基准项目/                   # 参考版本，禁止提交和日常开发修改
+└── 精简版本/                   # 参考版本，禁止提交和日常开发修改
 ```
 
 代码维护要求：
@@ -141,7 +142,7 @@ Docs/
 入口文件：
 
 ```text
-Code/art-design-pro/mock/local-mock.ts
+Code/丰富版本/art-design-pro/mock/local-mock.ts
 ```
 
 启用条件：
@@ -179,28 +180,28 @@ git diff --cached --name-only
 不得提交：
 
 - `Info/`
-- `Code/art-design-pro-main/`
-- `Code/art-design-pro-main.zip`
-- `Code/art-design-pro/node_modules/`
-- `Code/art-design-pro/dist/`
-- `Code/art-design-pro/.env`
-- `Code/art-design-pro/.env.development`
-- `Code/art-design-pro/.env.production`
-- `Code/art-design-pro/.vite-mock.out`
-- `Code/art-design-pro/.vite-mock.err`
-- `Code/art-design-pro/.vite-dev.out`
-- `Code/art-design-pro/.vite-dev.err`
-- `Code/art-design-pro/.frontend-dev.out`
-- `Code/art-design-pro/.frontend-dev.err`
-- `Code/art-design-pro/.auto-import.json`
-- `Code/art-design-pro/src/types/import/auto-imports.d.ts`
-- `Code/art-design-pro/src/types/import/components.d.ts`
-- `Code/backend-template-java/target/`
-- `Code/backend-template-java/src/main/resources/application-local.yml`
-- `Code/backend-template-java/uploads/`
-- `Code/backend-template-java/logs/`
-- `Code/backend-template-java/.boot-*.out`
-- `Code/backend-template-java/.boot-*.err`
+- `Code/基准项目/`
+- `Code/精简版本/`
+- `Code/丰富版本/art-design-pro/node_modules/`
+- `Code/丰富版本/art-design-pro/dist/`
+- `Code/丰富版本/art-design-pro/.env`
+- `Code/丰富版本/art-design-pro/.env.development`
+- `Code/丰富版本/art-design-pro/.env.production`
+- `Code/丰富版本/art-design-pro/.vite-mock.out`
+- `Code/丰富版本/art-design-pro/.vite-mock.err`
+- `Code/丰富版本/art-design-pro/.vite-dev.out`
+- `Code/丰富版本/art-design-pro/.vite-dev.err`
+- `Code/丰富版本/art-design-pro/.frontend-dev.out`
+- `Code/丰富版本/art-design-pro/.frontend-dev.err`
+- `Code/丰富版本/art-design-pro/.auto-import.json`
+- `Code/丰富版本/art-design-pro/src/types/import/auto-imports.d.ts`
+- `Code/丰富版本/art-design-pro/src/types/import/components.d.ts`
+- `Code/丰富版本/backend-template-java/target/`
+- `Code/丰富版本/backend-template-java/src/main/resources/application-local.yml`
+- `Code/丰富版本/backend-template-java/uploads/`
+- `Code/丰富版本/backend-template-java/logs/`
+- `Code/丰富版本/backend-template-java/.boot-*.out`
+- `Code/丰富版本/backend-template-java/.boot-*.err`
 - `.claude/`
 
 提交信息规则：
@@ -253,10 +254,10 @@ git push -u origin master
 示例：
 
 ```powershell
-Remove-Item -LiteralPath 'Code\art-design-pro\.git' -Recurse -Force
+Remove-Item -LiteralPath 'Code\丰富版本\art-design-pro\.git' -Recurse -Force
 ```
 
-含义：删除 `Code/art-design-pro/.git` 目录及其所有内容，只移除该项目内的 Git 历史和远程关联，不删除代码文件。
+含义：删除 `Code/丰富版本/art-design-pro/.git` 目录及其所有内容，只移除该项目内的 Git 历史和远程关联，不删除代码文件。
 
 ## 九、验证规则
 
@@ -282,7 +283,7 @@ node_modules\.bin\vite.cmd build
 D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd compile
 ```
 
-含义：使用本机 Maven 编译 `Code/backend-template-java`，验证 Java 源码和依赖是否正确。
+含义：使用本机 Maven 编译 `Code/丰富版本/backend-template-java`，验证 Java 源码和依赖是否正确。
 
 后端测试改动后，执行：
 
@@ -297,7 +298,7 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
 - 必要时 Agent 可以操作 SQL 文件并连接数据库执行测试，但只能操作本项目的 `backend-template` 数据库。
 - 禁止对其他数据库执行写入、删除、重建、初始化或测试操作。
 - 可以在 `backend-template` 数据库中执行接口联调、写接口回归和 SQL 验证。
-- 数据库测试完成后必须重新初始化 `backend-template` 数据库，执行 `Code/backend-template-java/src/main/resources/db/` 下的结构 SQL 和 Mock SQL，恢复项目标准开发数据。
+- 数据库测试完成后必须重新初始化 `backend-template` 数据库，执行 `Code/丰富版本/backend-template-java/src/main/resources/db/` 下的结构 SQL 和 Mock SQL，恢复项目标准开发数据。
 - 数据库密码等敏感信息仍只能来自环境变量或本机未追踪配置，不得写入 Git 跟踪文件、Docs 或提交信息。
 - Windows 下导入包含中文的 UTF-8 SQL 时，不要使用 PowerShell `Get-Content | mysql` 管道，容易把中文写成 `????`；应使用 `cmd /c` 原始文件重定向，并为 mysql 指定 `--default-character-set=utf8mb4`。
 
@@ -305,13 +306,13 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd test
 
 ```powershell
 $env:DB_PASSWORD="本机数据库密码"
-cd "D:\Coding\Project\资源——Art Design Pro开发模板\Code\backend-template-java"
+cd "D:\Coding\Project\资源——Art Design Pro开发模板\Code\丰富版本\backend-template-java"
 D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
 ```
 
 含义：只在当前 PowerShell 窗口设置数据库密码环境变量，然后启动后端服务。不要把真实密码写入项目配置或文档。
 
-如果使用本机未追踪的 `application-local.yml` 保存数据库密码，可直接在 `Code/backend-template-java` 下执行：
+如果使用本机未追踪的 `application-local.yml` 保存数据库密码，可直接在 `Code/丰富版本/backend-template-java` 下执行：
 
 ```powershell
 D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
@@ -319,7 +320,7 @@ D:\Coding\Maven\apache-maven-3.9.15\bin\mvn.cmd spring-boot:run
 
 含义：使用 Maven 启动后端服务，数据库密码从本机未追踪配置或环境变量读取。
 
-如需启动前端，Agent 可在 `Code/art-design-pro` 下自行执行：
+如需启动前端，Agent 可在 `Code/丰富版本/art-design-pro` 下自行执行：
 
 ```powershell
 pnpm dev
