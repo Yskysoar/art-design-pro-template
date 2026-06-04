@@ -18,18 +18,6 @@
             @keyup.enter="handleSubmit"
             style="margin-top: 25px"
           >
-            <ElFormItem prop="account">
-              <ElSelect v-model="formData.account" @change="setupAccount">
-                <ElOption
-                  v-for="account in accounts"
-                  :key="account.key"
-                  :label="account.label"
-                  :value="account.key"
-                >
-                  <span>{{ account.label }}</span>
-                </ElOption>
-              </ElSelect>
-            </ElFormItem>
             <ElFormItem prop="username">
               <ElInput
                 class="custom-height"
@@ -64,9 +52,7 @@
             </ElFormItem>
 
             <div class="flex-cb mt-2 text-sm">
-              <ElCheckbox v-model="formData.rememberPassword">{{
-                $t('login.rememberPwd')
-              }}</ElCheckbox>
+              <span />
               <RouterLink class="text-theme" :to="{ name: 'ForgetPassword' }">{{
                 $t('login.forgetPwd')
               }}</RouterLink>
@@ -104,7 +90,6 @@
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
   import { fetchCaptcha, fetchGetUserInfo, fetchLogin } from '@/api/auth'
-  const REMEMBER_PWD_KEY = 'remembered_password'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   defineOptions({ name: 'Login' })
 
@@ -117,40 +102,6 @@
     formKey.value++
   })
 
-  type AccountKey = 'super' | 'admin' | 'user'
-
-  export interface Account {
-    key: AccountKey
-    label: string
-    userName: string
-    password: string
-    roles: string[]
-  }
-
-  const accounts = computed<Account[]>(() => [
-    {
-      key: 'super',
-      label: t('login.roles.super'),
-      userName: 'admin',
-      password: 'admin123',
-      roles: ['R_SUPER']
-    },
-    {
-      key: 'admin',
-      label: t('login.roles.admin'),
-      userName: 'moderator',
-      password: 'admin123',
-      roles: ['R_CONTENT_ADMIN']
-    },
-    {
-      key: 'user',
-      label: t('login.roles.user'),
-      userName: 'designer',
-      password: 'admin123',
-      roles: ['R_USER']
-    }
-  ])
-
   const userStore = useUserStore()
   const router = useRouter()
   const route = useRoute()
@@ -158,11 +109,9 @@
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    account: '',
     username: '',
     password: '',
-    captchaCode: '',
-    rememberPassword: true
+    captchaCode: ''
   })
 
   const rules = computed<FormRules>(() => ({
@@ -179,29 +128,8 @@
   const captchaImage = ref('')
 
   onMounted(() => {
-    setupAccount('super')
     loadCaptcha()
-    // 加载记住的密码
-    const saved = localStorage.getItem(REMEMBER_PWD_KEY)
-    if (saved) {
-      try {
-        const { userName, password } = JSON.parse(saved)
-        if (userName) {
-          formData.username = userName
-          formData.password = password
-          formData.rememberPassword = true
-        }
-      } catch { /* 数据损坏时忽略 */ }
-    }
   })
-
-  // 设置账号
-  const setupAccount = (key: AccountKey) => {
-    const selectedAccount = accounts.value.find((account: Account) => account.key === key)
-    formData.account = key
-    formData.username = selectedAccount?.userName ?? ''
-    formData.password = selectedAccount?.password ?? ''
-  }
 
   const loadCaptcha = async () => {
     try {
