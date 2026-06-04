@@ -125,7 +125,7 @@
           class="notice-button relative"
           @click="visibleNotice"
         >
-          <div class="absolute top-2 right-2 size-1.5 !bg-danger rounded-full"></div>
+          <div v-if="notificationUnread > 0" class="absolute top-2 right-2 size-1.5 !bg-danger rounded-full"></div>
         </ArtIconButton>
 
         <!-- 聊天按钮 -->
@@ -188,6 +188,7 @@
   import AppConfig from '@/config'
   import { languageOptions } from '@/locales'
   import { mittBus } from '@/utils/sys'
+  import { fetchNotificationUnreadCount } from '@/api/notification'
   import { themeAnimation } from '@/utils/ui/animation'
   import { useCommon } from '@/hooks/core/useCommon'
   import { useHeaderBar } from '@/hooks/core/useHeaderBar'
@@ -230,6 +231,7 @@
 
   const showNotice = ref(false)
   const notice = ref(null)
+  const notificationUnread = ref(0)
 
   // 菜单类型判断
   const isLeftMenu = computed(() => menuType.value === MenuTypeEnum.LEFT)
@@ -241,6 +243,7 @@
 
   onMounted(() => {
     initLanguage()
+    loadNotificationUnread()
     document.addEventListener('click', bodyCloseNotice)
   })
 
@@ -342,6 +345,18 @@
    */
   const visibleNotice = (): void => {
     showNotice.value = !showNotice.value
+    if (showNotice.value) {
+      loadNotificationUnread()
+    }
+  }
+
+  const loadNotificationUnread = async (): Promise<void> => {
+    try {
+      const result = await fetchNotificationUnreadCount()
+      notificationUnread.value = result.count
+    } catch {
+      notificationUnread.value = 0
+    }
   }
 
   /**

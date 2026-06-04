@@ -13,6 +13,7 @@ import com.template.article.mapper.ArticleMapper;
 import com.template.common.exception.BusinessException;
 import com.template.common.response.ApiCode;
 import com.template.common.security.SensitiveWordGuard;
+import com.template.notification.service.NotificationService;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
@@ -61,12 +62,22 @@ class ArticleCommentServiceImplTest {
     private SensitiveWordGuard sensitiveWordGuard;
     @Mock
     private SysUserMapper userMapper;
+    @Mock
+    private NotificationService notificationService;
 
     private ArticleCommentServiceImpl commentService;
 
     @BeforeEach
     void setUp() {
-        commentService = new ArticleCommentServiceImpl(commentMapper, articleMapper, permissionService, configMapper, sensitiveWordGuard, userMapper);
+        commentService = new ArticleCommentServiceImpl(
+                commentMapper,
+                articleMapper,
+                permissionService,
+                configMapper,
+                sensitiveWordGuard,
+                userMapper,
+                notificationService
+        );
         lenient().when(permissionService.isSuperAdmin(ADMIN)).thenReturn(true);
         lenient().when(userMapper.selectList(anyWrapper())).thenReturn(List.of());
     }

@@ -68,7 +68,9 @@ VALUES
   (13, '查看角色', 'system:role:view', 'system', 'ADMIN', 1, 'system', 'system'),
   (14, '上传文章资源', 'article:upload', 'article', 'BOTH', 1, 'system', 'system'),
   (15, '管理文章评论', 'article:comment:manage', 'article', 'BOTH', 1, 'system', 'system'),
-  (16, '管理敏感词库', 'system:sensitive-word', 'system', 'ADMIN', 1, 'system', 'system');
+  (16, '管理敏感词库', 'system:sensitive-word', 'system', 'ADMIN', 1, 'system', 'system'),
+  (17, '管理文件资源', 'system:file:manage', 'system', 'ADMIN', 1, 'system', 'system'),
+  (18, '管理举报审核', 'moderation:report:manage', 'moderation', 'ADMIN', 1, 'system', 'system');
 
 INSERT INTO sys_menu (
   id, parent_id, menu_type, path, name, component, redirect, title, icon,
@@ -87,8 +89,9 @@ VALUES
   (10, 7, 'MENU', 'role', 'Role', '/system/role', NULL, 'menus.system.role', 'ri:user-settings-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
   (11, 7, 'MENU', 'org', 'Org', '/system/org', NULL, 'menus.system.org', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 3, 1, 'system', 'system'),
   (12, 7, 'MENU', 'config', 'Config', '/system/config', NULL, 'menus.system.config', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
-  (13, 7, 'MENU', 'menu', 'Menus', '/system/menu', NULL, 'menus.system.menu', 'ri:menu-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
-  (14, 7, 'MENU', 'sensitive-word', 'SensitiveWord', '/article/comment', NULL, 'menus.system.sensitiveWord', 'ri:shield-keyhole-line', 'ADMIN', 'system:sensitive-word', 0, 0, 0, 0, NULL, 6, 1, 'system', 'system'),
+  (13, 7, 'MENU', 'file', 'FileResource', '/system/file', NULL, 'menus.system.fileResource', 'ri:file-list-3-line', 'ADMIN', 'system:file:manage', 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
+  (14, 7, 'MENU', 'menu', 'Menus', '/system/menu', NULL, 'menus.system.menu', 'ri:menu-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 6, 1, 'system', 'system'),
+  (29, 31, 'MENU', 'sensitive-word', 'SensitiveWord', '/article/comment', NULL, 'menus.moderation.sensitiveWord', 'ri:shield-keyhole-line', 'ADMIN', 'system:sensitive-word', 0, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
   (15, 7, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system'),
   (16, 9, 'BUTTON', NULL, 'UserAdd', NULL, NULL, '新增用户', NULL, 'ADMIN', 'system:user:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (17, 9, 'BUTTON', NULL, 'UserEdit', NULL, NULL, '编辑用户', NULL, 'ADMIN', 'system:user:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
@@ -98,11 +101,15 @@ VALUES
   (21, 10, 'BUTTON', NULL, 'RolePermission', NULL, NULL, '分配角色权限', NULL, 'ADMIN', 'system:role:permission', 0, 0, 1, 1, NULL, 3, 1, 'system', 'system'),
   (22, 11, 'BUTTON', NULL, 'OrgManage', NULL, NULL, '管理组织', NULL, 'ADMIN', 'system:org:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (23, 12, 'BUTTON', NULL, 'ConfigManage', NULL, NULL, '管理配置', NULL, 'ADMIN', 'system:config:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (24, 13, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (24, 14, 'BUTTON', NULL, 'MenuManage', NULL, NULL, '管理菜单', NULL, 'ADMIN', 'system:menu:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (25, 4, 'BUTTON', NULL, 'ArticleAdd', NULL, NULL, '新增文章', NULL, 'BOTH', 'article:publish:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (26, 4, 'BUTTON', NULL, 'ArticleEdit', NULL, NULL, '编辑文章', NULL, 'BOTH', 'article:publish:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
   (27, 5, 'BUTTON', NULL, 'ArticleUpload', NULL, NULL, '上传文章资源', NULL, 'BOTH', 'article:upload', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
-  (28, 14, 'BUTTON', NULL, 'SensitiveWordManage', NULL, NULL, '管理敏感词库', NULL, 'ADMIN', 'system:sensitive-word', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
+  (28, 29, 'BUTTON', NULL, 'SensitiveWordManage', NULL, NULL, '管理敏感词库', NULL, 'ADMIN', 'system:sensitive-word', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (30, 13, 'BUTTON', NULL, 'FileResourceManage', NULL, NULL, '管理文件资源', NULL, 'ADMIN', 'system:file:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
+  (31, 0, 'DIR', '/moderation', 'Moderation', '/index/index', NULL, 'menus.moderation.title', 'ri:shield-check-line', 'ADMIN', NULL, 0, 0, 0, 0, NULL, 40, 1, 'system', 'system'),
+  (32, 31, 'MENU', 'reports', 'ContentReport', '/moderation/reports', NULL, 'menus.moderation.report', 'ri:alarm-warning-line', 'ADMIN', 'moderation:report:manage', 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
+  (33, 32, 'BUTTON', NULL, 'ContentReportManage', NULL, NULL, '管理举报审核', NULL, 'ADMIN', 'moderation:report:manage', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system');
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
@@ -141,8 +148,8 @@ VALUES
 
 INSERT INTO sys_role_menu (role_id, menu_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20), (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26), (1, 27), (1, 28),
-  (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 14), (2, 15), (2, 25), (2, 26), (2, 27), (2, 28),
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20), (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26), (1, 27), (1, 28), (1, 29), (1, 30), (1, 31), (1, 32), (1, 33),
+  (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 14), (2, 15), (2, 25), (2, 26), (2, 27), (2, 28), (2, 29), (2, 31), (2, 32), (2, 33),
   (3, 1), (3, 2), (3, 7), (3, 9), (3, 11), (3, 12), (3, 15), (3, 17), (3, 22), (3, 23),
   (4, 3), (4, 4), (4, 5), (4, 6), (4, 15), (4, 25), (4, 26), (4, 27),
   (5, 3), (5, 4), (5, 6), (5, 15),
@@ -150,7 +157,7 @@ VALUES
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
-  (2, 9), (2, 10), (2, 14), (2, 15), (2, 16),
+  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18),
+  (2, 9), (2, 10), (2, 14), (2, 15), (2, 16), (2, 18),
   (3, 2), (3, 7), (3, 8), (3, 12),
   (4, 9), (4, 10), (4, 14);

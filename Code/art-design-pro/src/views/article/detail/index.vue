@@ -10,6 +10,12 @@
       </div>
 
       <h1 class="text-3xl font-semibold mt-4">{{ article?.title }}</h1>
+      <div class="article-actions">
+        <ElButton text type="danger" :disabled="!userStore.isLogin || !article?.id" @click="openArticleReport">
+          <ArtSvgIcon icon="ri:flag-line" />
+          <span>{{ $t('moderation.report.reportAction') }}</span>
+        </ElButton>
+      </div>
       <p v-if="article?.summary" class="mt-4 text-g-600 leading-7">{{ article.summary }}</p>
       <ElImage v-if="article?.coverUrl" class="cover-image" :src="article.coverUrl" fit="cover" />
 
@@ -17,15 +23,34 @@
 
       <div v-if="article?.attachments?.length" class="attachments">
         <h2>附件</h2>
-        <ElLink
+        <div
           v-for="item in article.attachments"
           :key="item.id"
-          :href="item.url"
-          target="_blank"
-          type="primary"
+          class="attachment-card"
+          @click="openAttachment(item)"
         >
-          {{ item.originalName }}
-        </ElLink>
+          <ElImage
+            v-if="isImageAttachment(item)"
+            class="attachment-thumb"
+            :src="item.url"
+            :alt="item.originalName"
+            :preview-src-list="[item.url]"
+            :preview-teleported="true"
+            fit="cover"
+            @click.stop
+          />
+          <div v-else class="attachment-type" :class="attachmentTypeClass(item)">
+            <span>{{ attachmentTypeLabel(item) }}</span>
+          </div>
+          <div class="attachment-info">
+            <strong>{{ item.originalName }}</strong>
+            <span>{{ formatFileSize(item.size) }}</span>
+            <em>{{ item.contentType || '-' }}</em>
+          </div>
+          <ElButton text class="attachment-download" @click.stop="openAttachment(item)">
+            <ArtSvgIcon icon="ri:download-2-line" />
+          </ElButton>
+        </div>
       </div>
 
       <section class="comments-section">
@@ -72,6 +97,14 @@
                     @click="startReply(comment)"
                   >
                     回复
+                  </ElButton>
+                  <ElButton
+                    link
+                    type="danger"
+                    :disabled="!userStore.isLogin || comment.status === 'DELETED'"
+                    @click="openCommentReport(comment)"
+                  >
+                    举报
                   </ElButton>
                   <ElButton
                     v-if="comment.canHide"
@@ -142,6 +175,14 @@
                         回复
                       </ElButton>
                       <ElButton
+                        link
+                        type="danger"
+                        :disabled="!userStore.isLogin || reply.status === 'DELETED'"
+                        @click="openCommentReport(reply)"
+                      >
+                        举报
+                      </ElButton>
+                      <ElButton
                         v-if="reply.canHide"
                         link
                         type="warning"
@@ -194,6 +235,11 @@
         </div>
       </section>
     </div>
+    <ContentReportDialog
+      v-model:visible="reportDialog.visible"
+      :target-type="reportDialog.targetType"
+      :target-id="reportDialog.targetId"
+    />
     <ArtBackToTop />
   </div>
 </template>
@@ -213,6 +259,7 @@
   import { isHttpError } from '@/utils/http/error'
   import { sanitizeRichHtml } from '@/utils/security/html'
   import { ElMessageBox } from 'element-plus'
+  import ContentReportDialog from '@/components/business/content-report-dialog/index.vue'
   import defaultAvatar from '@/assets/images/user/avatar.webp'
 
   defineOptions({ name: 'ArticleDetail' })
@@ -230,6 +277,15 @@
   const replyContent = ref('')
   const replyTarget = ref<Api.Article.ArticleCommentItem>()
   const expandedReplyIds = reactive(new Set<number>())
+  const reportDialog = reactive<{
+    visible: boolean
+    targetType: 'ARTICLE' | 'COMMENT'
+    targetId?: number
+  }>({
+    visible: false,
+    targetType: 'ARTICLE',
+    targetId: undefined
+  })
   const commentsPagination = reactive({
     current: 1,
     size: 10,
@@ -377,6 +433,48 @@
     ElMessage.success('评论已删除')
   }
 
+  const openArticleReport = () => {
+    reportDialog.targetType = 'ARTICLE'
+    reportDialog.targetId = articleId.value
+    reportDialog.visible = true
+  }
+
+  const openCommentReport = (comment: Api.Article.ArticleCommentItem) => {
+    reportDialog.targetType = 'COMMENT'
+    reportDialog.targetId = comment.id
+    reportDialog.visible = true
+  }
+
+  const openAttachment = (attachment: Api.Article.ArticleAttachment) => {
+    window.open(attachment.url, '_blank', 'noopener,noreferrer')
+  }
+
+  const isImageAttachment = (attachment: Api.Article.ArticleAttachment) =>
+    attachment.contentType?.toLowerCase().startsWith('image/')
+
+  const attachmentTypeLabel = (attachment: Api.Article.ArticleAttachment) => {
+    const fileName = attachment.originalName || ''
+    const extension = fileName.includes('.') ? fileName.split('.').pop() : attachment.contentType?.split('/').pop()
+    const label = (extension || 'file').toUpperCase()
+    if (['DOC', 'DOCX'].includes(label)) return 'DOC'
+    if (['XLS', 'XLSX'].includes(label)) return 'XLS'
+    if (['PPT', 'PPTX'].includes(label)) return 'PPT'
+    return label.length > 4 ? 'FILE' : label
+  }
+
+  const attachmentTypeClass = (attachment: Api.Article.ArticleAttachment) => {
+    const label = attachmentTypeLabel(attachment).toLowerCase()
+    if (['pdf', 'doc', 'xls', 'ppt', 'zip'].includes(label)) return `is-${label}`
+    return 'is-file'
+  }
+
+  const formatFileSize = (size?: number) => {
+    if (!size) return '-'
+    if (size < 1024) return `${size}B`
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)}KB`
+    return `${(size / 1024 / 1024).toFixed(1)}MB`
+  }
+
   const displayCommentContent = (comment: Api.Article.ArticleCommentItem) => {
     if (comment.status === 'DELETED') return '该评论已删除'
     if (comment.status === 'HIDDEN') return '该评论已隐藏'
@@ -405,9 +503,6 @@
     }
 
     .attachments {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
       padding-top: 24px;
       margin-top: 32px;
       border-top: 1px solid var(--el-border-color);
@@ -416,6 +511,118 @@
         margin: 0;
         font-size: 18px;
         font-weight: 600;
+      }
+    }
+
+    .attachment-card {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) 32px;
+      gap: 12px;
+      align-items: center;
+      max-width: 520px;
+      padding: 12px;
+      margin-top: 12px;
+      cursor: pointer;
+      background: rgb(250 250 250);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 8px;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+      &:hover {
+        border-color: var(--el-color-primary-light-5);
+        box-shadow: 0 6px 18px rgb(15 23 42 / 8%);
+      }
+    }
+
+    .attachment-thumb,
+    .attachment-type {
+      width: 52px;
+      height: 52px;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+
+    .attachment-type {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: #8f99a8;
+
+      span {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      &.is-pdf {
+        background: #e34d4d;
+      }
+
+      &.is-doc {
+        background: #3478f6;
+      }
+
+      &.is-xls {
+        background: #21a366;
+      }
+
+      &.is-ppt {
+        background: #d85f32;
+      }
+
+      &.is-zip {
+        background: #7c5cff;
+      }
+    }
+
+    .attachment-info {
+      min-width: 0;
+
+      strong,
+      span,
+      em {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      strong {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--el-text-color-primary);
+      }
+
+      span,
+      em {
+        margin-top: 3px;
+        font-size: 12px;
+        font-style: normal;
+        line-height: 18px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    .attachment-download {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+
+      .art-svg-icon {
+        font-size: 18px;
+      }
+    }
+
+    .article-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+
+      .art-svg-icon {
+        margin-right: 4px;
       }
     }
 

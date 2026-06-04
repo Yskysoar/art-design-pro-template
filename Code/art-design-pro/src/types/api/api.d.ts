@@ -59,6 +59,80 @@ declare namespace Api {
     type EnableStatus = '1' | '2'
   }
 
+  /** 通知消息类型 */
+  namespace Notification {
+    type NotificationList = Api.Common.PaginatedResponse<NotificationItem>
+
+    interface NotificationItem {
+      id: number
+      noticeType: 'SYSTEM' | 'FOLLOW' | 'PRIVATE_MESSAGE' | 'COMMENT_REPLY'
+      title: string
+      content?: string
+      actorId?: number
+      actorName?: string
+      actorAvatar?: string
+      targetType?: string
+      targetId?: number
+      targetUrl?: string
+      read: boolean
+      createTime: string
+    }
+
+    type NotificationSearchParams = Partial<
+      Api.Common.CommonSearchParams & {
+        noticeType: string
+        unread: boolean
+      }
+    >
+
+    interface NotificationUnreadCount {
+      count: number
+    }
+  }
+
+  /** 内容治理类型 */
+  namespace Moderation {
+    type ContentReportList = Api.Common.PaginatedResponse<ContentReportItem>
+
+    interface ContentReportItem {
+      id: number
+      targetType: 'ARTICLE' | 'COMMENT' | 'PRIVATE_MESSAGE'
+      targetId: number
+      reasonType: string
+      description?: string
+      reporterId: number
+      reporterName: string
+      status: 'PENDING' | 'PROCESSING' | 'RESOLVED' | 'REJECTED'
+      handlerId?: number
+      handlerName?: string
+      handlingRemark?: string
+      handledTime?: string
+      createTime: string
+      updateTime?: string
+    }
+
+    interface ContentReportCreateParams {
+      targetType: string
+      targetId: number
+      reasonType: string
+      description?: string
+    }
+
+    type ContentReportSearchParams = Partial<
+      Api.Common.CommonSearchParams & {
+        targetType: string
+        reasonType: string
+        status: string
+        reporterId: number
+      }
+    >
+
+    interface ContentReportHandleParams {
+      status: string
+      remark?: string
+    }
+  }
+
   /** 认证类型 */
   namespace Auth {
     /** 登录参数 */
@@ -278,6 +352,39 @@ declare namespace Api {
       description?: string
       editable: boolean
     }
+
+    /** 文件资源列表 */
+    type FileResourceList = Api.Common.PaginatedResponse<FileResourceItem>
+
+    /** 文件资源列表项 */
+    interface FileResourceItem {
+      id: number
+      originalName: string
+      url: string
+      contentType: string
+      extension: string
+      size: number
+      sha256: string
+      storageType: string
+      uploaderId?: number
+      uploaderName?: string
+      createBy?: string
+      createTime: string
+      referenced: boolean
+      referenceCount: number
+    }
+
+    /** 文件资源搜索参数 */
+    type FileResourceSearchParams = Partial<
+      Pick<FileResourceItem, 'extension' | 'contentType' | 'storageType' | 'uploaderId' | 'referenced'> &
+        Api.Common.CommonSearchParams & {
+          keyword: string
+          minSize: number
+          maxSize: number
+          createTimeStart: string
+          createTimeEnd: string
+        }
+    >
 
     /** 组织树节点 */
     interface OrgTreeItem {

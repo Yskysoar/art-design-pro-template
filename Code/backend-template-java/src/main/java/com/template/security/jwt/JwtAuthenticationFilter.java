@@ -23,7 +23,7 @@ import java.util.Set;
 
 /**
  * Bearer JWT 解析过滤器。
- * <p>公开路径跳过 JWT 校验，避免干扰 permitAll() 配置。</p>
+ * <p>完全公开路径跳过 JWT 校验；匿名可读但需要识别登录态的接口仍会经过本过滤器。</p>
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/api/auth/login", "/api/auth/captcha",
         "/api/auth/register", "/api/auth/reset-password",
-        "/api/health", "/api/article/comment/list"
+        "/api/health"
     );
 
     private final JwtTokenService jwtTokenService;

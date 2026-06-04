@@ -36,11 +36,11 @@ const MENU_TITLE_ALIASES: Record<string, string> = {
   Org: 'menus.system.org',
   'Config Manage': 'menus.system.config',
   Config: 'menus.system.config',
-  'Sensitive Words': 'menus.system.sensitiveWord',
-  SensitiveWord: 'menus.system.sensitiveWord',
+  'Sensitive Words': 'menus.moderation.sensitiveWord',
+  SensitiveWord: 'menus.moderation.sensitiveWord',
   组织管理: 'menus.system.org',
   配置管理: 'menus.system.config',
-  敏感词库: 'menus.system.sensitiveWord'
+  敏感词库: 'menus.moderation.sensitiveWord'
 }
 
 /** 顶部进度条配置 */

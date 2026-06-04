@@ -413,29 +413,45 @@ async function initializeDynamicRoutes(
  * 兼容旧版后端菜单数据，并稳定系统菜单展示顺序。
  *
  * 当前标准数据已经维护在 mock SQL 中；本函数用于本地数据库尚未更新时，
- * 将旧的“文章管理 -> 评论敏感词”映射为“系统管理 -> 敏感词库”。
+ * 将旧的“文章管理/系统管理 -> 敏感词库”映射为“内容治理 -> 敏感词库”。
  */
 function normalizeBackendMenus(items: AppRouteRecord[]): void {
   const dashboard = items.find((item) => item.name === 'Dashboard' || item.path === '/dashboard')
   const article = items.find((item) => item.name === 'Article' || item.path === '/article')
   const system = items.find((item) => item.name === 'System' || item.path === '/system')
+  let moderation = items.find((item) => item.name === 'Moderation' || item.path === '/moderation')
 
-  if (article?.children && system) {
+  if (!moderation) {
+    moderation = {
+      path: '/moderation',
+      name: 'Moderation',
+      component: '/index/index',
+      meta: {
+        title: 'menus.moderation.title',
+        icon: 'ri:shield-check-line',
+        roles: ['R_SUPER', 'R_CONTENT_ADMIN']
+      },
+      children: []
+    }
+    items.push(moderation)
+  }
+
+  if (article?.children && moderation) {
     const sensitiveIndex = article.children.findIndex(
       (child) => child.name === 'ArticleComment' || child.name === 'SensitiveWord'
     )
     if (sensitiveIndex >= 0) {
       const [sensitiveRoute] = article.children.splice(sensitiveIndex, 1)
-      system.children = system.children || []
-      if (!system.children.some((child) => child.name === 'SensitiveWord')) {
-        system.children.push({
+      moderation.children = moderation.children || []
+      if (!moderation.children.some((child) => child.name === 'SensitiveWord')) {
+        moderation.children.push({
           ...sensitiveRoute,
           path: 'sensitive-word',
           name: 'SensitiveWord',
           component: '/article/comment',
           meta: {
             ...sensitiveRoute.meta,
-            title: 'menus.system.sensitiveWord',
+            title: 'menus.moderation.sensitiveWord',
             icon: 'ri:shield-keyhole-line',
             keepAlive: false,
             authList: [{ title: '管理敏感词', authMark: 'system:sensitive-word' }]
@@ -447,22 +463,47 @@ function normalizeBackendMenus(items: AppRouteRecord[]): void {
 
   if (system) {
     system.children = system.children || []
-    system.children = system.children.filter((child) => child.name !== 'SystemSettings')
+    const sensitiveFromSystem = system.children.find((child) => child.name === 'SensitiveWord')
+    system.children = system.children.filter((child) => child.name !== 'SystemSettings' && child.name !== 'SensitiveWord')
+    if (sensitiveFromSystem && moderation) {
+      moderation.children = moderation.children || []
+      if (!moderation.children.some((child) => child.name === 'SensitiveWord')) {
+        moderation.children.push({
+          ...sensitiveFromSystem,
+          path: 'sensitive-word',
+          name: 'SensitiveWord',
+          component: '/article/comment',
+          meta: {
+            ...sensitiveFromSystem.meta,
+            title: 'menus.moderation.sensitiveWord',
+            icon: 'ri:shield-keyhole-line',
+            keepAlive: false,
+            authList: [{ title: '管理敏感词', authMark: 'system:sensitive-word' }]
+          }
+        })
+      }
+    }
     system.children.sort((left, right) => systemMenuOrder(left) - systemMenuOrder(right))
   }
 
-  items.sort((left, right) => topMenuOrder(left, dashboard, article, system) - topMenuOrder(right, dashboard, article, system))
+  if (moderation?.children) {
+    moderation.children.sort((left, right) => moderationMenuOrder(left) - moderationMenuOrder(right))
+  }
+
+  items.sort((left, right) => topMenuOrder(left, dashboard, article, system, moderation) - topMenuOrder(right, dashboard, article, system, moderation))
 }
 
 function topMenuOrder(
   route: AppRouteRecord,
   dashboard?: AppRouteRecord,
   article?: AppRouteRecord,
-  system?: AppRouteRecord
+  system?: AppRouteRecord,
+  moderation?: AppRouteRecord
 ): number {
   if (route === dashboard || route.name === 'Dashboard' || route.path === '/dashboard') return 1
   if (route === article || route.name === 'Article' || route.path === '/article') return 2
   if (route === system || route.name === 'System' || route.path === '/system') return 3
+  if (route === moderation || route.name === 'Moderation' || route.path === '/moderation') return 4
   return 99
 }
 
@@ -473,8 +514,15 @@ function systemMenuOrder(route: AppRouteRecord): number {
     Org: 3,
     Config: 4,
     Menus: 5,
-    SensitiveWord: 6,
     UserCenter: 99
+  }
+  return order[String(route.name)] ?? 90
+}
+
+function moderationMenuOrder(route: AppRouteRecord): number {
+  const order: Record<string, number> = {
+    ContentReport: 1,
+    SensitiveWord: 2
   }
   return order[String(route.name)] ?? 90
 }

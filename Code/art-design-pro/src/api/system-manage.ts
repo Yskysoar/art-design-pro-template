@@ -200,6 +200,21 @@ export function fetchDeleteConfig(id: number) {
   })
 }
 
+// 获取文件资源列表
+export function fetchGetFileResourceList(params: Api.SystemManage.FileResourceSearchParams) {
+  return request.get<Api.SystemManage.FileResourceList>({
+    url: '/api/file-resource/list',
+    params
+  })
+}
+
+// 删除未引用文件资源
+export function fetchDeleteFileResource(id: number) {
+  return request.del<void>({
+    url: `/api/file-resource/${id}`
+  })
+}
+
 // 获取组织树
 export function fetchGetOrgTree() {
   return request.get<Api.SystemManage.OrgTreeItem[]>({

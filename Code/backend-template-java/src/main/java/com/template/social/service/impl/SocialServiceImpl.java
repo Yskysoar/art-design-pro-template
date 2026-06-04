@@ -10,6 +10,7 @@ import com.template.common.response.ApiCode;
 import com.template.common.security.SensitiveWordGuard;
 import com.template.file.entity.FileResource;
 import com.template.file.service.FileStorageService;
+import com.template.notification.service.NotificationService;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.social.convert.SocialStructMapper;
 import com.template.social.dto.SocialMessageQuery;
@@ -72,6 +73,7 @@ public class SocialServiceImpl implements SocialService {
     private final SocialStructMapper socialStructMapper;
     private final SensitiveWordGuard sensitiveWordGuard;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public SocialServiceImpl(
             SysUserMapper userMapper,
@@ -81,7 +83,8 @@ public class SocialServiceImpl implements SocialService {
             SocialMessageMapper messageMapper,
             SocialStructMapper socialStructMapper,
             SensitiveWordGuard sensitiveWordGuard,
-            FileStorageService fileStorageService
+            FileStorageService fileStorageService,
+            NotificationService notificationService
     ) {
         this.userMapper = userMapper;
         this.followMapper = followMapper;
@@ -91,6 +94,7 @@ public class SocialServiceImpl implements SocialService {
         this.socialStructMapper = socialStructMapper;
         this.sensitiveWordGuard = sensitiveWordGuard;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -163,6 +167,7 @@ public class SocialServiceImpl implements SocialService {
         follow.setFollowingId(targetUserId);
         follow.setDeleted(NOT_DELETED);
         followMapper.insert(follow);
+        notificationService.createFollowNotification(currentUserId, targetUserId);
     }
 
     @Override
@@ -302,6 +307,7 @@ public class SocialServiceImpl implements SocialService {
         conversation.setLastMessageTime(now);
         conversation.setUpdateTime(now);
         conversationMapper.updateById(conversation);
+        notificationService.createPrivateMessageNotification(senderId, receiverId, conversation.getId(), content);
         return toMessageVo(message, getActiveUser(senderId), senderId);
     }
 
@@ -510,9 +516,6 @@ public class SocialServiceImpl implements SocialService {
         }
         if (file.getSize() == null || file.getSize() > SOCIAL_FILE_MAX_SIZE) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "附件大小不能超过50MB");
-        }
-        if (StringUtils.hasText(contentType) && contentType.toLowerCase().startsWith("image/")) {
-            throw new BusinessException(ApiCode.BAD_REQUEST, "图片请使用图片消息发送");
         }
         return file;
     }

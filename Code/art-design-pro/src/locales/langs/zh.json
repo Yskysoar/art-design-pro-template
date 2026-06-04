@@ -176,6 +176,24 @@
     ],
     "viewAll": "查看全部"
   },
+  "notificationCenter": {
+    "readAll": "全部标为已读",
+    "type": "类型",
+    "status": "状态",
+    "title": "标题",
+    "content": "内容",
+    "actor": "触发人",
+    "read": "已读",
+    "unread": "未读",
+    "unreadOnly": "只看未读",
+    "readSuccess": "已标为已读",
+    "types": {
+      "SYSTEM": "系统通知",
+      "FOLLOW": "关注",
+      "PRIVATE_MESSAGE": "私信",
+      "COMMENT_REPLY": "评论回复"
+    }
+  },
   "worktab": {
     "btn": {
       "refresh": "刷新",
@@ -386,6 +404,7 @@
       "menu": "菜单管理",
       "org": "组织管理",
       "config": "配置管理",
+      "fileResource": "文件资源",
       "sensitiveWord": "敏感词库",
       "nested": "嵌套菜单",
       "menu1": "菜单1",
@@ -396,6 +415,15 @@
       "menu32": "菜单3-2",
       "menu321": "菜单3-2-1",
       "settings": "个性设置"
+    },
+    "notification": {
+      "title": "消息中心",
+      "center": "消息中心"
+    },
+    "moderation": {
+      "title": "内容治理",
+      "report": "举报审核",
+      "sensitiveWord": "敏感词库"
     },
     "safeguard": {
       "title": "运维管理",
@@ -489,7 +517,26 @@
       "placeholders": {
         "configKey": "请输入配置键",
         "configValue": "请输入配置值"
+      },
+      "values": {
+        "ONE_TO_ONE": "一人一个组织",
+        "ONE_TO_MANY": "一人多个组织",
+        "sizeMb": "{size} MB"
       }
+    },
+    "file": {
+      "keyword": "关键词",
+      "preview": "预览",
+      "originalName": "文件名",
+      "extension": "后缀",
+      "contentType": "MIME 类型",
+      "storageType": "存储类型",
+      "size": "大小",
+      "uploader": "上传人",
+      "referenced": "引用状态",
+      "referenceCount": "{count} 次引用",
+      "unreferenced": "未引用",
+      "deleteConfirm": "确定删除文件资源“{name}”吗？此操作只删除台账记录，不删除磁盘文件。"
     },
     "sensitiveWord": {
       "add": "新增敏感词",
@@ -631,6 +678,51 @@
       "success": "数据权限保存成功"
     }
   },
+  "moderation": {
+    "report": {
+      "handle": "处理举报",
+      "targetType": "目标类型",
+      "targetId": "目标ID",
+      "reasonType": "举报原因",
+      "description": "补充说明",
+      "reporter": "举报人",
+      "status": "状态",
+      "handler": "处理人",
+      "remark": "处理备注",
+      "statusRequired": "请选择处理状态",
+      "submitTitle": "提交举报",
+      "reportAction": "举报",
+      "reasonRequired": "请选择举报原因",
+      "targetRequired": "举报目标不能为空",
+      "descriptionPlaceholder": "请补充问题描述，便于管理员判断",
+      "descriptionMax": "补充说明不能超过 500 字",
+      "submitSuccess": "举报已提交",
+      "targets": {
+        "ARTICLE": "文章",
+        "COMMENT": "评论",
+        "PRIVATE_MESSAGE": "私信"
+      },
+      "reasons": {
+        "SPAM": "垃圾广告",
+        "HARASSMENT": "骚扰攻击",
+        "PERSONAL_INFO": "泄露个人信息",
+        "COPYRIGHT": "版权问题",
+        "FRAUD": "诈骗风险",
+        "MISLEADING": "误导信息",
+        "FILE_RISK": "文件风险",
+        "OUTDATED": "过期内容",
+        "OFF_TOPIC": "偏离主题",
+        "LOW_QUALITY": "低质量内容",
+        "OTHER": "其他问题"
+      },
+      "statuses": {
+        "PENDING": "待处理",
+        "PROCESSING": "处理中",
+        "RESOLVED": "已处理",
+        "REJECTED": "已驳回"
+      }
+    }
+  },
   "socialChat": {
     "searchUser": "搜索用户",
     "tabs": {
@@ -655,7 +747,8 @@
       "unfollow": "取消关注",
       "block": "拉黑",
       "unblock": "解除拉黑",
-      "send": "发送"
+      "send": "发送",
+      "download": "下载"
     },
     "empty": {
       "data": "暂无数据",
@@ -680,6 +773,7 @@
       "imageTooLarge": "图片大小不能超过5MB",
       "imageOnly": "请选择图片文件",
       "fileTooLarge": "附件大小不能超过50MB",
+      "svgUnsupported": "暂不支持 SVG 文件，请选择 PNG、JPG、WEBP、GIF 或常用文档格式",
       "fileFailed": "文件发送失败"
     }
   },

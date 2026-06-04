@@ -61,6 +61,12 @@ public class LocalFileStorageService implements FileStorageService {
             "application/zip",
             "application/x-zip-compressed"
     );
+    private static final Set<String> OFFICE_EXTENSIONS = Set.of("doc", "docx", "xls", "xlsx", "ppt", "pptx");
+    private static final Set<String> OFFICE_COMPATIBLE_CONTENT_TYPES = Set.of(
+            "application/octet-stream",
+            "application/zip",
+            "application/x-zip-compressed"
+    );
 
     private final FileResourceMapper fileResourceMapper;
     private final Path rootPath;
@@ -96,7 +102,11 @@ public class LocalFileStorageService implements FileStorageService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UploadResponse uploadSocialFile(MultipartFile file, AppUserPrincipal principal) {
-        return save(file, principal, FILE_EXTENSIONS, FILE_CONTENT_TYPES, SOCIAL_FILE_MAX_SIZE);
+        Set<String> extensions = new HashSet<>(IMAGE_EXTENSIONS);
+        extensions.addAll(FILE_EXTENSIONS);
+        Set<String> contentTypes = new HashSet<>(IMAGE_CONTENT_TYPES);
+        contentTypes.addAll(FILE_CONTENT_TYPES);
+        return save(file, principal, extensions, contentTypes, SOCIAL_FILE_MAX_SIZE);
     }
 
     @Override
@@ -206,10 +216,26 @@ public class LocalFileStorageService implements FileStorageService {
         if (!allowedExtensions.contains(extension)) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "不支持的文件后缀：" + extension);
         }
-        String contentType = file.getContentType();
-        if (!StringUtils.hasText(contentType) || !allowedContentTypes.contains(contentType.toLowerCase(Locale.ROOT))) {
+        String contentType = normalizeContentType(file.getContentType());
+        if (!StringUtils.hasText(contentType) || !isAllowedContentType(extension, contentType, allowedContentTypes)) {
             throw new BusinessException(ApiCode.BAD_REQUEST, "不支持的文件类型");
         }
+    }
+
+    private boolean isAllowedContentType(String extension, String contentType, Set<String> allowedContentTypes) {
+        if (allowedContentTypes.contains(contentType)) {
+            return true;
+        }
+        return OFFICE_EXTENSIONS.contains(extension) && OFFICE_COMPATIBLE_CONTENT_TYPES.contains(contentType);
+    }
+
+    private String normalizeContentType(String contentType) {
+        if (!StringUtils.hasText(contentType)) {
+            return null;
+        }
+        int semicolonIndex = contentType.indexOf(';');
+        String mediaType = semicolonIndex >= 0 ? contentType.substring(0, semicolonIndex) : contentType;
+        return mediaType.trim().toLowerCase(Locale.ROOT);
     }
 
     private String extractExtension(String originalName) {

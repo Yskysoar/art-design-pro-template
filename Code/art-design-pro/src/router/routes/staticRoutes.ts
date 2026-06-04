@@ -60,6 +60,20 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     ]
   },
   {
+    path: '/notification',
+    component: () => import('@views/index/index.vue'),
+    name: 'Notification',
+    meta: { title: 'menus.notification.title', isHide: true },
+    children: [
+      {
+        path: 'center',
+        name: 'NotificationCenter',
+        component: () => import('@views/notification/center/index.vue'),
+        meta: { title: 'menus.notification.center', keepAlive: true, isHide: true }
+      }
+    ]
+  },
+  {
     path: '/500',
     name: 'Exception500',
     component: () => import('@views/exception/500/index.vue'),

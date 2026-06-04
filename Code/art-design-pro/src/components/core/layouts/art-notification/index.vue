@@ -11,7 +11,7 @@
   >
     <div class="flex-cb px-3.5 mt-3.5">
       <span class="text-base font-medium text-g-800">{{ $t('notice.title') }}</span>
-      <span class="text-xs text-g-800 px-1.5 py-1 c-p select-none rounded hover:bg-g-200">
+      <span class="text-xs text-g-800 px-1.5 py-1 c-p select-none rounded hover:bg-g-200" @click="readAll">
         {{ $t('notice.btnRead') }}
       </span>
     </div>
@@ -33,9 +33,10 @@
         <!-- 通知 -->
         <ul v-show="barActiveIndex === 0">
           <li
-            v-for="(item, index) in noticeList"
-            :key="index"
+            v-for="item in noticeList"
+            :key="item.id"
             class="box-border flex-c px-3.5 py-3.5 c-p last:border-b-0 hover:bg-g-200/60"
+            @click="openItem(item)"
           >
             <div
               class="size-9 leading-9 text-center rounded-lg flex-cc"
@@ -53,12 +54,13 @@
         <!-- 消息 -->
         <ul v-show="barActiveIndex === 1">
           <li
-            v-for="(item, index) in msgList"
-            :key="index"
+            v-for="item in msgList"
+            :key="item.id"
             class="box-border flex-c px-3.5 py-3.5 c-p last:border-b-0 hover:bg-g-200/60"
+            @click="openItem(item)"
           >
             <div class="w-9 h-9">
-              <img :src="item.avatar" class="w-full h-full rounded-lg" />
+              <img :src="item.avatar || defaultAvatar" class="object-cover w-full h-full rounded-lg" />
             </div>
             <div class="w-[calc(100%-45px)] ml-3.5">
               <h4 class="text-xs font-normal leading-5.5">{{ item.title }}</h4>
@@ -70,9 +72,10 @@
         <!-- 待办 -->
         <ul v-show="barActiveIndex === 2">
           <li
-            v-for="(item, index) in pendingList"
-            :key="index"
+            v-for="item in pendingList"
+            :key="item.id"
             class="box-border px-5 py-3.5 last:border-b-0"
+            @click="openItem(item)"
           >
             <h4>{{ item.title }}</h4>
             <p class="text-xs text-g-500">{{ item.time }}</p>
@@ -104,42 +107,36 @@
 
 <script setup lang="ts">
   import { computed, ref, watch, type Ref, type ComputedRef } from 'vue'
+  import { useRouter } from 'vue-router'
   import { useI18n } from 'vue-i18n'
-
-  // 导入头像图片
-  import avatar1 from '@/assets/images/avatar/avatar1.webp'
-  import avatar2 from '@/assets/images/avatar/avatar2.webp'
-  import avatar3 from '@/assets/images/avatar/avatar3.webp'
-  import avatar4 from '@/assets/images/avatar/avatar4.webp'
-  import avatar5 from '@/assets/images/avatar/avatar5.webp'
-  import avatar6 from '@/assets/images/avatar/avatar6.webp'
+  import {
+    fetchNotifications,
+    markAllNotificationsRead,
+    markNotificationRead
+  } from '@/api/notification'
+  import defaultAvatar from '@/assets/images/avatar/avatar1.webp'
 
   defineOptions({ name: 'ArtNotification' })
 
   interface NoticeItem {
+    id: number
     /** 标题 */
     title: string
+    /** 内容 */
+    content?: string
     /** 时间 */
     time: string
     /** 类型 */
     type: NoticeType
+    /** 跳转地址 */
+    targetUrl?: string
   }
 
-  interface MessageItem {
-    /** 标题 */
-    title: string
-    /** 时间 */
-    time: string
-    /** 头像 */
+  interface MessageItem extends NoticeItem {
     avatar: string
   }
 
-  interface PendingItem {
-    /** 标题 */
-    title: string
-    /** 时间 */
-    time: string
-  }
+  type PendingItem = NoticeItem
 
   interface BarItem {
     /** 名称 */
@@ -158,6 +155,7 @@
   type NoticeType = 'email' | 'message' | 'collection' | 'user' | 'notice'
 
   const { t } = useI18n()
+  const router = useRouter()
 
   const props = defineProps<{
     value: boolean
@@ -172,76 +170,27 @@
   const barActiveIndex = ref(0)
 
   const useNotificationData = () => {
-    // 通知数据
-    const noticeList = ref<NoticeItem[]>([
-      {
-        title: '新增国际化',
-        time: '2024-6-13 0:10',
-        type: 'notice'
-      },
-      {
-        title: '冷月呆呆给你发了一条消息',
-        time: '2024-4-21 8:05',
-        type: 'message'
-      },
-      {
-        title: '小肥猪关注了你',
-        time: '2020-3-17 21:12',
-        type: 'collection'
-      },
-      {
-        title: '新增使用文档',
-        time: '2024-02-14 0:20',
-        type: 'notice'
-      },
-      {
-        title: '小肥猪给你发了一封邮件',
-        time: '2024-1-20 0:15',
-        type: 'email'
-      },
-      {
-        title: '菜单mock本地真实数据',
-        time: '2024-1-17 22:06',
-        type: 'notice'
-      }
-    ])
-
-    // 消息数据
-    const msgList = ref<MessageItem[]>([
-      {
-        title: '池不胖 关注了你',
-        time: '2021-2-26 23:50',
-        avatar: avatar1
-      },
-      {
-        title: '唐不苦 关注了你',
-        time: '2021-2-21 8:05',
-        avatar: avatar2
-      },
-      {
-        title: '中小鱼 关注了你',
-        time: '2020-1-17 21:12',
-        avatar: avatar3
-      },
-      {
-        title: '何小荷 关注了你',
-        time: '2021-01-14 0:20',
-        avatar: avatar4
-      },
-      {
-        title: '誶誶淰 关注了你',
-        time: '2020-12-20 0:15',
-        avatar: avatar5
-      },
-      {
-        title: '冷月呆呆 关注了你',
-        time: '2020-12-17 22:06',
-        avatar: avatar6
-      }
-    ])
-
-    // 待办数据
+    const noticeList = ref<NoticeItem[]>([])
+    const msgList = ref<MessageItem[]>([])
     const pendingList = ref<PendingItem[]>([])
+    const loading = ref(false)
+
+    const loadNotifications = async () => {
+      loading.value = true
+      try {
+        const result = await fetchNotifications({ current: 1, size: 20, unread: true })
+        const rows = result.records || []
+        noticeList.value = rows
+          .filter((item) => item.noticeType === 'SYSTEM')
+          .map(mapNoticeItem)
+        msgList.value = rows
+          .filter((item) => item.noticeType !== 'SYSTEM')
+          .map((item) => ({ ...mapNoticeItem(item), avatar: item.actorAvatar || defaultAvatar }))
+        pendingList.value = []
+      } finally {
+        loading.value = false
+      }
+    }
 
     // 标签栏数据
     const barList = computed<BarItem[]>(() => [
@@ -263,7 +212,9 @@
       noticeList,
       msgList,
       pendingList,
-      barList
+      barList,
+      loadNotifications,
+      loading
     }
   }
 
@@ -375,18 +326,15 @@
   // 业务逻辑处理
   const useBusinessLogic = () => {
     const handleNoticeAll = () => {
-      // 处理查看全部通知
-      console.log('查看全部通知')
+      router.push('/notification/center')
     }
 
     const handleMsgAll = () => {
-      // 处理查看全部消息
-      console.log('查看全部消息')
+      router.push('/notification/center')
     }
 
     const handlePendingAll = () => {
-      // 处理查看全部待办
-      console.log('查看全部待办')
+      router.push('/notification/center')
     }
 
     return {
@@ -396,8 +344,24 @@
     }
   }
 
+  const mapNoticeItem = (item: Api.Notification.NotificationItem): NoticeItem => ({
+    id: item.id,
+    title: item.title,
+    content: item.content,
+    time: item.createTime,
+    type: noticeTypeMap[item.noticeType] || 'notice',
+    targetUrl: item.targetUrl
+  })
+
+  const noticeTypeMap: Record<string, NoticeType> = {
+    SYSTEM: 'notice',
+    FOLLOW: 'collection',
+    PRIVATE_MESSAGE: 'message',
+    COMMENT_REPLY: 'user'
+  }
+
   // 组合所有逻辑
-  const { noticeList, msgList, pendingList, barList } = useNotificationData()
+  const { noticeList, msgList, pendingList, barList, loadNotifications } = useNotificationData()
   const { getNoticeStyle } = useNotificationStyles()
   const { showNotice } = useNotificationAnimation()
   const { handleNoticeAll, handleMsgAll, handlePendingAll } = useBusinessLogic()
@@ -408,11 +372,27 @@
     { handleNoticeAll, handleMsgAll, handlePendingAll }
   )
 
+  const readAll = async () => {
+    await markAllNotificationsRead()
+    await loadNotifications()
+  }
+
+  const openItem = async (item: NoticeItem) => {
+    await markNotificationRead(item.id)
+    emit('update:value', false)
+    if (item.targetUrl) {
+      router.push(item.targetUrl)
+    }
+  }
+
   // 监听属性变化
   watch(
     () => props.value,
     (newValue) => {
       showNotice(newValue)
+      if (newValue) {
+        loadNotifications()
+      }
     }
   )
 </script>

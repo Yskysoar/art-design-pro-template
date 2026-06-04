@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.template.common.exception.BusinessException;
 import com.template.common.security.SensitiveWordGuard;
 import com.template.file.service.FileStorageService;
+import com.template.notification.service.NotificationService;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.social.convert.SocialStructMapper;
 import com.template.social.dto.SocialMessageSendRequest;
@@ -67,6 +68,8 @@ class SocialServiceImplTest {
     private SensitiveWordGuard sensitiveWordGuard;
     @Mock
     private FileStorageService fileStorageService;
+    @Mock
+    private NotificationService notificationService;
 
     private SocialServiceImpl socialService;
 
@@ -74,7 +77,17 @@ class SocialServiceImplTest {
     void setUp() {
         initTableInfo(SocialFollow.class);
         initTableInfo(SocialMessage.class);
-        socialService = new SocialServiceImpl(userMapper, followMapper, blockMapper, conversationMapper, messageMapper, socialStructMapper, sensitiveWordGuard, fileStorageService);
+        socialService = new SocialServiceImpl(
+                userMapper,
+                followMapper,
+                blockMapper,
+                conversationMapper,
+                messageMapper,
+                socialStructMapper,
+                sensitiveWordGuard,
+                fileStorageService,
+                notificationService
+        );
     }
 
     @Test
@@ -177,6 +190,7 @@ class SocialServiceImplTest {
         assertThat(result.createTime()).isNotBlank();
         verify(messageMapper).insert(any(SocialMessage.class));
         verify(conversationMapper).updateById(any(SocialConversation.class));
+        verify(notificationService).createPrivateMessageNotification(ADMIN.userId(), TARGET_ID, 10L, "你好，项目已更新");
     }
 
     @Test

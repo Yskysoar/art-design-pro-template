@@ -98,36 +98,66 @@
         </header>
 
         <ElScrollbar ref="messageScrollbarRef" class="message-scroll">
-          <div v-for="message in messages" :key="message.id" class="message-row" :class="{ mine: message.mine }">
-            <ElAvatar :size="34" :src="message.senderAvatar">{{ message.senderName.charAt(0) }}</ElAvatar>
-            <div class="message-bubble">
-              <div class="message-meta">
-                <span>{{ message.senderName }}</span>
-                <em>{{ message.createTime }}</em>
+          <template v-for="(message, index) in messages" :key="message.id">
+            <div v-if="shouldShowTime(index)" class="message-time-divider">{{ formatMessageTime(message.createTime) }}</div>
+            <div class="message-row" :class="{ mine: message.mine }">
+              <ElAvatar :size="34" :src="message.senderAvatar">{{ message.senderName.charAt(0) }}</ElAvatar>
+              <div class="message-bubble">
+                <div v-if="message.messageType === 'TEXT'" class="message-text">{{ message.content }}</div>
+                <ElImage
+                  v-else-if="message.messageType === 'IMAGE'"
+                  class="message-image"
+                  :src="message.fileUrl"
+                  :alt="message.fileName || $t('socialChat.imageMessage')"
+                  :preview-src-list="message.fileUrl ? [message.fileUrl] : []"
+                  :preview-teleported="true"
+                  fit="cover"
+                />
+                <div v-else class="message-file">
+                  <div class="message-file__body">
+                    <strong>{{ message.fileName || $t('socialChat.file') }}</strong>
+                    <span>{{ formatFileSize(message.fileSize) }}</span>
+                    <div class="message-file__source">
+                      <img src="@imgs/common/logo.webp" alt="Yskysoar Template" />
+                      <em>Yskysoar Template</em>
+                    </div>
+                  </div>
+                  <ElImage
+                    v-if="isImageFile(message)"
+                    class="message-file__thumb"
+                    :src="message.fileUrl"
+                    :alt="message.fileName || $t('socialChat.file')"
+                    :preview-src-list="message.fileUrl ? [message.fileUrl] : []"
+                    :preview-teleported="true"
+                    fit="cover"
+                  />
+                  <div v-else class="message-file__type" :class="fileTypeClass(message)">
+                    <span>{{ fileTypeLabel(message) }}</span>
+                  </div>
+                  <button
+                    class="message-file__download"
+                    type="button"
+                    @click.stop
+                    @click="downloadFile(message)"
+                  >
+                    <ArtSvgIcon icon="ri:download-2-line" />
+                    <span>{{ $t('socialChat.actions.download') }}</span>
+                  </button>
+                </div>
+                <div class="message-actions">
+                  <ElButton
+                    text
+                    type="danger"
+                    :disabled="!message.id"
+                    @click="openMessageReport(message)"
+                  >
+                    <ArtSvgIcon icon="ri:flag-line" />
+                    <span>{{ $t('moderation.report.reportAction') }}</span>
+                  </ElButton>
+                </div>
               </div>
-              <p v-if="message.messageType === 'TEXT'">{{ message.content }}</p>
-              <a
-                v-else-if="message.messageType === 'IMAGE'"
-                class="message-image"
-                :href="message.fileUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img :src="message.fileUrl" :alt="message.fileName || $t('socialChat.imageMessage')" />
-              </a>
-              <a
-                v-else
-                class="message-file"
-                :href="message.fileUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ArtSvgIcon icon="ri:file-3-line" />
-                <span>{{ message.fileName || $t('socialChat.file') }}</span>
-                <em>{{ formatFileSize(message.fileSize) }}</em>
-              </a>
             </div>
-          </div>
+          </template>
           <ElEmpty v-if="messages.length === 0" :description="$t('socialChat.empty.message')" :image-size="110" />
         </ElScrollbar>
 
@@ -170,7 +200,13 @@
                 <ArtSvgIcon icon="ri:attachment-2" />
               </ElButton>
               <input ref="imageInputRef" type="file" accept="image/*" class="hidden-input" @change="uploadImage" />
-              <input ref="fileInputRef" type="file" class="hidden-input" @change="uploadFile" />
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                class="hidden-input"
+                @change="uploadFile"
+              />
             </div>
             <ElButton type="primary" :loading="uploading" :disabled="quotaDisabled || !messageText.trim()" @click="sendMessage">
               {{ $t('socialChat.actions.send') }}
@@ -181,6 +217,11 @@
 
       <ElEmpty v-else class="chat-empty" :description="$t('socialChat.empty.selectUser')" />
     </main>
+    <ContentReportDialog
+      v-model:visible="reportDialog.visible"
+      target-type="PRIVATE_MESSAGE"
+      :target-id="reportDialog.targetId"
+    />
   </div>
 </template>
 
@@ -189,6 +230,7 @@
   import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import { useAutoLayoutHeight } from '@/hooks/core/useLayoutHeight'
+  import ContentReportDialog from '@/components/business/content-report-dialog/index.vue'
   import {
     blockUser,
     fetchBlocks,
@@ -225,6 +267,10 @@
   const imageInputRef = ref<HTMLInputElement>()
   const fileInputRef = ref<HTMLInputElement>()
   const uploading = ref(false)
+  const reportDialog = reactive({
+    visible: false,
+    targetId: undefined as number | undefined
+  })
   const emojiList = ['😀', '😄', '😂', '😊', '😍', '👍', '👏', '🙏', '🎉', '🔥', '💡', '✅', '❤️', '😎', '🤝', '💪']
 
   const selectedConversationForUser = computed(() => {
@@ -406,6 +452,10 @@
       ElMessage.error(t('socialChat.errors.fileTooLarge'))
       return
     }
+    if (isSvgFile(file)) {
+      ElMessage.error(t('socialChat.errors.svgUnsupported'))
+      return
+    }
     await uploadAndSend(file, 'FILE')
   }
 
@@ -437,6 +487,77 @@
     if (message.messageType === 'IMAGE') return t('socialChat.imagePreview')
     if (message.messageType === 'FILE') return t('socialChat.filePreview', { name: message.fileName || '' }).trim()
     return message.content || t('socialChat.noMessage')
+  }
+
+  function isImageFile(message: Api.Social.SocialMessage) {
+    return !!message.fileContentType?.toLowerCase().startsWith('image/')
+  }
+
+  function isSvgFile(file: File) {
+    return file.name.toLowerCase().endsWith('.svg') || file.type.toLowerCase() === 'image/svg+xml'
+  }
+
+  function fileExtension(message: Api.Social.SocialMessage) {
+    const fileName = message.fileName || ''
+    const extension = fileName.includes('.') ? fileName.split('.').pop() : message.fileContentType?.split('/').pop()
+    return (extension || 'file').toUpperCase()
+  }
+
+  function fileTypeLabel(message: Api.Social.SocialMessage) {
+    if (isImageFile(message)) return 'IMG'
+    const extension = fileExtension(message)
+    if (['DOC', 'DOCX'].includes(extension)) return 'DOC'
+    if (['XLS', 'XLSX'].includes(extension)) return 'XLS'
+    if (['PPT', 'PPTX'].includes(extension)) return 'PPT'
+    if (extension.length > 4) return 'FILE'
+    return extension
+  }
+
+  function fileTypeClass(message: Api.Social.SocialMessage) {
+    const label = fileTypeLabel(message).toLowerCase()
+    if (['pdf', 'doc', 'xls', 'ppt', 'zip', 'img'].includes(label)) return `is-${label}`
+    return 'is-file'
+  }
+
+  function shouldShowTime(index: number) {
+    if (index === 0) return true
+    const currentTime = new Date(messages.value[index]?.createTime || '').getTime()
+    const previousTime = new Date(messages.value[index - 1]?.createTime || '').getTime()
+    if (!Number.isFinite(currentTime) || !Number.isFinite(previousTime)) return false
+    return currentTime - previousTime >= 5 * 60 * 1000
+  }
+
+  function formatMessageTime(time?: string) {
+    if (!time) return ''
+    const date = new Date(time)
+    if (Number.isNaN(date.getTime())) return time.slice(11, 16) || time
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+    const hourMinute = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    return `星期${weekdays[date.getDay()]} ${hourMinute}`
+  }
+
+  async function downloadFile(message: Api.Social.SocialMessage) {
+    if (!message.fileUrl) return
+    try {
+      const response = await fetch(message.fileUrl)
+      if (!response.ok) throw new Error(response.statusText)
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = message.fileName || fileTypeLabel(message).toLowerCase()
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch {
+      ElMessage.error(t('socialChat.errors.fileFailed'))
+    }
+  }
+
+  function openMessageReport(message: Api.Social.SocialMessage) {
+    reportDialog.targetId = message.id
+    reportDialog.visible = true
   }
 
   function formatFileSize(size?: number) {
@@ -618,14 +739,22 @@
     flex: 1;
     min-height: 0;
     padding: 18px;
-    background: var(--art-bg-color);
+    background: rgb(250 250 250);
+  }
+
+  .message-time-divider {
+    margin: 8px 0 18px;
+    font-size: 12px;
+    line-height: 18px;
+    color: #9b9b9b;
+    text-align: center;
   }
 
   .message-row {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: flex-start;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 
     &.mine {
       flex-direction: row-reverse;
@@ -634,12 +763,36 @@
         align-items: flex-end;
       }
 
-      .message-bubble p {
-        background: rgb(var(--art-primary-rgb) / 12%);
+      .message-text {
+        color: #101828;
+        background: rgb(157 242 159);
+
+        &::after {
+          right: -7px;
+          left: auto;
+          border-right: 0;
+          border-left: 8px solid rgb(157 242 159);
+        }
       }
 
       .message-file {
-        background: rgb(var(--art-primary-rgb) / 12%);
+        &::after {
+          right: -7px;
+          left: auto;
+          border-right: 0;
+          border-left: 8px solid rgb(238 238 240);
+        }
+      }
+
+      .message-image {
+        background: rgb(157 242 159);
+
+        &::after {
+          right: -7px;
+          left: auto;
+          border-right: 0;
+          border-left: 8px solid rgb(157 242 159);
+        }
       }
     }
   }
@@ -651,76 +804,229 @@
     min-width: 0;
   }
 
-  .message-meta {
+  .message-actions {
     display: flex;
-    gap: 8px;
-    margin-bottom: 5px;
-    font-size: 12px;
-    color: var(--art-text-gray-600);
+    justify-content: flex-start;
+    min-height: 24px;
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
 
-    em {
-      font-style: normal;
+    .el-button {
+      height: 24px;
+      padding: 0 4px;
+      font-size: 12px;
+    }
+
+    .art-svg-icon {
+      margin-right: 3px;
+      font-size: 13px;
     }
   }
 
-  .message-bubble p {
+  .message-row:hover .message-actions {
+    opacity: 1;
+  }
+
+  .message-text {
+    position: relative;
     padding: 10px 12px;
-    margin: 0;
     overflow-wrap: anywhere;
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-word;
-    background: var(--art-main-bg-color);
-    border-radius: 8px;
+    background: rgb(238 238 240);
+    border-radius: 6px;
+    box-shadow: 0 1px 1px rgb(0 0 0 / 4%);
+
+    &::after {
+      position: absolute;
+      top: 10px;
+      left: -7px;
+      width: 0;
+      height: 0;
+      content: '';
+      border-top: 6px solid transparent;
+      border-right: 8px solid rgb(238 238 240);
+      border-bottom: 6px solid transparent;
+    }
   }
 
   .message-image {
+    position: relative;
     display: block;
     max-width: min(280px, 100%);
-    overflow: hidden;
-    border: 1px solid var(--art-card-border);
-    border-radius: 8px;
+    padding: 4px;
+    background: rgb(238 238 240);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
 
-    img {
+    &::after {
+      position: absolute;
+      top: 10px;
+      left: -7px;
+      width: 0;
+      height: 0;
+      content: '';
+      border-top: 6px solid transparent;
+      border-right: 8px solid rgb(238 238 240);
+      border-bottom: 6px solid transparent;
+    }
+
+    :deep(img) {
       display: block;
       max-width: 100%;
       max-height: 220px;
+      overflow: hidden;
       object-fit: cover;
+      border-radius: 4px;
     }
   }
 
   .message-file {
+    position: relative;
     display: grid;
-    grid-template-columns: 28px minmax(0, 1fr);
-    gap: 2px 10px;
-    align-items: center;
-    min-width: 210px;
-    max-width: min(320px, 100%);
-    padding: 10px 12px;
-    color: inherit;
-    text-decoration: none;
-    background: var(--art-main-bg-color);
-    border-radius: 8px;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 10px 14px;
+    align-items: start;
+    width: min(270px, 100%);
+    padding: 12px 12px 10px;
+    color: #1f2329;
+    background: rgb(238 238 240);
+    border-radius: 6px;
+    box-shadow: 0 1px 0 rgb(0 0 0 / 3%);
 
-    .art-svg-icon {
-      grid-row: span 2;
-      font-size: 24px;
-      color: var(--theme-color);
+    &::after {
+      position: absolute;
+      top: 10px;
+      left: -7px;
+      width: 0;
+      height: 0;
+      content: '';
+      border-top: 6px solid transparent;
+      border-right: 8px solid rgb(238 238 240);
+      border-bottom: 6px solid transparent;
     }
+  }
 
-    span {
+  .message-file__thumb {
+    display: flex;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    background: #e5e7eb;
+    border-radius: 3px;
+
+    :deep(img) {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .message-file__body {
+    min-width: 0;
+
+    strong {
+      display: block;
       overflow: hidden;
       font-size: 14px;
       font-weight: 600;
+      line-height: 20px;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    > span {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 18px;
+      color: #9aa0a6;
+    }
+  }
+
+  .message-file__source {
+    display: flex;
+    grid-column: 1 / -1;
+    gap: 4px;
+    align-items: center;
+    padding-top: 8px;
+    margin-top: 12px;
+    border-top: 1px solid rgb(0 0 0 / 7%);
+
+    img {
+      width: 13px;
+      height: 13px;
+      object-fit: contain;
     }
 
     em {
       font-size: 12px;
       font-style: normal;
-      color: var(--art-text-gray-600);
+      line-height: 16px;
+      color: #9aa0a6;
+    }
+  }
+
+  .message-file__type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    color: #fff;
+    background: #8f99a8;
+    border-radius: 4px 4px 10px 4px;
+
+    span {
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    &.is-pdf {
+      background: #e34d4d;
+    }
+
+    &.is-doc {
+      background: #3478f6;
+    }
+
+    &.is-xls {
+      background: #21a366;
+    }
+
+    &.is-ppt {
+      background: #d85f32;
+    }
+
+    &.is-zip {
+      background: #7c5cff;
+    }
+  }
+
+  .message-file__download {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 0;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8a8f98;
+    text-decoration: none;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+
+    .art-svg-icon {
+      font-size: 14px;
+      color: currentcolor;
     }
   }
 
@@ -839,6 +1145,10 @@
 
     .message-bubble {
       max-width: 82%;
+    }
+
+    .message-file {
+      width: min(250px, 100%);
     }
 
     .chat-input {

@@ -105,6 +105,55 @@ class LocalFileStorageServiceTest {
     }
 
     @Test
+    @DisplayName("社交附件上传应支持图片格式")
+    void uploadSocialFileShouldAcceptImageFormat() {
+        MockMultipartFile file = new MockMultipartFile("file", "chat-image.png", "image/png", "image".getBytes());
+
+        UploadResponse response = fileStorageService.uploadSocialFile(file, ADMIN);
+
+        ArgumentCaptor<FileResource> captor = ArgumentCaptor.forClass(FileResource.class);
+        verify(fileResourceMapper).insert(captor.capture());
+        FileResource saved = captor.getValue();
+        assertThat(saved.getOriginalName()).isEqualTo("chat-image.png");
+        assertThat(saved.getContentType()).isEqualTo("image/png");
+        assertThat(saved.getExtension()).isEqualTo("png");
+        assertThat(response.url()).startsWith("/api/common/files/");
+    }
+
+    @Test
+    @DisplayName("社交附件上传应兼容Office文件通用MIME")
+    void uploadSocialFileShouldAcceptOfficeCompatibleMime() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "slides.pptx",
+                "application/octet-stream",
+                "pptx".getBytes()
+        );
+
+        UploadResponse response = fileStorageService.uploadSocialFile(file, ADMIN);
+
+        ArgumentCaptor<FileResource> captor = ArgumentCaptor.forClass(FileResource.class);
+        verify(fileResourceMapper).insert(captor.capture());
+        FileResource saved = captor.getValue();
+        assertThat(saved.getOriginalName()).isEqualTo("slides.pptx");
+        assertThat(saved.getExtension()).isEqualTo("pptx");
+        assertThat(saved.getContentType()).isEqualTo("application/octet-stream");
+        assertThat(response.url()).startsWith("/api/common/files/");
+    }
+
+    @Test
+    @DisplayName("社交附件上传应继续拒绝SVG")
+    void uploadSocialFileShouldRejectSvg() {
+        MockMultipartFile file = new MockMultipartFile("file", "vector.svg", "image/svg+xml", "<svg/>".getBytes());
+
+        assertThatThrownBy(() -> fileStorageService.uploadSocialFile(file, ADMIN))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("不支持的文件后缀：svg");
+
+        verify(fileResourceMapper, never()).insert(any(FileResource.class));
+    }
+
+    @Test
     @DisplayName("读取文件应拒绝目录穿越路径")
     void getByStoragePathShouldRejectPathTraversal() {
         assertThatThrownBy(() -> fileStorageService.getByStoragePath("../secret.txt"))

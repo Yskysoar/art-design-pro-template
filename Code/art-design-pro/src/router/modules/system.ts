@@ -67,6 +67,18 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'file',
+      name: 'FileResource',
+      component: '/system/file',
+      meta: {
+        title: 'menus.system.fileResource',
+        icon: 'ri:file-list-3-line',
+        keepAlive: true,
+        roles: ['R_SUPER'],
+        authList: [{ title: '管理文件资源', authMark: 'system:file:manage' }]
+      }
+    },
+    {
       path: 'menu',
       name: 'Menus',
       component: '/system/menu',
@@ -76,18 +88,6 @@ export const systemRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER'],
         authList: [{ title: '管理菜单', authMark: 'system:menu:manage' }]
-      }
-    },
-    {
-      path: 'sensitive-word',
-      name: 'SensitiveWord',
-      component: '/article/comment',
-      meta: {
-        title: 'menus.system.sensitiveWord',
-        icon: 'ri:shield-keyhole-line',
-        keepAlive: false,
-        roles: ['R_SUPER'],
-        authList: [{ title: '管理敏感词', authMark: 'system:sensitive-word' }]
       }
     },
     {

@@ -31,7 +31,15 @@
           <ElInput v-model="form.configKey" :disabled="dialogType === 'edit'" />
         </ElFormItem>
         <ElFormItem :label="$t('systemManage.config.configValue')" prop="configValue">
-          <ElInput v-model="form.configValue" />
+          <ElSelect v-if="configValueOptions.length" v-model="form.configValue" class="w-full">
+            <ElOption
+              v-for="item in configValueOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </ElSelect>
+          <ElInput v-else v-model="form.configValue" />
         </ElFormItem>
         <ElFormItem :label="$t('systemManage.config.description')" prop="description">
           <ElInput v-model="form.description" type="textarea" :rows="3" />
@@ -64,6 +72,10 @@
   const { t } = useI18n()
 
   type ConfigItem = Api.SystemManage.ConfigListItem
+  type ConfigValueOption = {
+    label: string
+    value: string
+  }
 
   const searchForm = reactive<Api.SystemManage.ConfigSearchParams>({
     configKey: undefined,
@@ -104,6 +116,40 @@
     configKey: [{ required: true, message: t('systemManage.config.placeholders.configKey'), trigger: 'blur' }],
     configValue: [{ required: true, message: t('systemManage.config.placeholders.configValue'), trigger: 'blur' }]
   }
+
+  const booleanOptions = computed<ConfigValueOption[]>(() => [
+    { label: t('common.yes'), value: 'true' },
+    { label: t('common.no'), value: 'false' }
+  ])
+
+  const configValueOptionMap = computed<Record<string, ConfigValueOption[]>>(() => ({
+    user_org_relation_mode: [
+      { label: t('systemManage.config.values.ONE_TO_ONE'), value: 'ONE_TO_ONE' },
+      { label: t('systemManage.config.values.ONE_TO_MANY'), value: 'ONE_TO_MANY' }
+    ],
+    role_level_enabled: booleanOptions.value,
+    anonymous_portal_access: booleanOptions.value,
+    guest_admin_access: booleanOptions.value,
+    article_comment_hide_enabled: booleanOptions.value,
+    article_default_visible: booleanOptions.value,
+    upload_max_size_mb: [
+      { label: t('systemManage.config.values.sizeMb', { size: 5 }), value: '5' },
+      { label: t('systemManage.config.values.sizeMb', { size: 10 }), value: '10' },
+      { label: t('systemManage.config.values.sizeMb', { size: 20 }), value: '20' },
+      { label: t('systemManage.config.values.sizeMb', { size: 50 }), value: '50' }
+    ]
+  }))
+
+  const configValueOptions = computed(() => configValueOptionMap.value[form.configKey] || [])
+
+  watch(
+    () => form.configKey,
+    () => {
+      const options = configValueOptions.value
+      if (!options.length || options.some((item) => item.value === form.configValue)) return
+      form.configValue = options[0].value
+    }
+  )
 
   const {
     columns,

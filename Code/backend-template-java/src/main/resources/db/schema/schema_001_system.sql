@@ -341,3 +341,44 @@ CREATE TABLE IF NOT EXISTS social_message (
   KEY idx_social_message_receiver_read (receiver_id, read_time),
   KEY idx_social_message_quota (sender_id, receiver_id, create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交聊天消息表';
+
+CREATE TABLE IF NOT EXISTS notification_message (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '通知ID',
+  recipient_id BIGINT NOT NULL COMMENT '接收人用户ID',
+  actor_id BIGINT DEFAULT NULL COMMENT '触发人用户ID',
+  notice_type VARCHAR(30) NOT NULL COMMENT '通知类型：SYSTEM/FOLLOW/PRIVATE_MESSAGE/COMMENT_REPLY',
+  title VARCHAR(100) NOT NULL COMMENT '通知标题',
+  content VARCHAR(500) DEFAULT NULL COMMENT '通知内容',
+  target_type VARCHAR(30) DEFAULT NULL COMMENT '跳转目标类型',
+  target_id BIGINT DEFAULT NULL COMMENT '跳转目标ID',
+  target_url VARCHAR(255) DEFAULT NULL COMMENT '跳转URL',
+  read_time DATETIME DEFAULT NULL COMMENT '已读时间',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  PRIMARY KEY (id),
+  KEY idx_notification_recipient_read (recipient_id, read_time, create_time),
+  KEY idx_notification_type (notice_type),
+  KEY idx_notification_actor (actor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户通知消息表';
+
+CREATE TABLE IF NOT EXISTS content_report (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '举报ID',
+  target_type VARCHAR(30) NOT NULL COMMENT '目标类型：ARTICLE/COMMENT/PRIVATE_MESSAGE',
+  target_id BIGINT NOT NULL COMMENT '目标ID',
+  reason_type VARCHAR(50) NOT NULL COMMENT '举报原因类型',
+  description VARCHAR(500) DEFAULT NULL COMMENT '举报补充说明',
+  reporter_id BIGINT NOT NULL COMMENT '举报人用户ID',
+  reporter_name VARCHAR(50) NOT NULL COMMENT '举报人名称',
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '状态：PENDING/PROCESSING/RESOLVED/REJECTED',
+  handler_id BIGINT DEFAULT NULL COMMENT '处理人用户ID',
+  handler_name VARCHAR(50) DEFAULT NULL COMMENT '处理人名称',
+  handling_remark VARCHAR(500) DEFAULT NULL COMMENT '处理备注',
+  handled_time DATETIME DEFAULT NULL COMMENT '处理时间',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  deleted BIGINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  PRIMARY KEY (id),
+  KEY idx_content_report_target (target_type, target_id),
+  KEY idx_content_report_status (status, create_time),
+  KEY idx_content_report_reporter (reporter_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='内容举报审核表';

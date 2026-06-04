@@ -176,6 +176,24 @@
     ],
     "viewAll": "View all"
   },
+  "notificationCenter": {
+    "readAll": "Mark all as read",
+    "type": "Type",
+    "status": "Status",
+    "title": "Title",
+    "content": "Content",
+    "actor": "Actor",
+    "read": "Read",
+    "unread": "Unread",
+    "unreadOnly": "Unread only",
+    "readSuccess": "Marked as read",
+    "types": {
+      "SYSTEM": "System",
+      "FOLLOW": "Follow",
+      "PRIVATE_MESSAGE": "Private Message",
+      "COMMENT_REPLY": "Comment Reply"
+    }
+  },
   "worktab": {
     "btn": {
       "refresh": "Refresh",
@@ -395,6 +413,16 @@
       "settings": "Personal Settings",
       "org": "Org Manage",
       "config": "Config Manage",
+      "fileResource": "File Resources",
+      "sensitiveWord": "Sensitive Words"
+    },
+    "notification": {
+      "title": "Message Center",
+      "center": "Message Center"
+    },
+    "moderation": {
+      "title": "Content Governance",
+      "report": "Reports",
       "sensitiveWord": "Sensitive Words"
     },
     "safeguard": {
@@ -517,7 +545,26 @@
       "placeholders": {
         "configKey": "Please enter config key",
         "configValue": "Please enter config value"
+      },
+      "values": {
+        "ONE_TO_ONE": "One user, one organization",
+        "ONE_TO_MANY": "One user, multiple organizations",
+        "sizeMb": "{size} MB"
       }
+    },
+    "file": {
+      "keyword": "Keyword",
+      "preview": "Preview",
+      "originalName": "File Name",
+      "extension": "Extension",
+      "contentType": "MIME Type",
+      "storageType": "Storage Type",
+      "size": "Size",
+      "uploader": "Uploader",
+      "referenced": "Referenced",
+      "referenceCount": "{count} refs",
+      "unreferenced": "Unreferenced",
+      "deleteConfirm": "Delete file resource \"{name}\"? This only deletes the ledger record and does not remove the physical file."
     },
     "sensitiveWord": {
       "add": "Add Sensitive Word",
@@ -659,6 +706,51 @@
       "success": "Data scope saved"
     }
   },
+  "moderation": {
+    "report": {
+      "handle": "Handle Report",
+      "targetType": "Target Type",
+      "targetId": "Target ID",
+      "reasonType": "Reason",
+      "description": "Description",
+      "reporter": "Reporter",
+      "status": "Status",
+      "handler": "Handler",
+      "remark": "Remark",
+      "statusRequired": "Please select status",
+      "submitTitle": "Submit Report",
+      "reportAction": "Report",
+      "reasonRequired": "Please select a reason",
+      "targetRequired": "Report target is required",
+      "descriptionPlaceholder": "Describe the issue to help admins review it",
+      "descriptionMax": "Description cannot exceed 500 characters",
+      "submitSuccess": "Report submitted",
+      "targets": {
+        "ARTICLE": "Article",
+        "COMMENT": "Comment",
+        "PRIVATE_MESSAGE": "Private Message"
+      },
+      "reasons": {
+        "SPAM": "Spam",
+        "HARASSMENT": "Harassment",
+        "PERSONAL_INFO": "Personal Information",
+        "COPYRIGHT": "Copyright",
+        "FRAUD": "Fraud Risk",
+        "MISLEADING": "Misleading",
+        "FILE_RISK": "File Risk",
+        "OUTDATED": "Outdated Content",
+        "OFF_TOPIC": "Off Topic",
+        "LOW_QUALITY": "Low Quality",
+        "OTHER": "Other"
+      },
+      "statuses": {
+        "PENDING": "Pending",
+        "PROCESSING": "Processing",
+        "RESOLVED": "Resolved",
+        "REJECTED": "Rejected"
+      }
+    }
+  },
   "socialChat": {
     "searchUser": "Search users",
     "tabs": {
@@ -683,7 +775,8 @@
       "unfollow": "Unfollow",
       "block": "Block",
       "unblock": "Unblock",
-      "send": "Send"
+      "send": "Send",
+      "download": "Download"
     },
     "empty": {
       "data": "No data",
@@ -708,6 +801,7 @@
       "imageTooLarge": "Image size cannot exceed 5MB",
       "imageOnly": "Please select an image file",
       "fileTooLarge": "Attachment size cannot exceed 50MB",
+      "svgUnsupported": "SVG files are not supported. Please choose PNG, JPG, WEBP, GIF, or common document formats",
       "fileFailed": "Failed to send file"
     }
   },

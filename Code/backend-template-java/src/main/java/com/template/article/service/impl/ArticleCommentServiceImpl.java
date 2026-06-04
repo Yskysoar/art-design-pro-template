@@ -17,6 +17,7 @@ import com.template.common.exception.BusinessException;
 import com.template.common.pagination.PageResult;
 import com.template.common.response.ApiCode;
 import com.template.common.security.SensitiveWordGuard;
+import com.template.notification.service.NotificationService;
 import com.template.security.auth.AppUserPrincipal;
 import com.template.security.permission.PermissionService;
 import com.template.system.config.entity.SysConfig;
@@ -73,6 +74,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
     private final SysConfigMapper configMapper;
     private final SensitiveWordGuard sensitiveWordGuard;
     private final SysUserMapper userMapper;
+    private final NotificationService notificationService;
 
     public ArticleCommentServiceImpl(
             ArticleCommentMapper commentMapper,
@@ -80,7 +82,8 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
             PermissionService permissionService,
             SysConfigMapper configMapper,
             SensitiveWordGuard sensitiveWordGuard,
-            SysUserMapper userMapper
+            SysUserMapper userMapper,
+            NotificationService notificationService
     ) {
         this.commentMapper = commentMapper;
         this.articleMapper = articleMapper;
@@ -88,6 +91,7 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
         this.configMapper = configMapper;
         this.sensitiveWordGuard = sensitiveWordGuard;
         this.userMapper = userMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -162,6 +166,15 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
             commentMapper.updateById(comment);
         }
         changeCommentCount(article, 1L);
+        if (parent != null && parent.getUserId() != null) {
+            notificationService.createCommentReplyNotification(
+                    principal.userId(),
+                    parent.getUserId(),
+                    article.getId(),
+                    comment.getId(),
+                    content
+            );
+        }
         return comment.getId();
     }
 
