@@ -1,33 +1,33 @@
 <template>
   <ElDialog
     v-model="visible"
-    :title="dialogType === 'add' ? '新增角色' : '编辑角色'"
+    :title="dialogType === 'add' ? $t('systemManage.roleDialog.add') : $t('systemManage.roleDialog.edit')"
     width="30%"
     align-center
     @close="handleClose"
   >
     <ElForm ref="formRef" :model="form" :rules="rules" label-width="120px">
-      <ElFormItem label="角色名称" prop="roleName">
-        <ElInput v-model="form.roleName" placeholder="请输入角色名称" />
+      <ElFormItem :label="$t('systemManage.role.roleName')" prop="roleName">
+        <ElInput v-model="form.roleName" :placeholder="$t('systemManage.role.placeholders.roleName')" />
       </ElFormItem>
-      <ElFormItem label="角色编码" prop="roleCode">
-        <ElInput v-model="form.roleCode" placeholder="请输入角色编码" />
+      <ElFormItem :label="$t('systemManage.role.roleCode')" prop="roleCode">
+        <ElInput v-model="form.roleCode" :placeholder="$t('systemManage.role.placeholders.roleCode')" />
       </ElFormItem>
-      <ElFormItem label="描述" prop="description">
+      <ElFormItem :label="$t('systemManage.roleDialog.description')" prop="description">
         <ElInput
           v-model="form.description"
           type="textarea"
           :rows="3"
-          placeholder="请输入角色描述"
+          :placeholder="$t('systemManage.role.placeholders.description')"
         />
       </ElFormItem>
-      <ElFormItem label="启用">
+      <ElFormItem :label="$t('systemManage.roleDialog.enabled')">
         <ElSwitch v-model="form.enabled" />
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="handleClose">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
+      <ElButton type="primary" @click="handleSubmit">{{ $t('common.submit') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -35,6 +35,7 @@
 <script setup lang="ts">
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchCreateRole, fetchUpdateRole } from '@/api/system-manage'
+  import { useI18n } from 'vue-i18n'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -56,6 +57,7 @@
   })
 
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const formRef = ref<FormInstance>()
 
@@ -72,14 +74,14 @@
    */
   const rules = reactive<FormRules>({
     roleName: [
-      { required: true, message: '请输入角色名称', trigger: 'blur' },
-      { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+      { required: true, message: t('systemManage.role.placeholders.roleName'), trigger: 'blur' },
+      { min: 2, max: 20, message: t('systemManage.roleDialog.nameLength'), trigger: 'blur' }
     ],
     roleCode: [
-      { required: true, message: '请输入角色编码', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+      { required: true, message: t('systemManage.role.placeholders.roleCode'), trigger: 'blur' },
+      { min: 2, max: 50, message: t('systemManage.roleDialog.codeLength'), trigger: 'blur' }
     ],
-    description: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
+    description: [{ required: true, message: t('systemManage.role.placeholders.description'), trigger: 'blur' }]
   })
 
   /**
@@ -164,12 +166,12 @@
         await fetchCreateRole(payload)
       }
 
-      const message = props.dialogType === 'add' ? '新增成功' : '修改成功'
+      const message = props.dialogType === 'add' ? t('common.success.add') : t('systemManage.roleDialog.updateSuccess')
       ElMessage.success(message)
       emit('success')
       handleClose()
     } catch (error) {
-      console.log('表单验证失败:', error)
+      console.log(t('systemManage.roleDialog.validateFailed'), error)
     }
   }
 </script>

@@ -12,7 +12,7 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton v-auth="'system:config:manage'" @click="showDialog('add')" v-ripple>新增配置</ElButton>
+            <ElButton v-auth="'system:config:manage'" @click="showDialog('add')" v-ripple>{{ $t('systemManage.config.add') }}</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -22,27 +22,27 @@
 
     <ElDialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增配置' : '编辑配置'"
+      :title="dialogType === 'add' ? $t('systemManage.config.add') : $t('systemManage.config.edit')"
       width="520px"
       align-center
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <ElFormItem label="配置键" prop="configKey">
+        <ElFormItem :label="$t('systemManage.config.configKey')" prop="configKey">
           <ElInput v-model="form.configKey" :disabled="dialogType === 'edit'" />
         </ElFormItem>
-        <ElFormItem label="配置值" prop="configValue">
+        <ElFormItem :label="$t('systemManage.config.configValue')" prop="configValue">
           <ElInput v-model="form.configValue" />
         </ElFormItem>
-        <ElFormItem label="说明" prop="description">
+        <ElFormItem :label="$t('systemManage.config.description')" prop="description">
           <ElInput v-model="form.description" type="textarea" :rows="3" />
         </ElFormItem>
-        <ElFormItem label="可编辑">
+        <ElFormItem :label="$t('systemManage.config.editable')">
           <ElSwitch v-model="form.editable" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="submitForm">保存</ElButton>
+        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="submitForm">{{ $t('common.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
@@ -58,8 +58,10 @@
     fetchUpdateConfig
   } from '@/api/system-manage'
   import { ElMessageBox, ElSwitch, ElTag, type FormInstance, type FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Config' })
+  const { t } = useI18n()
 
   type ConfigItem = Api.SystemManage.ConfigListItem
 
@@ -70,17 +72,17 @@
   })
 
   const formItems = computed(() => [
-    { label: '配置键', key: 'configKey', type: 'input', props: { clearable: true } },
-    { label: '说明', key: 'description', type: 'input', props: { clearable: true } },
+    { label: t('systemManage.config.configKey'), key: 'configKey', type: 'input', props: { clearable: true } },
+    { label: t('systemManage.config.description'), key: 'description', type: 'input', props: { clearable: true } },
     {
-      label: '可编辑',
+      label: t('systemManage.config.editable'),
       key: 'editable',
       type: 'select',
       props: {
         clearable: true,
         options: [
-          { label: '是', value: true },
-          { label: '否', value: false }
+          { label: t('common.yes'), value: true },
+          { label: t('common.no'), value: false }
         ]
       }
     }
@@ -99,8 +101,8 @@
   })
 
   const rules: FormRules = {
-    configKey: [{ required: true, message: '请输入配置键', trigger: 'blur' }],
-    configValue: [{ required: true, message: '请输入配置值', trigger: 'blur' }]
+    configKey: [{ required: true, message: t('systemManage.config.placeholders.configKey'), trigger: 'blur' }],
+    configValue: [{ required: true, message: t('systemManage.config.placeholders.configValue'), trigger: 'blur' }]
   }
 
   const {
@@ -121,22 +123,22 @@
         size: 20
       },
       columnsFactory: () => [
-        { prop: 'configKey', label: '配置键', minWidth: 180 },
-        { prop: 'configValue', label: '配置值', minWidth: 160 },
-        { prop: 'description', label: '说明', minWidth: 220, showOverflowTooltip: true },
+        { prop: 'configKey', label: t('systemManage.config.configKey'), minWidth: 180 },
+        { prop: 'configValue', label: t('systemManage.config.configValue'), minWidth: 160 },
+        { prop: 'description', label: t('systemManage.config.description'), minWidth: 220, showOverflowTooltip: true },
         {
           prop: 'editable',
-          label: '可编辑',
+          label: t('systemManage.config.editable'),
           width: 100,
           formatter: (row) =>
             h(ElTag, { type: row.editable ? 'success' : 'info' }, () =>
-              row.editable ? '是' : '否'
+              row.editable ? t('common.yes') : t('common.no')
             )
         },
-        { prop: 'updateTime', label: '更新时间', width: 180 },
+        { prop: 'updateTime', label: t('systemManage.common.updateTime'), width: 180 },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 120,
           fixed: 'right',
           formatter: (row) =>
@@ -181,19 +183,19 @@
     } else {
       await fetchCreateConfig(form)
     }
-    ElMessage.success(dialogType.value === 'add' ? '新增成功' : '更新成功')
+    ElMessage.success(dialogType.value === 'add' ? t('common.success.add') : t('common.success.update'))
     dialogVisible.value = false
     refreshData()
   }
 
   const deleteConfig = async (row: ConfigItem) => {
-    await ElMessageBox.confirm(`确定删除配置"${row.configKey}"吗？`, '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('systemManage.config.deleteConfirm', { name: row.configKey }), t('common.confirmDeleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
     await fetchDeleteConfig(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.success.delete'))
     refreshData()
   }
 </script>

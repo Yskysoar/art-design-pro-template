@@ -12,7 +12,7 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="getOrgTree">
         <template #left>
           <ElSpace wrap>
-            <ElButton v-auth="'system:org:manage'" @click="showDialog('add')" v-ripple>新增组织</ElButton>
+            <ElButton v-auth="'system:org:manage'" @click="showDialog('add')" v-ripple>{{ $t('systemManage.org.add') }}</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -30,12 +30,12 @@
 
     <ElDialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增组织' : '编辑组织'"
+      :title="dialogType === 'add' ? $t('systemManage.org.add') : $t('systemManage.org.edit')"
       width="560px"
       align-center
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <ElFormItem label="上级组织" prop="parentId">
+        <ElFormItem :label="$t('systemManage.org.parent')" prop="parentId">
           <ElTreeSelect
             v-model="form.parentId"
             :data="parentOptions"
@@ -45,34 +45,34 @@
             check-strictly
             clearable
             filterable
-            placeholder="不选择则作为根组织"
+            :placeholder="$t('systemManage.org.rootPlaceholder')"
             style="width: 100%"
           />
         </ElFormItem>
-        <ElFormItem label="组织名称" prop="orgName">
+        <ElFormItem :label="$t('systemManage.org.orgName')" prop="orgName">
           <ElInput v-model="form.orgName" maxlength="100" show-word-limit />
         </ElFormItem>
-        <ElFormItem label="组织编码" prop="orgCode">
+        <ElFormItem :label="$t('systemManage.org.orgCode')" prop="orgCode">
           <ElInput v-model="form.orgCode" maxlength="100" show-word-limit />
         </ElFormItem>
-        <ElFormItem label="组织类型" prop="orgType">
+        <ElFormItem :label="$t('systemManage.org.orgType')" prop="orgType">
           <ElSelect v-model="form.orgType" style="width: 100%">
-            <ElOption label="分组" value="GROUP" />
-            <ElOption label="部门" value="DEPT" />
-            <ElOption label="社团" value="CLUB" />
-            <ElOption label="商家" value="MERCHANT" />
+            <ElOption :label="$t('systemManage.org.group')" value="GROUP" />
+            <ElOption :label="$t('systemManage.org.dept')" value="DEPT" />
+            <ElOption :label="$t('systemManage.org.club')" value="CLUB" />
+            <ElOption :label="$t('systemManage.org.merchant')" value="MERCHANT" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="排序" prop="sort">
+        <ElFormItem :label="$t('systemManage.org.sort')" prop="sort">
           <ElInputNumber v-model="form.sort" :min="0" controls-position="right" style="width: 100%" />
         </ElFormItem>
-        <ElFormItem label="是否启用">
+        <ElFormItem :label="$t('systemManage.org.enabled')">
           <ElSwitch v-model="form.enabled" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="submitForm">保存</ElButton>
+        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="submitForm">{{ $t('common.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
@@ -88,8 +88,10 @@
     fetchUpdateOrg
   } from '@/api/system-manage'
   import { ElMessageBox, ElTag, type FormInstance, type FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Org' })
+  const { t } = useI18n()
 
   type OrgItem = Api.SystemManage.OrgTreeItem
 
@@ -115,24 +117,24 @@
   })
 
   const formItems = computed(() => [
-    { label: '关键词', key: 'keyword', type: 'input', props: { clearable: true } },
+    { label: t('systemManage.org.keyword'), key: 'keyword', type: 'input', props: { clearable: true } },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'enabled',
       type: 'select',
       props: {
         clearable: true,
         options: [
-          { label: '启用', value: true },
-          { label: '停用', value: false }
+          { label: t('common.enabled'), value: true },
+          { label: t('systemManage.org.stopped'), value: false }
         ]
       }
     }
   ])
 
   const rules: FormRules = {
-    orgName: [{ required: true, message: '请输入组织名称', trigger: 'blur' }],
-    orgCode: [{ required: true, message: '请输入组织编码', trigger: 'blur' }]
+    orgName: [{ required: true, message: t('systemManage.org.placeholders.orgName'), trigger: 'blur' }],
+    orgCode: [{ required: true, message: t('systemManage.org.placeholders.orgCode'), trigger: 'blur' }]
   }
 
   const parentOptions = computed(() => [
@@ -140,7 +142,7 @@
       id: 0,
       parentId: 0,
       ancestors: '0',
-      orgName: '根组织',
+      orgName: t('systemManage.org.root'),
       orgCode: 'ROOT',
       orgType: 'GROUP',
       sort: 0,
@@ -150,25 +152,25 @@
   ])
 
   const { columnChecks, columns } = useTableColumns(() => [
-    { prop: 'orgName', label: '组织名称', minWidth: 180 },
-    { prop: 'orgCode', label: '组织编码', minWidth: 160 },
+    { prop: 'orgName', label: t('systemManage.org.orgName'), minWidth: 180 },
+    { prop: 'orgCode', label: t('systemManage.org.orgCode'), minWidth: 160 },
     {
       prop: 'orgType',
-      label: '组织类型',
+      label: t('systemManage.org.orgType'),
       width: 110,
       formatter: (row: OrgItem) => orgTypeText(row.orgType)
     },
-    { prop: 'sort', label: '排序', width: 80 },
+    { prop: 'sort', label: t('systemManage.org.sort'), width: 80 },
     {
       prop: 'enabled',
-      label: '状态',
+      label: t('common.status'),
       width: 90,
       formatter: (row: OrgItem) =>
-        h(ElTag, { type: row.enabled ? 'success' : 'info' }, () => (row.enabled ? '启用' : '停用'))
+        h(ElTag, { type: row.enabled ? 'success' : 'info' }, () => (row.enabled ? t('common.enabled') : t('systemManage.org.stopped')))
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('common.operation'),
       width: 140,
       fixed: 'right',
       formatter: (row: OrgItem) =>
@@ -227,19 +229,19 @@
     } else {
       await fetchCreateOrg(payload)
     }
-    ElMessage.success(dialogType.value === 'add' ? '新增成功' : '更新成功')
+    ElMessage.success(dialogType.value === 'add' ? t('common.success.add') : t('common.success.update'))
     dialogVisible.value = false
     getOrgTree()
   }
 
   const deleteOrg = async (row: OrgItem) => {
-    await ElMessageBox.confirm(`确定删除组织"${row.orgName}"吗？`, '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('systemManage.org.deleteConfirm', { name: row.orgName }), t('common.confirmDeleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
     await fetchDeleteOrg(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.success.delete'))
     getOrgTree()
   }
 
@@ -272,10 +274,10 @@
 
   const orgTypeText = (type: string) => {
     const map: Record<string, string> = {
-      GROUP: '分组',
-      DEPT: '部门',
-      CLUB: '社团',
-      MERCHANT: '商家'
+      GROUP: t('systemManage.org.group'),
+      DEPT: t('systemManage.org.dept'),
+      CLUB: t('systemManage.org.club'),
+      MERCHANT: t('systemManage.org.merchant')
     }
     return map[type] || type
   }

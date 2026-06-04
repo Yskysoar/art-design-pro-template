@@ -26,6 +26,14 @@
               />
             </ElFormItem>
 
+            <ElFormItem prop="nickName">
+              <ElInput
+                class="custom-height"
+                v-model.trim="formData.nickName"
+                :placeholder="$t('register.placeholder.nickname')"
+              />
+            </ElFormItem>
+
             <ElFormItem prop="password">
               <ElInput
                 class="custom-height"
@@ -44,9 +52,24 @@
                 :placeholder="$t('register.placeholder.confirmPassword')"
                 type="password"
                 autocomplete="off"
-                @keyup.enter="register"
                 show-password
               />
+            </ElFormItem>
+
+            <ElFormItem prop="captchaCode">
+              <div class="captcha-row">
+                <ElInput
+                  class="custom-height"
+                  v-model.trim="formData.captchaCode"
+                  :placeholder="$t('register.placeholder.captcha')"
+                  maxlength="4"
+                  @keyup.enter="register"
+                />
+                <button class="captcha-image" type="button" @click="loadCaptcha">
+                  <img v-if="captchaImage" :src="captchaImage" alt="captcha" />
+                  <span v-else>{{ $t('register.captcha.refresh') }}</span>
+                </button>
+              </div>
             </ElFormItem>
 
             <ElFormItem prop="agreement">
@@ -88,18 +111,23 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { fetchCaptcha, fetchRegister } from '@/api/auth'
 
   defineOptions({ name: 'Register' })
 
   interface RegisterForm {
     username: string
+    nickName: string
     password: string
     confirmPassword: string
+    captchaCode: string
     agreement: boolean
   }
 
   const USERNAME_MIN_LENGTH = 3
   const USERNAME_MAX_LENGTH = 20
+  const NICKNAME_MIN_LENGTH = 2
+  const NICKNAME_MAX_LENGTH = 20
   const PASSWORD_MIN_LENGTH = 6
   const REDIRECT_DELAY = 1000
 
@@ -109,7 +137,8 @@
 
   const loading = ref(false)
   const formKey = ref(0)
-  const privacyDialogVisible = ref(false)
+  const captchaId = ref('')
+  const captchaImage = ref('')
 
   // 监听语言切换，重置表单
   watch(locale, () => {
@@ -118,9 +147,15 @@
 
   const formData = reactive<RegisterForm>({
     username: '',
+    nickName: '',
     password: '',
     confirmPassword: '',
+    captchaCode: '',
     agreement: false
+  })
+
+  onMounted(() => {
+    loadCaptcha()
   })
 
   /**
@@ -184,13 +219,41 @@
         trigger: 'blur'
       }
     ],
+    nickName: [
+      { required: true, message: t('register.placeholder.nickname'), trigger: 'blur' },
+      {
+        min: NICKNAME_MIN_LENGTH,
+        max: NICKNAME_MAX_LENGTH,
+        message: t('register.rule.nicknameLength'),
+        trigger: 'blur'
+      }
+    ],
     password: [
       { required: true, validator: validatePassword, trigger: 'blur' },
       { min: PASSWORD_MIN_LENGTH, message: t('register.rule.passwordLength'), trigger: 'blur' }
     ],
     confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
+    captchaCode: [
+      { required: true, message: t('register.placeholder.captcha'), trigger: 'blur' },
+      { min: 4, max: 4, message: t('register.rule.captchaLength'), trigger: 'blur' }
+    ],
     agreement: [{ validator: validateAgreement, trigger: 'change' }]
   }))
+
+  /**
+   * 加载图形验证码。
+   */
+  const loadCaptcha = async () => {
+    try {
+      const captcha = await fetchCaptcha()
+      captchaId.value = captcha.captchaId
+      captchaImage.value = captcha.imageBase64
+      formData.captchaCode = ''
+    } catch {
+      captchaId.value = ''
+      captchaImage.value = ''
+    }
+  }
 
   /**
    * 注册用户
@@ -203,25 +266,17 @@
       await formRef.value.validate()
       loading.value = true
 
-      // TODO: 替换为真实 API 调用
-      // const params = {
-      //   username: formData.username,
-      //   password: formData.password
-      // }
-      // const res = await AuthService.register(params)
-      // if (res.code === ApiStatus.success) {
-      //   ElMessage.success('注册成功')
-      //   toLogin()
-      // }
-
-      // 模拟注册请求
-      setTimeout(() => {
-        loading.value = false
-        ElMessage.success('注册成功')
-        toLogin()
-      }, REDIRECT_DELAY)
+      await fetchRegister({
+        userName: formData.username,
+        nickName: formData.nickName,
+        password: formData.password,
+        captchaId: captchaId.value,
+        captchaCode: formData.captchaCode
+      })
+      ElMessage.success(t('register.success'))
+      toLogin()
     } catch (error) {
-      console.error('表单验证失败:', error)
+      await loadCaptcha()
       loading.value = false
     }
   }
@@ -238,4 +293,29 @@
 
 <style scoped>
   @import '../login/style.css';
+</style>
+
+<style lang="scss" scoped>
+  .captcha-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .captcha-image {
+    width: 112px;
+    height: 40px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--el-fill-color-light);
+    border: 1px solid var(--el-border-color);
+    border-radius: 6px;
+  }
+
+  .captcha-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 </style>

@@ -39,7 +39,7 @@
           v-if="isDualMenu && shouldShowMenuButton"
           :icon="menuOpen ? 'ri:side-bar-line' : 'ri:side-bar-fill'"
           class="ml-3 max-sm:ml-[7px]"
-          :title="menuOpen ? '收起侧边菜单' : '展开侧边菜单'"
+          :title="menuOpen ? $t('table.searchBar.collapse') : $t('table.searchBar.expand')"
           @click="visibleMenu"
         />
 

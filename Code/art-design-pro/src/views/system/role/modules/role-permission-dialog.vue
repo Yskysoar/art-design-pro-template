@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="visible"
-    title="菜单权限"
+    :title="$t('systemManage.roleDialog.permissionTitle')"
     width="520px"
     align-center
     class="el-dialog-border"
@@ -28,13 +28,11 @@
       </ElTree>
     </ElScrollbar>
     <template #footer>
-      <ElButton @click="outputSelectedData" style="margin-left: 8px">获取选中数据</ElButton>
-
-      <ElButton @click="toggleExpandAll">{{ isExpandAll ? '全部收起' : '全部展开' }}</ElButton>
+      <ElButton @click="toggleExpandAll">{{ isExpandAll ? $t('systemManage.roleDialog.collapseAll') : $t('systemManage.roleDialog.expandAll') }}</ElButton>
       <ElButton @click="toggleSelectAll" style="margin-left: 8px">{{
-        isSelectAll ? '取消全选' : '全部选择'
+        isSelectAll ? $t('systemManage.roleDialog.unselectAll') : $t('systemManage.roleDialog.selectAll')
       }}</ElButton>
-      <ElButton type="primary" @click="savePermission">保存</ElButton>
+      <ElButton type="primary" @click="savePermission">{{ $t('common.save') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -43,6 +41,7 @@
   import { useMenuStore } from '@/store/modules/menu'
   import { formatMenuTitle } from '@/utils/router'
   import { fetchGetRolePermissions, fetchSaveRolePermissions } from '@/api/system-manage'
+  import { useI18n } from 'vue-i18n'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -62,6 +61,7 @@
   })
 
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const { menuList } = storeToRefs(useMenuStore())
   const treeRef = ref()
@@ -170,7 +170,7 @@
     await fetchSaveRolePermissions(props.roleData.roleId, {
       menuIds: menuIds.filter((id: unknown): id is number => typeof id === 'number')
     })
-    ElMessage.success('权限保存成功')
+    ElMessage.success(t('systemManage.roleDialog.savePermissionSuccess'))
     emit('success')
     handleClose()
   }
@@ -239,24 +239,4 @@
     isSelectAll.value = checkedKeys.length === allKeys.length && allKeys.length > 0
   }
 
-  /**
-   * 输出选中的权限数据到控制台
-   * 用于调试和查看当前选中的权限配置
-   */
-  const outputSelectedData = () => {
-    const tree = treeRef.value
-    if (!tree) return
-
-    const selectedData = {
-      checkedKeys: tree.getCheckedKeys(),
-      halfCheckedKeys: tree.getHalfCheckedKeys(),
-      checkedNodes: tree.getCheckedNodes(),
-      halfCheckedNodes: tree.getHalfCheckedNodes(),
-      totalChecked: tree.getCheckedKeys().length,
-      totalHalfChecked: tree.getHalfCheckedKeys().length
-    }
-
-    console.log('=== 选中的权限数据 ===', selectedData)
-    ElMessage.success(`已输出选中数据到控制台，共选中 ${selectedData.totalChecked} 个节点`)
-  }
 </script>

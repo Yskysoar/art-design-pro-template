@@ -11,6 +11,9 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
   interface Props {
     modelValue: Api.SystemManage.UserSearchParams
   }
@@ -36,49 +39,49 @@
 
   // 动态 options
   const statusOptions = [
-    { label: '启用', value: '1' },
-    { label: '禁用', value: '4' }
+    { label: t('common.enabled'), value: '1' },
+    { label: t('common.disabled'), value: '4' }
   ]
 
   // 表单配置
   const formItems = computed(() => [
     {
-      label: '用户名',
+      label: t('systemManage.user.userName'),
       key: 'userName',
       type: 'input',
-      placeholder: '请输入用户名',
+      placeholder: t('systemManage.user.placeholders.userName'),
       clearable: true
     },
     {
-      label: '手机号',
+      label: t('systemManage.user.phone'),
       key: 'userPhone',
       type: 'input',
-      props: { placeholder: '请输入手机号', maxlength: '11' }
+      props: { placeholder: t('systemManage.user.placeholders.phone'), maxlength: '11' }
     },
     {
-      label: '邮箱',
+      label: t('systemManage.user.email'),
       key: 'userEmail',
       type: 'input',
-      props: { placeholder: '请输入邮箱' }
+      props: { placeholder: t('systemManage.user.placeholders.email') }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'select',
       props: {
-        placeholder: '请选择状态',
+        placeholder: t('systemManage.common.selectStatus'),
         clearable: true,
         options: statusOptions
       }
     },
     {
-      label: '性别',
+      label: t('systemManage.user.gender'),
       key: 'userGender',
       type: 'radiogroup',
       props: {
         options: [
-          { label: '男', value: '1' },
-          { label: '女', value: '2' }
+          { label: t('systemManage.user.male'), value: '1' },
+          { label: t('systemManage.user.female'), value: '2' }
         ]
       }
     }
@@ -86,13 +89,11 @@
 
   // 事件
   function handleReset() {
-    console.log('重置表单')
     emit('reset')
   }
 
   async function handleSearch(params: Api.SystemManage.UserSearchParams) {
     await searchBarRef.value.validate()
     emit('search', params)
-    console.log('表单数据', params)
   }
 </script>

@@ -23,7 +23,27 @@
       "docs": "Document",
       "github": "Github",
       "lockScreen": "Lock screen",
-      "logout": "Log out"
+      "logout": "Log out",
+      "unnamed": "Unnamed user",
+      "emptyEmail": "Email not provided",
+      "changePassword": "Change password",
+      "password": {
+        "title": "Change password",
+        "oldPassword": "Current password",
+        "newPassword": "New password",
+        "confirmPassword": "Confirm new password",
+        "captcha": "Captcha",
+        "refresh": "Refresh",
+        "submit": "Confirm",
+        "success": "Password changed. Please log in again with the new password.",
+        "mismatch": "The two new passwords do not match",
+        "oldRequired": "Please enter current password",
+        "newRequired": "Please enter new password",
+        "confirmRequired": "Please enter new password again",
+        "captchaRequired": "Please enter the captcha",
+        "passwordLength": "Password length must be 6 to 100 characters",
+        "captchaLength": "Captcha must be 4 characters"
+      }
     },
     "guide": {
       "title": "Click here to view",
@@ -36,7 +56,26 @@
     "tips": "Prompt",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "logOutTips": "Do you want to log out?"
+    "logOutTips": "Do you want to log out?",
+    "submit": "Submit",
+    "save": "Save",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "operation": "Operation",
+    "status": "Status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "unknown": "Unknown",
+    "yes": "Yes",
+    "no": "No",
+    "success": {
+      "add": "Added successfully",
+      "update": "Updated successfully",
+      "delete": "Deleted successfully",
+      "status": "Status updated"
+    },
+    "confirmDeleteTitle": "Delete confirmation"
   },
   "search": {
     "placeholder": "Search page",
@@ -48,11 +87,20 @@
   "setting": {
     "menuType": {
       "title": "Menu Layout",
-      "list": ["Vertical", "Horizontal", "Mixed", "Dual"]
+      "list": [
+        "Vertical",
+        "Horizontal",
+        "Mixed",
+        "Dual"
+      ]
     },
     "theme": {
       "title": "Theme Style",
-      "list": ["Light", "Dark", "System"]
+      "list": [
+        "Light",
+        "Dark",
+        "System"
+      ]
     },
     "menu": {
       "title": "Menu Style"
@@ -62,11 +110,17 @@
     },
     "box": {
       "title": "Box Style",
-      "list": ["Border", "Shadow"]
+      "list": [
+        "Border",
+        "Shadow"
+      ]
     },
     "container": {
       "title": "Container Width",
-      "list": ["Full", "Boxed"]
+      "list": [
+        "Full",
+        "Boxed"
+      ]
     },
     "basics": {
       "title": "Basic Config",
@@ -112,8 +166,14 @@
   "notice": {
     "title": "Notice",
     "btnRead": "Mark as read",
-    "bar": ["Notice", "Message", "Todo"],
-    "text": ["No"],
+    "bar": [
+      "Notice",
+      "Message",
+      "Todo"
+    ],
+    "text": [
+      "No"
+    ],
     "viewAll": "View all"
   },
   "worktab": {
@@ -142,7 +202,14 @@
     "placeholder": {
       "username": "Please enter your account",
       "password": "Please enter your password",
+      "captcha": "Please enter the captcha",
       "slider": "Please slide to verify"
+    },
+    "captcha": {
+      "refresh": "Refresh"
+    },
+    "rule": {
+      "captchaLength": "Captcha must be 4 characters"
     },
     "sliderText": "Please slide to verify",
     "sliderSuccessText": "Verification successful",
@@ -161,23 +228,47 @@
     "subTitle": "Enter your email to reset your password",
     "placeholder": "Please enter your email",
     "submitBtnText": "Submit",
-    "backBtnText": "Back"
+    "backBtnText": "Back",
+    "placeholders": {
+      "userName": "Please enter your account",
+      "newPassword": "Please enter new password",
+      "confirmPassword": "Please enter new password again",
+      "captcha": "Please enter the captcha"
+    },
+    "captcha": {
+      "refresh": "Refresh"
+    },
+    "rule": {
+      "confirmPasswordRequired": "Please enter new password again",
+      "passwordMismatch": "The two passwords do not match",
+      "passwordLength": "Password must be at least 6 characters",
+      "captchaLength": "Captcha must be 4 characters"
+    },
+    "success": "Password reset. Please log in with the new password."
   },
   "register": {
     "title": "Create account",
     "subTitle": "Welcome to join us, please fill in the following information to complete the registration",
     "placeholder": {
       "username": "Please enter your account",
+      "nickname": "Please enter your nickname",
       "password": "Please enter your password",
-      "confirmPassword": "Please enter your password again"
+      "confirmPassword": "Please enter your password again",
+      "captcha": "Please enter the captcha"
     },
     "rule": {
       "confirmPasswordRequired": "Please enter your password again",
       "passwordMismatch": "The two passwords are inconsistent!",
       "usernameLength": "The length is 3 to 20 characters",
+      "nicknameLength": "Nickname length must be 2 to 20 characters",
       "passwordLength": "The password length cannot be less than 6 digits",
+      "captchaLength": "Captcha must be 4 characters",
       "agreementRequired": "Please agree to the privacy policy"
     },
+    "captcha": {
+      "refresh": "Refresh"
+    },
+    "success": "Registration successful",
     "agreeText": "I agree",
     "privacyPolicy": "Privacy policy",
     "submitBtnText": "Register",
@@ -203,10 +294,10 @@
     "evening": "Good evening!"
   },
   "exceptionPage": {
-    "gohome": "Go Home",
     "403": "Sorry, you do not have permission to access this page",
     "404": "Sorry, the page you are trying to access does not exist",
-    "500": "Sorry, there was an error on the server"
+    "500": "Sorry, there was an error on the server",
+    "gohome": "Go Home"
   },
   "menus": {
     "login": {
@@ -301,7 +392,10 @@
       "menu31": "Menu 3-1",
       "menu32": "Menu 3-2",
       "menu321": "Menu 3-2-1",
-      "settings": "Personal Settings"
+      "settings": "Personal Settings",
+      "org": "Org Manage",
+      "config": "Config Manage",
+      "sensitiveWord": "Sensitive Words"
     },
     "safeguard": {
       "title": "Safeguard",
@@ -345,5 +439,297 @@
     "zebra": "Zebra",
     "border": "Border",
     "headerBackground": "Header BG"
+  },
+  "systemManage": {
+    "common": {
+      "index": "No.",
+      "createTime": "Created At",
+      "updateTime": "Updated At",
+      "remark": "Remark",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "selectStatus": "Please select status"
+    },
+    "user": {
+      "add": "Add User",
+      "addDialog": "Add User",
+      "editDialog": "Edit User",
+      "user": "User",
+      "userName": "Username",
+      "phone": "Phone",
+      "email": "Email",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "role": "Role",
+      "org": "Organization",
+      "offline": "Offline",
+      "abnormal": "Abnormal",
+      "deleteTitle": "Delete User",
+      "deleteConfirm": "Delete this user? This will logically delete the account. To temporarily stop access, use Disable instead.",
+      "statusConfirm": "{action} this user?",
+      "statusTitle": "{action} User",
+      "statusSuccess": "{action} successfully",
+      "placeholders": {
+        "userName": "Please enter username",
+        "phone": "Please enter phone",
+        "email": "Please enter email",
+        "org": "Please select organization",
+        "role": "Please select role",
+        "gender": "Please select gender"
+      }
+    },
+    "role": {
+      "add": "Add Role",
+      "roleId": "Role ID",
+      "roleName": "Role Name",
+      "roleCode": "Role Code",
+      "description": "Description",
+      "enabled": "Role Status",
+      "permission": "Menu Permission",
+      "dataScope": "Data Scope",
+      "edit": "Edit Role",
+      "delete": "Delete Role",
+      "deleteConfirm": "Delete role \"{name}\"? This cannot be undone.",
+      "cancelDelete": "Delete canceled",
+      "dateRange": "Created At",
+      "dateRangePlaceholder": "Please select date range",
+      "rangeSeparator": "To",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "today": "Today",
+      "lastWeek": "Last 7 days",
+      "lastMonth": "Last 30 days",
+      "placeholders": {
+        "roleName": "Please enter role name",
+        "roleCode": "Please enter role code",
+        "description": "Please enter description"
+      }
+    },
+    "config": {
+      "add": "Add Config",
+      "edit": "Edit Config",
+      "configKey": "Config Key",
+      "configValue": "Config Value",
+      "description": "Description",
+      "editable": "Editable",
+      "deleteConfirm": "Delete config \"{name}\"?",
+      "placeholders": {
+        "configKey": "Please enter config key",
+        "configValue": "Please enter config value"
+      }
+    },
+    "sensitiveWord": {
+      "add": "Add Sensitive Word",
+      "edit": "Edit Sensitive Word",
+      "word": "Sensitive Word",
+      "matchType": "Match Type",
+      "contains": "Contains",
+      "enabledStatus": "Enabled",
+      "deleteConfirm": "Delete sensitive word \"{name}\"?",
+      "placeholders": {
+        "word": "Please enter sensitive word"
+      },
+      "rules": {
+        "max": "Sensitive word cannot exceed 100 characters"
+      }
+    },
+    "org": {
+      "add": "Add Organization",
+      "edit": "Edit Organization",
+      "parent": "Parent Org",
+      "rootPlaceholder": "Leave empty to create a root organization",
+      "root": "Root Org",
+      "orgName": "Org Name",
+      "orgCode": "Org Code",
+      "orgType": "Org Type",
+      "sort": "Sort",
+      "enabled": "Enabled",
+      "keyword": "Keyword",
+      "group": "Group",
+      "dept": "Department",
+      "club": "Club",
+      "merchant": "Merchant",
+      "stopped": "Stopped",
+      "deleteConfirm": "Delete organization \"{name}\"?",
+      "placeholders": {
+        "orgName": "Please enter organization name",
+        "orgCode": "Please enter organization code"
+      }
+    },
+    "menu": {
+      "add": "Add Menu",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "menuName": "Menu Name",
+      "routePath": "Route Path",
+      "menuType": "Menu Type",
+      "route": "Route",
+      "permissionCode": "Permission Code",
+      "editTime": "Edited At",
+      "addPermission": "Add Permission",
+      "permissionCount": "{count} permission codes",
+      "types": {
+        "button": "Button",
+        "directory": "Directory",
+        "iframe": "Iframe",
+        "menu": "Menu",
+        "external": "External Link",
+        "unknown": "Unknown"
+      },
+      "deleteMenuConfirm": "Delete this menu? This cannot be undone.",
+      "deletePermissionConfirm": "Delete this permission? This cannot be undone.",
+      "fetchFailed": "Failed to load menus",
+      "deleteFailed": "Delete failed"
+    },
+    "roleDialog": {
+      "add": "Add Role",
+      "edit": "Edit Role",
+      "description": "Description",
+      "enabled": "Enabled",
+      "nameLength": "Length must be 2 to 20 characters",
+      "codeLength": "Length must be 2 to 50 characters",
+      "updateSuccess": "Updated successfully",
+      "validateFailed": "Form validation failed",
+      "permissionTitle": "Menu Permission",
+      "savePermissionSuccess": "Permissions saved",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "selectAll": "Select All",
+      "unselectAll": "Unselect All"
+    },
+    "menuDialog": {
+      "menu": "Menu",
+      "button": "Button",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "menuNameRequired": "Please enter menu name",
+      "nameLength": "Length must be 2 to 20 characters",
+      "routeRequired": "Please enter route path",
+      "permissionCodeRequired": "Please enter permission code",
+      "permissionNameRequired": "Please enter permission name",
+      "menuType": "Menu Type",
+      "menuName": "Menu Name",
+      "routePath": "Route Path",
+      "routeTooltip": "Top-level menu: absolute path starting with /, such as /dashboard\nNested menu: relative path, such as console or user",
+      "routePlaceholder": "Example: /dashboard or console",
+      "permissionCode": "Permission Code",
+      "permissionCodePlaceholder": "Example: User",
+      "componentPath": "Component Path",
+      "componentTooltip": "Top-level parent menu: use /index/index\nPage: use component path, such as /system/user\nDirectory menu: leave empty",
+      "componentPlaceholder": "Example: /system/user or empty",
+      "icon": "Icon",
+      "iconPlaceholder": "Example: ri:user-line",
+      "rolePermission": "Role Permission",
+      "rolePermissionTooltip": "Frontend permission mode only: configure role codes such as R_SUPER or R_ADMIN\nBackend permission mode: not required",
+      "rolePermissionPlaceholder": "Press Enter after role code, e.g. R_SUPER",
+      "menuSort": "Menu Sort",
+      "externalLink": "External Link",
+      "badge": "Badge Text",
+      "activePath": "Active Path",
+      "activePathTooltip": "For hidden pages such as details pages, set parent menu highlight path",
+      "activePathPlaceholder": "Example: /system/user",
+      "enabled": "Enabled",
+      "keepAlive": "Keep Alive",
+      "hideMenu": "Hide Menu",
+      "iframe": "Iframe",
+      "showBadge": "Show Badge",
+      "fixedTab": "Fixed Tab",
+      "hideTab": "Hide Tab",
+      "fullPage": "Full Page",
+      "permissionName": "Permission Name",
+      "permissionNamePlaceholder": "Example: Add, Edit, Delete",
+      "permissionSort": "Permission Sort",
+      "editMenu": "Edit Menu",
+      "newMenu": "New Menu",
+      "editButton": "Edit Button",
+      "newButton": "New Button",
+      "submitSuccess": "{action} successfully",
+      "validateFailed": "Form validation failed. Please check input."
+    },
+    "dataScope": {
+      "title": "Data Scope",
+      "scope": "Scope",
+      "orgScope": "Organization Scope",
+      "all": "All Data",
+      "self": "Self Data",
+      "currentOrg": "Current Org",
+      "currentOrgAndSub": "Current Org And Sub",
+      "customOrg": "Custom Org",
+      "success": "Data scope saved"
+    }
+  },
+  "socialChat": {
+    "searchUser": "Search users",
+    "tabs": {
+      "conversations": "Chats",
+      "following": "Following",
+      "followers": "Followers",
+      "blocks": "Blocked"
+    },
+    "relation": {
+      "mutual": "Mutual",
+      "following": "Following",
+      "blocked": "Blocked",
+      "blockedByMe": "Blocked",
+      "blockedMe": "Blocked by user",
+      "mutualFull": "Mutual following",
+      "iFollowed": "Following",
+      "followedBy": "Follows you",
+      "none": "Not followed"
+    },
+    "actions": {
+      "follow": "Follow",
+      "unfollow": "Unfollow",
+      "block": "Block",
+      "unblock": "Unblock",
+      "send": "Send"
+    },
+    "empty": {
+      "data": "No data",
+      "message": "No messages yet",
+      "selectUser": "Select a user to start chatting"
+    },
+    "quota": {
+      "blockedByMe": "You blocked this user. Private messages disabled.",
+      "blockedMe": "This user blocked you. Private messages disabled.",
+      "unlimited": "Mutual following. Messages are unrestricted.",
+      "remaining": "{count} private messages remaining before the user replies"
+    },
+    "inputPlaceholder": "Type a message",
+    "imageMessage": "Image message",
+    "file": "Attachment",
+    "noMessage": "No messages",
+    "imagePreview": "[Image]",
+    "filePreview": "[Attachment] {name}",
+    "errors": {
+      "sensitive": "Content contains sensitive words: {words}",
+      "sendFailed": "Failed to send message",
+      "imageTooLarge": "Image size cannot exceed 5MB",
+      "imageOnly": "Please select an image file",
+      "fileTooLarge": "Attachment size cannot exceed 50MB",
+      "fileFailed": "Failed to send file"
+    }
+  },
+  "userCenter": {
+    "title": "Profile",
+    "subtitle": "Profile and account information",
+    "roles": "Roles",
+    "basic": "Basic Settings",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "userName": "Username",
+    "userId": "User ID",
+    "email": "Email",
+    "avatar": "Avatar URL",
+    "nickname": "Nickname",
+    "empty": "Not provided",
+    "noRole": "No roles",
+    "save": "Save Changes",
+    "operation": "Operation",
+    "emailPlaceholder": "Please enter email",
+    "avatarPlaceholder": "Please enter avatar URL",
+    "nicknamePlaceholder": "Please enter nickname",
+    "success": "Profile updated"
   }
 }

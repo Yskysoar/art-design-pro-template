@@ -16,6 +16,33 @@ export type AppRouteRecordRaw = RouteRecordRaw & {
   hidden?: boolean
 }
 
+/** 兼容后端历史菜单标题，避免面包屑、标签页和双列菜单出现中英混排 */
+const MENU_TITLE_ALIASES: Record<string, string> = {
+  Dashboard: 'menus.dashboard.title',
+  Console: 'menus.dashboard.console',
+  Article: 'menus.article.title',
+  ArticleList: 'menus.article.articleList',
+  ArticlePublish: 'menus.article.articlePublish',
+  ArticleDetail: 'menus.article.articleDetail',
+  'System Settings': 'menus.system.title',
+  System: 'menus.system.title',
+  'User Manage': 'menus.system.user',
+  User: 'menus.system.user',
+  'Role Manage': 'menus.system.role',
+  Role: 'menus.system.role',
+  'Menu Manage': 'menus.system.menu',
+  Menus: 'menus.system.menu',
+  'Org Manage': 'menus.system.org',
+  Org: 'menus.system.org',
+  'Config Manage': 'menus.system.config',
+  Config: 'menus.system.config',
+  'Sensitive Words': 'menus.system.sensitiveWord',
+  SensitiveWord: 'menus.system.sensitiveWord',
+  组织管理: 'menus.system.org',
+  配置管理: 'menus.system.config',
+  敏感词库: 'menus.system.sensitiveWord'
+}
+
 /** 顶部进度条配置 */
 export const configureNProgress = () => {
   NProgress.configure({
@@ -46,16 +73,18 @@ export const setPageTitle = (to: RouteLocationNormalized): void => {
  */
 export const formatMenuTitle = (title: string): string => {
   if (title) {
-    if (title.startsWith('menus.')) {
+    const i18nKey = MENU_TITLE_ALIASES[title] || title
+
+    if (i18nKey.startsWith('menus.')) {
       // 使用 te() 方法检查翻译键值是否存在，避免控制台警告
-      if (i18n.global.te(title)) {
-        return $t(title)
+      if (i18n.global.te(i18nKey)) {
+        return $t(i18nKey)
       } else {
         // 如果翻译不存在，返回键值的最后部分作为fallback
-        return title.split('.').pop() || title
+        return i18nKey.split('.').pop() || i18nKey
       }
     }
-    return title
+    return i18nKey
   }
   return ''
 }

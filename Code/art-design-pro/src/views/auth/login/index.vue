@@ -53,12 +53,12 @@
                 <ElInput
                   class="custom-height"
                   v-model.trim="formData.captchaCode"
-                  placeholder="请输入验证码"
+                  :placeholder="$t('login.placeholder.captcha')"
                   maxlength="4"
                 />
                 <button class="captcha-image" type="button" @click="loadCaptcha">
                   <img v-if="captchaImage" :src="captchaImage" alt="captcha" />
-                  <span v-else>刷新</span>
+                  <span v-else>{{ $t('login.captcha.refresh') }}</span>
                 </button>
               </div>
             </ElFormItem>
@@ -138,15 +138,15 @@
     {
       key: 'admin',
       label: t('login.roles.admin'),
-      userName: 'Admin',
-      password: '123456',
-      roles: ['R_ADMIN']
+      userName: 'moderator',
+      password: 'admin123',
+      roles: ['R_CONTENT_ADMIN']
     },
     {
       key: 'user',
       label: t('login.roles.user'),
-      userName: 'User',
-      password: '123456',
+      userName: 'designer',
+      password: 'admin123',
       roles: ['R_USER']
     }
   ])
@@ -169,8 +169,8 @@
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
     password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
     captchaCode: [
-      { required: true, message: '请输入验证码', trigger: 'blur' },
-      { min: 4, max: 4, message: '验证码为4位', trigger: 'blur' }
+      { required: true, message: t('login.placeholder.captcha'), trigger: 'blur' },
+      { min: 4, max: 4, message: t('login.rule.captchaLength'), trigger: 'blur' }
     ]
   }))
 

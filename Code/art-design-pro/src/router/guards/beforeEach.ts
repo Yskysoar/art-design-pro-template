@@ -435,7 +435,7 @@ function normalizeBackendMenus(items: AppRouteRecord[]): void {
           component: '/article/comment',
           meta: {
             ...sensitiveRoute.meta,
-            title: '敏感词库',
+            title: 'menus.system.sensitiveWord',
             icon: 'ri:shield-keyhole-line',
             keepAlive: false,
             authList: [{ title: '管理敏感词', authMark: 'system:sensitive-word' }]

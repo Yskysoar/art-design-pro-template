@@ -22,8 +22,28 @@
       "userCenter": "个人中心",
       "docs": "使用文档",
       "github": "Github",
+      "unnamed": "未命名用户",
+      "emptyEmail": "未填写邮箱",
+      "changePassword": "修改密码",
       "lockScreen": "锁定屏幕",
-      "logout": "退出登录"
+      "logout": "退出登录",
+      "password": {
+        "title": "修改密码",
+        "oldPassword": "当前密码",
+        "newPassword": "新密码",
+        "confirmPassword": "确认新密码",
+        "captcha": "验证码",
+        "refresh": "刷新",
+        "submit": "确认修改",
+        "success": "密码已修改，请使用新密码重新登录",
+        "mismatch": "两次输入的新密码不一致",
+        "oldRequired": "请输入当前密码",
+        "newRequired": "请输入新密码",
+        "confirmRequired": "请再次输入新密码",
+        "captchaRequired": "请输入验证码",
+        "passwordLength": "密码长度为 6 到 100 位",
+        "captchaLength": "验证码为4位"
+      }
     },
     "guide": {
       "title": "点击这里查看",
@@ -36,6 +56,25 @@
     "tips": "提示",
     "cancel": "取消",
     "confirm": "确定",
+    "submit": "提交",
+    "save": "保存",
+    "add": "新增",
+    "edit": "编辑",
+    "delete": "删除",
+    "operation": "操作",
+    "status": "状态",
+    "enabled": "启用",
+    "disabled": "禁用",
+    "unknown": "未知",
+    "yes": "是",
+    "no": "否",
+    "success": {
+      "add": "新增成功",
+      "update": "更新成功",
+      "delete": "删除成功",
+      "status": "状态已更新"
+    },
+    "confirmDeleteTitle": "删除确认",
     "logOutTips": "您是否要退出登录?"
   },
   "search": {
@@ -48,11 +87,20 @@
   "setting": {
     "menuType": {
       "title": "菜单布局",
-      "list": ["垂直", "水平", "混合", "双列"]
+      "list": [
+        "垂直",
+        "水平",
+        "混合",
+        "双列"
+      ]
     },
     "theme": {
       "title": "主题风格",
-      "list": ["浅色", "深色", "系统"]
+      "list": [
+        "浅色",
+        "深色",
+        "系统"
+      ]
     },
     "menu": {
       "title": "菜单风格"
@@ -62,11 +110,17 @@
     },
     "box": {
       "title": "盒子样式",
-      "list": ["边框", "阴影"]
+      "list": [
+        "边框",
+        "阴影"
+      ]
     },
     "container": {
       "title": "容器宽度",
-      "list": ["铺满", "定宽"]
+      "list": [
+        "铺满",
+        "定宽"
+      ]
     },
     "basics": {
       "title": "基础配置",
@@ -112,8 +166,14 @@
   "notice": {
     "title": "通知",
     "btnRead": "标为已读",
-    "bar": ["通知", "消息", "代办"],
-    "text": ["暂无"],
+    "bar": [
+      "通知",
+      "消息",
+      "代办"
+    ],
+    "text": [
+      "暂无"
+    ],
     "viewAll": "查看全部"
   },
   "worktab": {
@@ -142,7 +202,14 @@
     "placeholder": {
       "username": "请输入账号",
       "password": "请输入密码",
+      "captcha": "请输入验证码",
       "slider": "请拖动滑块完成验证"
+    },
+    "captcha": {
+      "refresh": "刷新"
+    },
+    "rule": {
+      "captchaLength": "验证码为4位"
     },
     "sliderText": "按住滑块拖动",
     "sliderSuccessText": "验证成功",
@@ -160,6 +227,22 @@
     "title": "忘记密码？",
     "subTitle": "输入您的电子邮件来重置您的密码",
     "placeholder": "请输入您的电子邮件",
+    "placeholders": {
+      "userName": "请输入账号",
+      "newPassword": "请输入新密码",
+      "confirmPassword": "请再次输入新密码",
+      "captcha": "请输入验证码"
+    },
+    "captcha": {
+      "refresh": "刷新"
+    },
+    "rule": {
+      "confirmPasswordRequired": "请再次输入新密码",
+      "passwordMismatch": "两次输入的密码不一致",
+      "passwordLength": "密码长度不能少于 6 位",
+      "captchaLength": "验证码为4位"
+    },
+    "success": "密码已重置，请使用新密码登录",
     "submitBtnText": "提交",
     "backBtnText": "返回"
   },
@@ -168,16 +251,24 @@
     "subTitle": "欢迎加入我们，请填写以下信息完成注册",
     "placeholder": {
       "username": "请输入账号",
+      "nickname": "请输入昵称",
       "password": "请输入密码",
-      "confirmPassword": "请再次输入密码"
+      "confirmPassword": "请再次输入密码",
+      "captcha": "请输入验证码"
     },
     "rule": {
       "confirmPasswordRequired": "请再次输入密码",
       "passwordMismatch": "两次输入密码不一致!",
       "usernameLength": "长度在 3 到 20 个字符",
+      "nicknameLength": "昵称长度在 2 到 20 个字符",
       "passwordLength": "密码长度不能小于6位",
+      "captchaLength": "验证码为4位",
       "agreementRequired": "请同意隐私协议"
     },
+    "captcha": {
+      "refresh": "刷新"
+    },
+    "success": "注册成功",
     "agreeText": "我同意",
     "privacyPolicy": "《隐私政策》",
     "submitBtnText": "注册",
@@ -203,10 +294,10 @@
     "evening": "晚上好！"
   },
   "exceptionPage": {
-    "gohome": "返回首页",
     "403": "抱歉，您无权访问该页面",
     "404": "抱歉，您访问的页面不存在",
-    "500": "抱歉，服务器出错了"
+    "500": "抱歉，服务器出错了",
+    "gohome": "返回首页"
   },
   "menus": {
     "login": {
@@ -293,6 +384,9 @@
       "role": "角色管理",
       "userCenter": "个人中心",
       "menu": "菜单管理",
+      "org": "组织管理",
+      "config": "配置管理",
+      "sensitiveWord": "敏感词库",
       "nested": "嵌套菜单",
       "menu1": "菜单1",
       "menu2": "菜单2",
@@ -316,6 +410,277 @@
       "document": "官方文档",
       "liteVersion": "精简版本",
       "oldVersion": "v2.6.1 版本"
+    }
+  },
+  "systemManage": {
+    "common": {
+      "index": "序号",
+      "createTime": "创建日期",
+      "updateTime": "更新时间",
+      "remark": "备注",
+      "enabled": "启用",
+      "disabled": "禁用",
+      "selectStatus": "请选择状态"
+    },
+    "user": {
+      "add": "新增用户",
+      "addDialog": "添加用户",
+      "editDialog": "编辑用户",
+      "user": "用户",
+      "userName": "用户名",
+      "phone": "手机号",
+      "email": "邮箱",
+      "gender": "性别",
+      "male": "男",
+      "female": "女",
+      "role": "角色",
+      "org": "组织",
+      "offline": "离线",
+      "abnormal": "异常",
+      "deleteTitle": "删除用户",
+      "deleteConfirm": "确定要删除该用户吗？该操作会逻辑删除用户；如需临时停用账号，请使用禁用按钮。",
+      "statusConfirm": "确定要{action}该用户吗？",
+      "statusTitle": "{action}用户",
+      "statusSuccess": "{action}成功",
+      "placeholders": {
+        "userName": "请输入用户名",
+        "phone": "请输入手机号",
+        "email": "请输入邮箱",
+        "org": "请选择组织",
+        "role": "请选择角色",
+        "gender": "请选择性别"
+      }
+    },
+    "role": {
+      "add": "新增角色",
+      "roleId": "角色ID",
+      "roleName": "角色名称",
+      "roleCode": "角色编码",
+      "description": "角色描述",
+      "enabled": "角色状态",
+      "permission": "菜单权限",
+      "dataScope": "数据权限",
+      "edit": "编辑角色",
+      "delete": "删除角色",
+      "deleteConfirm": "确定删除角色“{name}”吗？此操作不可恢复！",
+      "cancelDelete": "已取消删除",
+      "dateRange": "创建日期",
+      "dateRangePlaceholder": "请选择日期范围",
+      "rangeSeparator": "至",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "today": "今日",
+      "lastWeek": "最近一周",
+      "lastMonth": "最近一个月",
+      "placeholders": {
+        "roleName": "请输入角色名称",
+        "roleCode": "请输入角色编码",
+        "description": "请输入角色描述"
+      }
+    },
+    "config": {
+      "add": "新增配置",
+      "edit": "编辑配置",
+      "configKey": "配置键",
+      "configValue": "配置值",
+      "description": "说明",
+      "editable": "可编辑",
+      "deleteConfirm": "确定删除配置“{name}”吗？",
+      "placeholders": {
+        "configKey": "请输入配置键",
+        "configValue": "请输入配置值"
+      }
+    },
+    "sensitiveWord": {
+      "add": "新增敏感词",
+      "edit": "编辑敏感词",
+      "word": "敏感词",
+      "matchType": "匹配方式",
+      "contains": "包含匹配",
+      "enabledStatus": "启用状态",
+      "deleteConfirm": "确定删除敏感词“{name}”吗？",
+      "placeholders": {
+        "word": "请输入敏感词"
+      },
+      "rules": {
+        "max": "敏感词不能超过100字"
+      }
+    },
+    "org": {
+      "add": "新增组织",
+      "edit": "编辑组织",
+      "parent": "上级组织",
+      "rootPlaceholder": "不选择则作为根组织",
+      "root": "根组织",
+      "orgName": "组织名称",
+      "orgCode": "组织编码",
+      "orgType": "组织类型",
+      "sort": "排序",
+      "enabled": "是否启用",
+      "keyword": "关键词",
+      "group": "分组",
+      "dept": "部门",
+      "club": "社团",
+      "merchant": "商家",
+      "stopped": "停用",
+      "deleteConfirm": "确定删除组织“{name}”吗？",
+      "placeholders": {
+        "orgName": "请输入组织名称",
+        "orgCode": "请输入组织编码"
+      }
+    },
+    "menu": {
+      "add": "添加菜单",
+      "expand": "展开",
+      "collapse": "收起",
+      "menuName": "菜单名称",
+      "routePath": "路由地址",
+      "menuType": "菜单类型",
+      "route": "路由",
+      "permissionCode": "权限标识",
+      "editTime": "编辑时间",
+      "addPermission": "新增权限",
+      "permissionCount": "{count} 个权限标识",
+      "types": {
+        "button": "按钮",
+        "directory": "目录",
+        "iframe": "内嵌",
+        "menu": "菜单",
+        "external": "外链",
+        "unknown": "未知"
+      },
+      "deleteMenuConfirm": "确定要删除该菜单吗？删除后无法恢复",
+      "deletePermissionConfirm": "确定要删除该权限吗？删除后无法恢复",
+      "fetchFailed": "获取菜单失败",
+      "deleteFailed": "删除失败"
+    },
+    "roleDialog": {
+      "add": "新增角色",
+      "edit": "编辑角色",
+      "description": "描述",
+      "enabled": "启用",
+      "nameLength": "长度在 2 到 20 个字符",
+      "codeLength": "长度在 2 到 50 个字符",
+      "updateSuccess": "修改成功",
+      "validateFailed": "表单验证失败",
+      "permissionTitle": "菜单权限",
+      "savePermissionSuccess": "权限保存成功",
+      "expandAll": "全部展开",
+      "collapseAll": "全部收起",
+      "selectAll": "全部选择",
+      "unselectAll": "取消全选"
+    },
+    "menuDialog": {
+      "menu": "菜单",
+      "button": "按钮",
+      "cancel": "取消",
+      "confirm": "确定",
+      "menuNameRequired": "请输入菜单名称",
+      "nameLength": "长度在 2 到 20 个字符",
+      "routeRequired": "请输入路由地址",
+      "permissionCodeRequired": "请输入权限标识",
+      "permissionNameRequired": "请输入权限名称",
+      "menuType": "菜单类型",
+      "menuName": "菜单名称",
+      "routePath": "路由地址",
+      "routeTooltip": "一级菜单：以 / 开头的绝对路径（如 /dashboard）\n二级及以下：相对路径（如 console、user）",
+      "routePlaceholder": "如：/dashboard 或 console",
+      "permissionCode": "权限标识",
+      "permissionCodePlaceholder": "如：User",
+      "componentPath": "组件路径",
+      "componentTooltip": "一级父级菜单：填写 /index/index\n具体页面：填写组件路径（如 /system/user）\n目录菜单：留空",
+      "componentPlaceholder": "如：/system/user 或留空",
+      "icon": "图标",
+      "iconPlaceholder": "如：ri:user-line",
+      "rolePermission": "角色权限",
+      "rolePermissionTooltip": "仅用于前端权限模式：配置角色标识（如 R_SUPER、R_ADMIN）\n后端权限模式：无需配置",
+      "rolePermissionPlaceholder": "输入角色标识后按回车，如：R_SUPER",
+      "menuSort": "菜单排序",
+      "externalLink": "外部链接",
+      "badge": "文本徽章",
+      "activePath": "激活路径",
+      "activePathTooltip": "用于详情页等隐藏菜单，指定高亮显示的父级菜单路径\n例如：用户详情页高亮显示“用户管理”菜单",
+      "activePathPlaceholder": "如：/system/user",
+      "enabled": "是否启用",
+      "keepAlive": "页面缓存",
+      "hideMenu": "隐藏菜单",
+      "iframe": "是否内嵌",
+      "showBadge": "显示徽章",
+      "fixedTab": "固定标签",
+      "hideTab": "标签隐藏",
+      "fullPage": "全屏页面",
+      "permissionName": "权限名称",
+      "permissionNamePlaceholder": "如：新增、编辑、删除",
+      "permissionSort": "权限排序",
+      "editMenu": "编辑菜单",
+      "newMenu": "新建菜单",
+      "editButton": "编辑按钮",
+      "newButton": "新建按钮",
+      "submitSuccess": "{action}成功",
+      "validateFailed": "表单校验失败，请检查输入"
+    },
+    "dataScope": {
+      "title": "数据权限",
+      "scope": "权限范围",
+      "orgScope": "组织范围",
+      "all": "全部数据",
+      "self": "本人数据",
+      "currentOrg": "当前组织",
+      "currentOrgAndSub": "当前组织及下级",
+      "customOrg": "自定义组织",
+      "success": "数据权限保存成功"
+    }
+  },
+  "socialChat": {
+    "searchUser": "搜索用户",
+    "tabs": {
+      "conversations": "会话",
+      "following": "关注",
+      "followers": "粉丝",
+      "blocks": "拉黑"
+    },
+    "relation": {
+      "mutual": "互关",
+      "following": "已关注",
+      "blocked": "已拉黑",
+      "blockedByMe": "已拉黑",
+      "blockedMe": "对方已拉黑你",
+      "mutualFull": "互相关注",
+      "iFollowed": "我已关注",
+      "followedBy": "对方关注了你",
+      "none": "未关注"
+    },
+    "actions": {
+      "follow": "关注",
+      "unfollow": "取消关注",
+      "block": "拉黑",
+      "unblock": "解除拉黑",
+      "send": "发送"
+    },
+    "empty": {
+      "data": "暂无数据",
+      "message": "还没有消息",
+      "selectUser": "选择一个用户开始聊天"
+    },
+    "quota": {
+      "blockedByMe": "你已拉黑对方，不能发送私信",
+      "blockedMe": "对方已拉黑你，不能发送私信",
+      "unlimited": "已互相关注，可自由私信",
+      "remaining": "对方回复前还可发送 {count} 条私信"
+    },
+    "inputPlaceholder": "输入消息",
+    "imageMessage": "图片消息",
+    "file": "附件",
+    "noMessage": "暂无消息",
+    "imagePreview": "[图片]",
+    "filePreview": "[附件] {name}",
+    "errors": {
+      "sensitive": "内容包含敏感词：{words}",
+      "sendFailed": "消息发送失败",
+      "imageTooLarge": "图片大小不能超过5MB",
+      "imageOnly": "请选择图片文件",
+      "fileTooLarge": "附件大小不能超过50MB",
+      "fileFailed": "文件发送失败"
     }
   },
   "table": {
@@ -345,5 +710,26 @@
     "zebra": "斑马纹",
     "border": "边框",
     "headerBackground": "表头背景"
+  },
+  "userCenter": {
+    "title": "个人中心页面",
+    "subtitle": "个人资料与账号信息",
+    "roles": "角色",
+    "basic": "基本设置",
+    "edit": "编辑",
+    "cancel": "取消",
+    "userName": "用户名",
+    "userId": "用户 ID",
+    "email": "邮箱",
+    "avatar": "头像地址",
+    "nickname": "昵称",
+    "empty": "未填写",
+    "noRole": "暂无角色",
+    "save": "保存修改",
+    "operation": "操作",
+    "emailPlaceholder": "请输入邮箱",
+    "avatarPlaceholder": "请输入头像 URL",
+    "nicknamePlaceholder": "请输入昵称",
+    "success": "个人资料已更新"
   }
 }

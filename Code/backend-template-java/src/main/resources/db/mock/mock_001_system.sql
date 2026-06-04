@@ -29,11 +29,15 @@ INSERT INTO sys_user (
 )
 VALUES
   (1, 'admin', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '系统管理员', '男', '13800000001', 'admin@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
-  (2, 'moderator', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '内容版主', '男', '13800000002', 'moderator@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
-  (3, 'editor', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '文章编辑', '女', '13800000003', 'editor@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
-  (4, 'operator', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '运营同学', '女', '13800000004', 'operator@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
-  (5, 'designer', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '设计访客', '男', '13800000005', 'designer@example.com', '/src/assets/images/avatar/avatar.webp', 'NORMAL', 'system', 'system'),
-  (6, 'disabled_user', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '停用用户', '女', '13800000006', 'disabled@example.com', '/src/assets/images/avatar/avatar.webp', 'DISABLED', 'system', 'system');
+  (2, 'moderator', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '内容版主', '男', '13800000002', 'moderator@example.com', '/src/assets/images/avatar/avatar1.webp', 'NORMAL', 'system', 'system'),
+  (3, 'editor', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '文章编辑', '女', '13800000003', 'editor@example.com', '/src/assets/images/avatar/avatar2.webp', 'NORMAL', 'system', 'system'),
+  (4, 'operator', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '运营同学', '女', '13800000004', 'operator@example.com', '/src/assets/images/avatar/avatar3.webp', 'NORMAL', 'system', 'system'),
+  (5, 'designer', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '设计访客', '男', '13800000005', 'designer@example.com', '/src/assets/images/avatar/avatar4.webp', 'NORMAL', 'system', 'system'),
+  (6, 'disabled_user', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '停用用户', '女', '13800000006', 'disabled@example.com', '/src/assets/images/avatar/avatar5.webp', 'DISABLED', 'system', 'system'),
+  (7, 'photographer', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '视觉摄影师', '女', '13800000007', 'photo@example.com', '/src/assets/images/avatar/avatar6.webp', 'NORMAL', 'system', 'system'),
+  (8, 'producter', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '产品策划', '男', '13800000008', 'product@example.com', '/src/assets/images/avatar/avatar7.webp', 'NORMAL', 'system', 'system'),
+  (9, 'tester', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '体验测试员', '女', '13800000009', 'tester@example.com', '/src/assets/images/avatar/avatar8.webp', 'NORMAL', 'system', 'system'),
+  (10, 'guest_writer', '$2a$10$rfvyC6RCEizuD33WiIVFKeSD4liX0oGZQiICwxVUowzZcov3EJuk2', '特约作者', '男', '13800000010', 'writer@example.com', '/src/assets/images/avatar/avatar9.webp', 'NORMAL', 'system', 'system');
 
 INSERT INTO sys_role (
   id, role_name, role_code, role_level, role_sort, role_type, access_scope,
@@ -81,10 +85,10 @@ VALUES
   (7, 0, 'DIR', '/system', 'System', '/index/index', NULL, 'menus.system.title', 'ri:user-3-line', 'ADMIN', NULL, 0, 0, 0, 0, NULL, 30, 1, 'system', 'system'),
   (9, 7, 'MENU', 'user', 'User', '/system/user', NULL, 'menus.system.user', 'ri:user-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 1, 1, 'system', 'system'),
   (10, 7, 'MENU', 'role', 'Role', '/system/role', NULL, 'menus.system.role', 'ri:user-settings-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 2, 1, 'system', 'system'),
-  (11, 7, 'MENU', 'org', 'Org', '/system/org', NULL, '组织管理', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 3, 1, 'system', 'system'),
-  (12, 7, 'MENU', 'config', 'Config', '/system/config', NULL, '配置管理', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
+  (11, 7, 'MENU', 'org', 'Org', '/system/org', NULL, 'menus.system.org', 'ri:organization-chart', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 3, 1, 'system', 'system'),
+  (12, 7, 'MENU', 'config', 'Config', '/system/config', NULL, 'menus.system.config', 'ri:settings-3-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 4, 1, 'system', 'system'),
   (13, 7, 'MENU', 'menu', 'Menus', '/system/menu', NULL, 'menus.system.menu', 'ri:menu-line', 'ADMIN', NULL, 1, 0, 0, 0, NULL, 5, 1, 'system', 'system'),
-  (14, 7, 'MENU', 'sensitive-word', 'SensitiveWord', '/article/comment', NULL, '敏感词库', 'ri:shield-keyhole-line', 'ADMIN', 'system:sensitive-word', 0, 0, 0, 0, NULL, 6, 1, 'system', 'system'),
+  (14, 7, 'MENU', 'sensitive-word', 'SensitiveWord', '/article/comment', NULL, 'menus.system.sensitiveWord', 'ri:shield-keyhole-line', 'ADMIN', 'system:sensitive-word', 0, 0, 0, 0, NULL, 6, 1, 'system', 'system'),
   (15, 7, 'MENU', 'user-center', 'UserCenter', '/system/user-center', NULL, 'menus.system.userCenter', 'ri:user-line', 'BOTH', NULL, 1, 0, 1, 1, NULL, 99, 1, 'system', 'system'),
   (16, 9, 'BUTTON', NULL, 'UserAdd', NULL, NULL, '新增用户', NULL, 'ADMIN', 'system:user:add', 0, 0, 1, 1, NULL, 1, 1, 'system', 'system'),
   (17, 9, 'BUTTON', NULL, 'UserEdit', NULL, NULL, '编辑用户', NULL, 'ADMIN', 'system:user:edit', 0, 0, 1, 1, NULL, 2, 1, 'system', 'system'),
@@ -107,7 +111,11 @@ VALUES
   (3, 4),
   (4, 3),
   (5, 5),
-  (6, 5);
+  (6, 5),
+  (7, 5),
+  (8, 5),
+  (9, 5),
+  (10, 4);
 
 INSERT INTO sys_user_org (user_id, org_id, primary_org)
 VALUES
@@ -118,7 +126,11 @@ VALUES
   (4, 5, 1),
   (4, 6, 0),
   (5, 7, 1),
-  (6, 8, 1);
+  (6, 8, 1),
+  (7, 7, 1),
+  (8, 5, 1),
+  (9, 6, 1),
+  (10, 3, 1);
 
 INSERT INTO sys_role_org (role_id, org_id)
 VALUES

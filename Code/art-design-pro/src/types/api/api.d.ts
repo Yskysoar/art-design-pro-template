@@ -77,6 +77,7 @@ declare namespace Api {
 
     interface RegisterParams {
       userName: string
+      nickName: string
       password: string
       captchaId: string
       captchaCode: string
@@ -487,8 +488,13 @@ declare namespace Api {
       receiverId: number
       senderName: string
       senderAvatar?: string
-      content: string
-      messageType: 'TEXT'
+      content?: string
+      messageType: 'TEXT' | 'IMAGE' | 'FILE'
+      fileId?: number
+      fileUrl?: string
+      fileName?: string
+      fileSize?: number
+      fileContentType?: string
       mine: boolean
       read: boolean
       createTime: string
@@ -506,7 +512,9 @@ declare namespace Api {
 
     interface SocialMessageSendParams {
       receiverId: number
-      content: string
+      messageType?: 'TEXT' | 'IMAGE' | 'FILE'
+      content?: string
+      fileId?: number
     }
 
     interface SocialUnreadCount {

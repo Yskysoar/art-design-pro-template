@@ -10,13 +10,13 @@
             :src="userAvatar"
             alt="avatar"
           />
-          <h2 class="mt-5 text-xl font-normal">{{ userInfo.userName || '未命名用户' }}</h2>
-          <p class="mt-5 text-sm">个人资料与账号信息</p>
+          <h2 class="mt-5 text-xl font-normal">{{ userInfo.userName || $t('topBar.user.unnamed') }}</h2>
+          <p class="mt-5 text-sm">{{ $t('userCenter.subtitle') }}</p>
 
           <div class="w-75 mx-auto mt-7.5 text-left">
             <div class="mt-2.5">
               <ArtSvgIcon icon="ri:mail-line" class="text-g-700" />
-              <span class="ml-2 text-sm">{{ userInfo.email || '未填写邮箱' }}</span>
+              <span class="ml-2 text-sm">{{ userInfo.email || $t('topBar.user.emptyEmail') }}</span>
             </div>
             <div class="mt-2.5">
               <ArtSvgIcon icon="ri:user-3-line" class="text-g-700" />
@@ -25,7 +25,7 @@
           </div>
 
           <div class="mt-10">
-            <h3 class="text-sm font-medium">角色</h3>
+            <h3 class="text-sm font-medium">{{ $t('userCenter.roles') }}</h3>
             <div class="flex flex-wrap justify-center mt-3.5">
               <div
                 v-for="item in userInfo.roles || []"
@@ -41,9 +41,9 @@
       <div class="flex-1 overflow-hidden max-md:w-full max-md:mt-3.5">
         <div class="art-card-sm">
           <div class="flex items-center justify-between p-4 border-b border-g-300">
-            <h1 class="text-xl font-normal">基本设置</h1>
+            <h1 class="text-xl font-normal">{{ $t('userCenter.basic') }}</h1>
             <ElButton size="small" :type="editing ? 'primary' : 'default'" @click="toggleEdit">
-              {{ editing ? '取消' : '编辑' }}
+              {{ editing ? $t('userCenter.cancel') : $t('userCenter.edit') }}
             </ElButton>
           </div>
 
@@ -56,32 +56,32 @@
             label-position="top"
           >
             <ElRow>
-              <ElFormItem label="用户名" prop="userName">
+              <ElFormItem :label="$t('userCenter.userName')" prop="userName">
                 <ElInput :model-value="userInfo.userName || ''" disabled />
               </ElFormItem>
-              <ElFormItem label="用户 ID" prop="userId" class="ml-5">
+              <ElFormItem :label="$t('userCenter.userId')" prop="userId" class="ml-5">
                 <ElInput :model-value="String(userInfo.userId || '')" disabled />
               </ElFormItem>
             </ElRow>
 
             <ElRow>
-              <ElFormItem label="邮箱" prop="email">
-                <ElInput v-model="form.email" :disabled="!editing" :placeholder="editing ? '请输入邮箱' : userInfo.email || '未填写'" />
+              <ElFormItem :label="$t('userCenter.email')" prop="email">
+                <ElInput v-model="form.email" :disabled="!editing" :placeholder="editing ? $t('userCenter.emailPlaceholder') : userInfo.email || $t('userCenter.empty')" />
               </ElFormItem>
-              <ElFormItem label="头像地址" prop="avatar" class="ml-5">
-                <ElInput v-model="form.avatar" :disabled="!editing" :placeholder="editing ? '请输入头像 URL' : userInfo.avatar || '未填写'" />
+              <ElFormItem :label="$t('userCenter.avatar')" prop="avatar" class="ml-5">
+                <ElInput v-model="form.avatar" :disabled="!editing" :placeholder="editing ? $t('userCenter.avatarPlaceholder') : userInfo.avatar || $t('userCenter.empty')" />
               </ElFormItem>
             </ElRow>
 
             <ElRow>
-              <ElFormItem label="昵称" prop="nickName">
-                <ElInput v-model="form.nickName" :disabled="!editing" :placeholder="editing ? '请输入昵称' : userInfo.userName || '未填写'" />
+              <ElFormItem :label="$t('userCenter.nickname')" prop="nickName">
+                <ElInput v-model="form.nickName" :disabled="!editing" :placeholder="editing ? $t('userCenter.nicknamePlaceholder') : userInfo.userName || $t('userCenter.empty')" />
               </ElFormItem>
             </ElRow>
 
-            <ElFormItem v-if="editing" label="操作">
-              <ElButton type="primary" :loading="saving" @click="saveProfile">保存修改</ElButton>
-              <ElButton :disabled="saving" @click="toggleEdit">取消</ElButton>
+            <ElFormItem v-if="editing" :label="$t('userCenter.operation')">
+              <ElButton type="primary" :loading="saving" @click="saveProfile">{{ $t('userCenter.save') }}</ElButton>
+              <ElButton :disabled="saving" @click="toggleEdit">{{ $t('common.cancel') }}</ElButton>
             </ElFormItem>
           </ElForm>
         </div>
@@ -95,13 +95,15 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import defaultAvatar from '@/assets/images/user/avatar.webp'
   import { fetchUpdateProfile } from '@/api/system-manage'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'UserCenter' })
+  const { t } = useI18n()
 
   const userStore = useUserStore()
   const userInfo = computed(() => userStore.getUserInfo)
   const userAvatar = computed(() => form.avatar || userInfo.value.avatar || defaultAvatar)
-  const roleText = computed(() => userInfo.value.roles?.join('、') || '暂无角色')
+  const roleText = computed(() => userInfo.value.roles?.join('、') || t('userCenter.noRole'))
   const ruleFormRef = ref<FormInstance>()
   const editing = ref(false)
   const saving = ref(false)
@@ -137,7 +139,7 @@
         userEmail: form.email || undefined,
         avatar: form.avatar || undefined
       })
-      ElMessage.success('个人资料已更新')
+      ElMessage.success(t('userCenter.success'))
       editing.value = false
       // 刷新用户信息
       const { fetchGetUserInfo } = await import('@/api/auth')

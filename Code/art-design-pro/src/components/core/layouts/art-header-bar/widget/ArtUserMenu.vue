@@ -28,10 +28,10 @@
           />
           <div class="w-[calc(100%-60px)] h-full">
             <span class="block text-sm font-medium text-g-800 truncate">{{
-              userInfo.userName || '未命名用户'
+              userInfo.userName || $t('topBar.user.unnamed')
             }}</span>
             <span class="block mt-0.5 text-xs text-g-500 truncate">{{
-              userInfo.email || '未填写邮箱'
+              userInfo.email || $t('topBar.user.emptyEmail')
             }}</span>
           </div>
         </div>
@@ -42,7 +42,7 @@
           </li>
           <li class="btn-item" @click="openPasswordDialog">
             <ArtSvgIcon icon="ri:key-2-line" />
-            <span>修改密码</span>
+            <span>{{ $t('topBar.user.changePassword') }}</span>
           </li>
           <li class="btn-item" @click="lockScreen">
             <ArtSvgIcon icon="ri:lock-line" />
@@ -59,7 +59,7 @@
 
   <ElDialog
     v-model="passwordDialogVisible"
-    title="修改密码"
+    :title="$t('topBar.user.password.title')"
     width="420px"
     align-center
     @closed="resetPasswordForm"
@@ -71,7 +71,7 @@
       label-width="92px"
       label-position="top"
     >
-      <ElFormItem label="当前密码" prop="oldPassword">
+      <ElFormItem :label="$t('topBar.user.password.oldPassword')" prop="oldPassword">
         <ElInput
           v-model.trim="passwordForm.oldPassword"
           type="password"
@@ -79,7 +79,7 @@
           autocomplete="current-password"
         />
       </ElFormItem>
-      <ElFormItem label="新密码" prop="newPassword">
+      <ElFormItem :label="$t('topBar.user.password.newPassword')" prop="newPassword">
         <ElInput
           v-model.trim="passwordForm.newPassword"
           type="password"
@@ -87,7 +87,7 @@
           autocomplete="new-password"
         />
       </ElFormItem>
-      <ElFormItem label="确认新密码" prop="confirmPassword">
+      <ElFormItem :label="$t('topBar.user.password.confirmPassword')" prop="confirmPassword">
         <ElInput
           v-model.trim="passwordForm.confirmPassword"
           type="password"
@@ -96,7 +96,7 @@
           @keyup.enter="submitPasswordChange"
         />
       </ElFormItem>
-      <ElFormItem label="验证码" prop="captchaCode">
+      <ElFormItem :label="$t('topBar.user.password.captcha')" prop="captchaCode">
         <div class="captcha-row">
           <ElInput
             v-model.trim="passwordForm.captchaCode"
@@ -105,15 +105,15 @@
           />
           <button class="captcha-image" type="button" @click="loadPasswordCaptcha">
             <img v-if="passwordCaptchaImage" :src="passwordCaptchaImage" alt="captcha" />
-            <span v-else>刷新</span>
+            <span v-else>{{ $t('topBar.user.password.refresh') }}</span>
           </button>
         </div>
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="passwordDialogVisible = false">取消</ElButton>
+      <ElButton @click="passwordDialogVisible = false">{{ $t('common.cancel') }}</ElButton>
       <ElButton type="primary" :loading="passwordSubmitting" @click="submitPasswordChange">
-        确认修改
+        {{ $t('topBar.user.password.submit') }}
       </ElButton>
     </template>
   </ElDialog>
@@ -156,7 +156,7 @@
     callback: (error?: Error) => void
   ) => {
     if (value !== passwordForm.newPassword) {
-      callback(new Error('两次输入的新密码不一致'))
+      callback(new Error(t('topBar.user.password.mismatch')))
       return
     }
     callback()
@@ -164,20 +164,20 @@
 
   const passwordRules: FormRules = {
     oldPassword: [
-      { required: true, message: '请输入当前密码', trigger: 'blur' },
-      { min: 6, max: 100, message: '密码长度为 6 到 100 位', trigger: 'blur' }
+      { required: true, message: t('topBar.user.password.oldRequired'), trigger: 'blur' },
+      { min: 6, max: 100, message: t('topBar.user.password.passwordLength'), trigger: 'blur' }
     ],
     newPassword: [
-      { required: true, message: '请输入新密码', trigger: 'blur' },
-      { min: 6, max: 100, message: '密码长度为 6 到 100 位', trigger: 'blur' }
+      { required: true, message: t('topBar.user.password.newRequired'), trigger: 'blur' },
+      { min: 6, max: 100, message: t('topBar.user.password.passwordLength'), trigger: 'blur' }
     ],
     confirmPassword: [
-      { required: true, message: '请再次输入新密码', trigger: 'blur' },
+      { required: true, message: t('topBar.user.password.confirmRequired'), trigger: 'blur' },
       { validator: validateConfirmPassword, trigger: 'blur' }
     ],
     captchaCode: [
-      { required: true, message: '请输入验证码', trigger: 'blur' },
-      { min: 4, max: 4, message: '验证码为4位', trigger: 'blur' }
+      { required: true, message: t('topBar.user.password.captchaRequired'), trigger: 'blur' },
+      { min: 4, max: 4, message: t('topBar.user.password.captchaLength'), trigger: 'blur' }
     ]
   }
 
@@ -232,7 +232,7 @@
         captchaCode: passwordForm.captchaCode
       })
       passwordDialogVisible.value = false
-      ElMessage.success('密码已修改，请使用新密码重新登录')
+      ElMessage.success(t('topBar.user.password.success'))
       userStore.logOut()
     } finally {
       if (passwordDialogVisible.value) {

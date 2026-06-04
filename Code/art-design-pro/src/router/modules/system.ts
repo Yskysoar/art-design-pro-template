@@ -47,7 +47,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'Org',
       component: '/system/org',
       meta: {
-        title: '组织管理',
+        title: 'menus.system.org',
         icon: 'ri:organization-chart',
         keepAlive: true,
         roles: ['R_SUPER'],
@@ -59,7 +59,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'Config',
       component: '/system/config',
       meta: {
-        title: '配置管理',
+        title: 'menus.system.config',
         icon: 'ri:settings-3-line',
         keepAlive: true,
         roles: ['R_SUPER'],
@@ -83,7 +83,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'SensitiveWord',
       component: '/article/comment',
       meta: {
-        title: '敏感词库',
+        title: 'menus.system.sensitiveWord',
         icon: 'ri:shield-keyhole-line',
         keepAlive: false,
         roles: ['R_SUPER'],

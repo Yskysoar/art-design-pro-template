@@ -80,6 +80,24 @@ export function sendSocialMessage(data: Api.Social.SocialMessageSendParams) {
   })
 }
 
+export function uploadSocialImage(file: File) {
+  const data = new FormData()
+  data.append('file', file)
+  return request.post<Api.Upload.UploadResponse>({
+    url: '/api/social/upload/image',
+    data
+  })
+}
+
+export function uploadSocialFile(file: File) {
+  const data = new FormData()
+  data.append('file', file)
+  return request.post<Api.Upload.UploadResponse>({
+    url: '/api/social/upload/file',
+    data
+  })
+}
+
 export function markConversationRead(conversationId: number) {
   return request.post<void>({
     url: `/api/social/conversations/${conversationId}/read`

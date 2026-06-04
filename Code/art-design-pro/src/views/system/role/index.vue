@@ -18,7 +18,7 @@
         <template #left>
           <ElSpace wrap>
             <ElButton v-auth="'system:role:add'" @click="showDialog('add')" v-ripple
-              >新增角色</ElButton
+              >{{ $t('systemManage.role.add') }}</ElButton
             >
           </ElSpace>
         </template>
@@ -69,8 +69,10 @@
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
   import RoleDataScopeDialog from './modules/role-data-scope-dialog.vue'
   import { ElTag, ElMessageBox } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Role' })
+  const { t } = useI18n()
 
   type RoleListItem = Api.SystemManage.RoleListItem
   type RoleSearchFormParams = Api.SystemManage.RoleSearchParams & {
@@ -118,33 +120,33 @@
       columnsFactory: () => [
         {
           prop: 'roleId',
-          label: '角色ID',
+          label: t('systemManage.role.roleId'),
           width: 100
         },
         {
           prop: 'roleName',
-          label: '角色名称',
+          label: t('systemManage.role.roleName'),
           minWidth: 120
         },
         {
           prop: 'roleCode',
-          label: '角色编码',
+          label: t('systemManage.role.roleCode'),
           minWidth: 120
         },
         {
           prop: 'description',
-          label: '角色描述',
+          label: t('systemManage.role.description'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'enabled',
-          label: '角色状态',
+          label: t('systemManage.role.enabled'),
           width: 100,
           formatter: (row) => {
             const statusConfig = row.enabled
-              ? { type: 'success', text: '启用' }
-              : { type: 'warning', text: '禁用' }
+              ? { type: 'success', text: t('common.enabled') }
+              : { type: 'warning', text: t('common.disabled') }
             return h(
               ElTag,
               { type: statusConfig.type as 'success' | 'warning' },
@@ -154,13 +156,13 @@
         },
         {
           prop: 'createTime',
-          label: '创建日期',
+          label: t('systemManage.common.createTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 80,
           fixed: 'right',
           formatter: (row) =>
@@ -169,25 +171,25 @@
                 list: [
                   {
                     key: 'permission',
-                    label: '菜单权限',
+                    label: t('systemManage.role.permission'),
                     icon: 'ri:user-3-line',
                     auth: 'system:role:permission'
                   },
                   {
                     key: 'dataScope',
-                    label: '数据权限',
+                    label: t('systemManage.role.dataScope'),
                     icon: 'ri:organization-chart',
                     auth: 'system:role:permission'
                   },
                   {
                     key: 'edit',
-                    label: '编辑角色',
+                    label: t('systemManage.role.edit'),
                     icon: 'ri:edit-2-line',
                     auth: 'system:role:edit'
                   },
                   {
                     key: 'delete',
-                    label: '删除角色',
+                    label: t('systemManage.role.delete'),
                     icon: 'ri:delete-bin-4-line',
                     auth: 'system:role:edit',
                     color: '#f56c6c'
@@ -250,20 +252,20 @@
   }
 
   const deleteRole = (row: RoleListItem) => {
-    ElMessageBox.confirm(`确定删除角色"${row.roleName}"吗？此操作不可恢复！`, '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    ElMessageBox.confirm(t('systemManage.role.deleteConfirm', { name: row.roleName }), t('common.confirmDeleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
       .then(() => {
         return fetchDeleteRole(row.roleId)
       })
       .then(() => {
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.success.delete'))
         refreshData()
       })
       .catch(() => {
-        ElMessage.info('已取消删除')
+        ElMessage.info(t('systemManage.role.cancelDelete'))
       })
   }
 </script>

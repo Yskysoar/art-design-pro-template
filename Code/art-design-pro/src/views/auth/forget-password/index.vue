@@ -13,7 +13,7 @@
             <ElFormItem prop="userName">
               <ElInput
                 class="custom-height"
-                placeholder="请输入账号"
+                :placeholder="$t('forgetPassword.placeholders.userName')"
                 v-model.trim="formData.userName"
               />
             </ElFormItem>
@@ -21,7 +21,7 @@
             <ElFormItem prop="newPassword">
               <ElInput
                 class="custom-height"
-                placeholder="请输入新密码"
+                :placeholder="$t('forgetPassword.placeholders.newPassword')"
                 type="password"
                 autocomplete="new-password"
                 show-password
@@ -32,7 +32,7 @@
             <ElFormItem prop="confirmPassword">
               <ElInput
                 class="custom-height"
-                placeholder="请再次输入新密码"
+                :placeholder="$t('forgetPassword.placeholders.confirmPassword')"
                 type="password"
                 autocomplete="new-password"
                 show-password
@@ -45,14 +45,14 @@
               <div class="captcha-row">
                 <ElInput
                   class="custom-height"
-                  placeholder="请输入验证码"
+                  :placeholder="$t('forgetPassword.placeholders.captcha')"
                   maxlength="4"
                   v-model.trim="formData.captchaCode"
                   @keyup.enter="resetPassword"
                 />
                 <button class="captcha-image" type="button" @click="loadCaptcha">
                   <img v-if="captchaImage" :src="captchaImage" alt="captcha" />
-                  <span v-else>刷新</span>
+                  <span v-else>{{ $t('forgetPassword.captcha.refresh') }}</span>
                 </button>
               </div>
             </ElFormItem>
@@ -84,10 +84,12 @@
 <script setup lang="ts">
   import { fetchCaptcha, fetchResetPassword } from '@/api/auth'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'ForgetPassword' })
 
   const router = useRouter()
+  const { t } = useI18n()
   const formRef = ref<FormInstance>()
 
   const loading = ref(false)
@@ -102,26 +104,26 @@
 
   const validateConfirmPassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
     if (!value) {
-      callback(new Error('请再次输入新密码'))
+      callback(new Error(t('forgetPassword.rule.confirmPasswordRequired')))
       return
     }
     if (value !== formData.newPassword) {
-      callback(new Error('两次输入的密码不一致'))
+      callback(new Error(t('forgetPassword.rule.passwordMismatch')))
       return
     }
     callback()
   }
 
   const rules: FormRules = {
-    userName: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+    userName: [{ required: true, message: t('forgetPassword.placeholders.userName'), trigger: 'blur' }],
     newPassword: [
-      { required: true, message: '请输入新密码', trigger: 'blur' },
-      { min: 6, message: '密码长度不能少于 6 位', trigger: 'blur' }
+      { required: true, message: t('forgetPassword.placeholders.newPassword'), trigger: 'blur' },
+      { min: 6, message: t('forgetPassword.rule.passwordLength'), trigger: 'blur' }
     ],
     confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
     captchaCode: [
-      { required: true, message: '请输入验证码', trigger: 'blur' },
-      { min: 4, max: 4, message: '验证码为4位', trigger: 'blur' }
+      { required: true, message: t('forgetPassword.placeholders.captcha'), trigger: 'blur' },
+      { min: 4, max: 4, message: t('forgetPassword.rule.captchaLength'), trigger: 'blur' }
     ]
   }
 
@@ -149,7 +151,7 @@
         captchaId: captchaId.value,
         captchaCode: formData.captchaCode
       })
-      ElMessage.success('密码已重置，请使用新密码登录')
+      ElMessage.success(t('forgetPassword.success'))
       toLogin()
     } finally {
       if (loading.value) {

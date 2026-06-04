@@ -1,29 +1,29 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '添加用户' : '编辑用户'"
+    :title="dialogType === 'add' ? $t('systemManage.user.addDialog') : $t('systemManage.user.editDialog')"
     width="680px"
     align-center
   >
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="92px">
-      <ElFormItem label="用户名" prop="userName">
-        <ElInput v-model="formData.userName" placeholder="请输入用户名" />
+      <ElFormItem :label="$t('systemManage.user.userName')" prop="userName">
+        <ElInput v-model="formData.userName" :placeholder="$t('systemManage.user.placeholders.userName')" />
       </ElFormItem>
-      <ElFormItem label="手机号" prop="userPhone">
-        <ElInput v-model="formData.userPhone" placeholder="请输入手机号" />
+      <ElFormItem :label="$t('systemManage.user.phone')" prop="userPhone">
+        <ElInput v-model="formData.userPhone" :placeholder="$t('systemManage.user.placeholders.phone')" />
       </ElFormItem>
-      <ElFormItem label="性别" prop="userGender">
+      <ElFormItem :label="$t('systemManage.user.gender')" prop="userGender">
         <ElSelect v-model="formData.userGender" style="width: 100%">
-          <ElOption label="男" value="男" />
-          <ElOption label="女" value="女" />
+          <ElOption :label="$t('systemManage.user.male')" value="男" />
+          <ElOption :label="$t('systemManage.user.female')" value="女" />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="角色" prop="roleCodes">
+      <ElFormItem :label="$t('systemManage.user.role')" prop="roleCodes">
         <ElSelect v-model="formData.roleCodes" multiple style="width: 100%">
           <ElOption v-for="role in roleList" :key="role.roleCode" :value="role.roleCode" :label="role.roleName" />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="组织" prop="orgIds">
+      <ElFormItem :label="$t('systemManage.user.org')" prop="orgIds">
         <ElTreeSelect
           v-model="formData.orgIds"
           :data="orgTree"
@@ -33,14 +33,14 @@
           multiple
           check-strictly
           filterable
-          placeholder="请选择组织"
+          :placeholder="$t('systemManage.user.placeholders.org')"
           style="width: 100%"
         />
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="dialogVisible = false">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
+      <ElButton type="primary" @click="handleSubmit">{{ $t('common.submit') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -48,6 +48,7 @@
 <script setup lang="ts">
   import { fetchCreateUser, fetchGetOrgTree, fetchGetRoleList, fetchUpdateUser } from '@/api/system-manage'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     visible: boolean
@@ -62,6 +63,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const dialogVisible = computed({
     get: () => props.visible,
@@ -81,11 +83,11 @@
   })
 
   const rules: FormRules = {
-    userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-    userPhone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-    userGender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-    roleCodes: [{ required: true, message: '请选择角色', trigger: 'change' }],
-    orgIds: [{ required: true, message: '请选择组织', trigger: 'change' }]
+    userName: [{ required: true, message: t('systemManage.user.placeholders.userName'), trigger: 'blur' }],
+    userPhone: [{ required: true, message: t('systemManage.user.placeholders.phone'), trigger: 'blur' }],
+    userGender: [{ required: true, message: t('systemManage.user.placeholders.gender'), trigger: 'change' }],
+    roleCodes: [{ required: true, message: t('systemManage.user.placeholders.role'), trigger: 'change' }],
+    orgIds: [{ required: true, message: t('systemManage.user.placeholders.org'), trigger: 'change' }]
   }
 
   const loadOptions = async () => {
@@ -140,7 +142,7 @@
       await fetchCreateUser({ ...payload, password: 'admin123' })
     }
 
-    ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+    ElMessage.success(dialogType.value === 'add' ? t('common.success.add') : t('common.success.update'))
     dialogVisible.value = false
     emit('submit')
   }

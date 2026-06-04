@@ -13,7 +13,7 @@
         <template #left>
           <ElSpace wrap>
             <ElButton v-auth="'system:sensitive-word'" @click="openDialog()" v-ripple>
-              新增敏感词
+              {{ $t('systemManage.sensitiveWord.add') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -31,24 +31,24 @@
 
     <ElDialog
       v-model="dialogVisible"
-      :title="editingWord ? '编辑敏感词' : '新增敏感词'"
+      :title="editingWord ? $t('systemManage.sensitiveWord.edit') : $t('systemManage.sensitiveWord.add')"
       width="520px"
       align-center
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <ElFormItem label="敏感词" prop="word">
+        <ElFormItem :label="$t('systemManage.sensitiveWord.word')" prop="word">
           <ElInput v-model.trim="form.word" maxlength="100" show-word-limit />
         </ElFormItem>
-        <ElFormItem label="启用状态" prop="enabled">
+        <ElFormItem :label="$t('systemManage.sensitiveWord.enabledStatus')" prop="enabled">
           <ElSwitch v-model="form.enabled" :active-value="1" :inactive-value="0" />
         </ElFormItem>
-        <ElFormItem label="备注" prop="remark">
+        <ElFormItem :label="$t('systemManage.common.remark')" prop="remark">
           <ElInput v-model.trim="form.remark" maxlength="255" show-word-limit type="textarea" :rows="3" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="saveWord">保存</ElButton>
+        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="saveWord">{{ $t('common.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
@@ -65,8 +65,10 @@
     updateSensitiveWordStatus
   } from '@/api/article'
   import { ElMessageBox, ElTag, type FormInstance, type FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'SensitiveWord' })
+  const { t } = useI18n()
 
   type SensitiveWordItem = Api.Article.SensitiveWordItem
 
@@ -83,16 +85,16 @@
   })
 
   const formItems = computed(() => [
-    { label: '敏感词', key: 'word', type: 'input', props: { clearable: true } },
+    { label: t('systemManage.sensitiveWord.word'), key: 'word', type: 'input', props: { clearable: true } },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'enabled',
       type: 'select',
       props: {
         clearable: true,
         options: [
-          { label: '启用', value: 1 },
-          { label: '禁用', value: 0 }
+          { label: t('common.enabled'), value: 1 },
+          { label: t('common.disabled'), value: 0 }
         ]
       }
     }
@@ -106,8 +108,8 @@
 
   const rules: FormRules = {
     word: [
-      { required: true, message: '请输入敏感词', trigger: 'blur' },
-      { max: 100, message: '敏感词不能超过100字', trigger: 'blur' }
+      { required: true, message: t('systemManage.sensitiveWord.placeholders.word'), trigger: 'blur' },
+      { max: 100, message: t('systemManage.sensitiveWord.rules.max'), trigger: 'blur' }
     ]
   }
 
@@ -131,28 +133,28 @@
         size: 20
       },
       columnsFactory: () => [
-        { type: 'index', width: 60, label: '序号' },
-        { prop: 'word', label: '敏感词', minWidth: 180 },
+        { type: 'index', width: 60, label: t('systemManage.common.index') },
+        { prop: 'word', label: t('systemManage.sensitiveWord.word'), minWidth: 180 },
         {
           prop: 'matchType',
-          label: '匹配方式',
+          label: t('systemManage.sensitiveWord.matchType'),
           width: 120,
-          formatter: (row) => (row.matchType === 'CONTAINS' ? '包含匹配' : row.matchType)
+          formatter: (row) => (row.matchType === 'CONTAINS' ? t('systemManage.sensitiveWord.contains') : row.matchType)
         },
         {
           prop: 'enabled',
-          label: '状态',
+          label: t('common.status'),
           width: 100,
           formatter: (row) =>
             h(ElTag, { type: row.enabled === 1 ? 'success' : 'info' }, () =>
-              row.enabled === 1 ? '启用' : '禁用'
+              row.enabled === 1 ? t('common.enabled') : t('common.disabled')
             )
         },
-        { prop: 'remark', label: '备注', minWidth: 220, showOverflowTooltip: true },
-        { prop: 'updateTime', label: '更新时间', width: 180 },
+        { prop: 'remark', label: t('systemManage.common.remark'), minWidth: 220, showOverflowTooltip: true },
+        { prop: 'updateTime', label: t('systemManage.common.updateTime'), width: 180 },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 156,
           fixed: 'right',
           formatter: (row) => {
@@ -215,7 +217,7 @@
         await createSensitiveWord(form)
       }
       dialogVisible.value = false
-      ElMessage.success(editingWord.value ? '更新成功' : '新增成功')
+      ElMessage.success(editingWord.value ? t('common.success.update') : t('common.success.add'))
       refreshData()
     } finally {
       saving.value = false
@@ -224,18 +226,18 @@
 
   const changeStatus = async (row: SensitiveWordItem, checked: boolean) => {
     await updateSensitiveWordStatus(row.id, checked ? 1 : 0)
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('common.success.status'))
     refreshData()
   }
 
   const removeWord = async (row: SensitiveWordItem) => {
-    await ElMessageBox.confirm(`确定删除敏感词"${row.word}"吗？`, '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('systemManage.sensitiveWord.deleteConfirm', { name: row.word }), t('common.confirmDeleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
     await deleteSensitiveWord(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.success.delete'))
     refreshData()
   }
 </script>

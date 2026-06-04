@@ -1,16 +1,16 @@
 <template>
-  <ElDialog v-model="visible" title="数据权限" width="560px" align-center @closed="handleClosed">
+  <ElDialog v-model="visible" :title="$t('systemManage.dataScope.title')" width="560px" align-center @closed="handleClosed">
     <ElForm label-width="110px">
-      <ElFormItem label="权限范围">
+      <ElFormItem :label="$t('systemManage.dataScope.scope')">
         <ElSelect v-model="dataScope" style="width: 100%">
-          <ElOption label="全部数据" value="ALL" />
-          <ElOption label="本人数据" value="SELF" />
-          <ElOption label="当前组织" value="CURRENT_ORG" />
-          <ElOption label="当前组织及下级" value="CURRENT_ORG_AND_SUB" />
-          <ElOption label="自定义组织" value="CUSTOM_ORG" />
+          <ElOption :label="$t('systemManage.dataScope.all')" value="ALL" />
+          <ElOption :label="$t('systemManage.dataScope.self')" value="SELF" />
+          <ElOption :label="$t('systemManage.dataScope.currentOrg')" value="CURRENT_ORG" />
+          <ElOption :label="$t('systemManage.dataScope.currentOrgAndSub')" value="CURRENT_ORG_AND_SUB" />
+          <ElOption :label="$t('systemManage.dataScope.customOrg')" value="CUSTOM_ORG" />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem v-if="dataScope === 'CUSTOM_ORG'" label="组织范围">
+      <ElFormItem v-if="dataScope === 'CUSTOM_ORG'" :label="$t('systemManage.dataScope.orgScope')">
         <ElTree
           ref="treeRef"
           node-key="id"
@@ -23,8 +23,8 @@
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="handleClose">取消</ElButton>
-      <ElButton type="primary" @click="saveDataScope">保存</ElButton>
+      <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
+      <ElButton type="primary" @click="saveDataScope">{{ $t('common.save') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -36,6 +36,7 @@
     fetchSaveRoleDataScope
   } from '@/api/system-manage'
   import type { ElTree } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     modelValue: boolean
@@ -52,6 +53,7 @@
     roleData: undefined
   })
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const visible = computed({
     get: () => props.modelValue,
@@ -91,7 +93,7 @@
       dataScope: dataScope.value,
       orgIds
     })
-    ElMessage.success('数据权限保存成功')
+    ElMessage.success(t('systemManage.dataScope.success'))
     emit('success')
     handleClose()
   }

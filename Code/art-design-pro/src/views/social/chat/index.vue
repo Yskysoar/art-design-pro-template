@@ -5,7 +5,7 @@
       <div class="side-toolbar">
         <ElInput
           v-model="keyword"
-          placeholder="搜索用户"
+          :placeholder="$t('socialChat.searchUser')"
           :prefix-icon="Search"
           clearable
           @keyup.enter="loadActiveList"
@@ -13,12 +13,14 @@
         />
       </div>
 
-      <ElTabs v-model="activeTab" stretch @tab-change="handleTabChange">
-        <ElTabPane label="会话" name="conversations" />
-        <ElTabPane label="关注" name="following" />
-        <ElTabPane label="粉丝" name="followers" />
-        <ElTabPane label="拉黑" name="blocks" />
-      </ElTabs>
+      <div class="side-tabs">
+        <ElTabs v-model="activeTab" stretch @tab-change="handleTabChange">
+          <ElTabPane :label="$t('socialChat.tabs.conversations')" name="conversations" />
+          <ElTabPane :label="$t('socialChat.tabs.following')" name="following" />
+          <ElTabPane :label="$t('socialChat.tabs.followers')" name="followers" />
+          <ElTabPane :label="$t('socialChat.tabs.blocks')" name="blocks" />
+        </ElTabs>
+      </div>
 
       <ElScrollbar class="side-list">
         <template v-if="activeTab === 'conversations'">
@@ -37,7 +39,7 @@
                 <span>{{ displayName(item.targetUser) }}</span>
                 <em>{{ formatShortTime(item.lastMessageTime) }}</em>
               </div>
-              <p>{{ item.lastMessage?.content || '暂无消息' }}</p>
+              <p>{{ messagePreview(item.lastMessage) }}</p>
             </div>
           </div>
         </template>
@@ -54,9 +56,9 @@
             <div class="side-item__main">
               <div class="side-item__top">
                 <span>{{ displayName(item) }}</span>
-                <ElTag v-if="item.mutualFollow" size="small" type="success">互关</ElTag>
-                <ElTag v-else-if="item.following" size="small">已关注</ElTag>
-                <ElTag v-else-if="item.blockedByMe" size="small" type="danger">已拉黑</ElTag>
+                <ElTag v-if="item.mutualFollow" size="small" type="success">{{ $t('socialChat.relation.mutual') }}</ElTag>
+                <ElTag v-else-if="item.following" size="small">{{ $t('socialChat.relation.following') }}</ElTag>
+                <ElTag v-else-if="item.blockedByMe" size="small" type="danger">{{ $t('socialChat.relation.blocked') }}</ElTag>
               </div>
               <p>{{ item.email || item.userName }}</p>
             </div>
@@ -65,7 +67,7 @@
 
         <ElEmpty
           v-if="activeTab === 'conversations' ? conversations.length === 0 : users.length === 0"
-          description="暂无数据"
+          :description="$t('socialChat.empty.data')"
           :image-size="90"
         />
       </ElScrollbar>
@@ -82,16 +84,15 @@
             </div>
           </div>
           <div class="chat-actions">
-            <ElButton v-if="!selectedUser.blockedByMe" :icon="ChatDotRound" @click="focusInput">私信</ElButton>
             <ElButton
               v-if="!selectedUser.blockedByMe"
               :type="selectedUser.following ? 'default' : 'primary'"
               @click="toggleFollow"
             >
-              {{ selectedUser.following ? '取消关注' : '关注' }}
+              {{ selectedUser.following ? $t('socialChat.actions.unfollow') : $t('socialChat.actions.follow') }}
             </ElButton>
             <ElButton :type="selectedUser.blockedByMe ? 'warning' : 'danger'" plain @click="toggleBlock">
-              {{ selectedUser.blockedByMe ? '解除拉黑' : '拉黑' }}
+              {{ selectedUser.blockedByMe ? $t('socialChat.actions.unblock') : $t('socialChat.actions.block') }}
             </ElButton>
           </div>
         </header>
@@ -104,51 +105,89 @@
                 <span>{{ message.senderName }}</span>
                 <em>{{ message.createTime }}</em>
               </div>
-              <p>{{ message.content }}</p>
+              <p v-if="message.messageType === 'TEXT'">{{ message.content }}</p>
+              <a
+                v-else-if="message.messageType === 'IMAGE'"
+                class="message-image"
+                :href="message.fileUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img :src="message.fileUrl" :alt="message.fileName || $t('socialChat.imageMessage')" />
+              </a>
+              <a
+                v-else
+                class="message-file"
+                :href="message.fileUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ArtSvgIcon icon="ri:file-3-line" />
+                <span>{{ message.fileName || $t('socialChat.file') }}</span>
+                <em>{{ formatFileSize(message.fileSize) }}</em>
+              </a>
             </div>
           </div>
-          <ElEmpty v-if="messages.length === 0" description="还没有消息" :image-size="110" />
+          <ElEmpty v-if="messages.length === 0" :description="$t('socialChat.empty.message')" :image-size="110" />
         </ElScrollbar>
 
         <footer class="chat-input">
           <div class="quota-line" :class="{ danger: quotaDisabled }">
-            <template v-if="selectedUser.blockedByMe">你已拉黑对方，不能发送私信</template>
-            <template v-else-if="selectedUser.blockedMe">对方已拉黑你，不能发送私信</template>
-            <template v-else-if="selectedConversation?.unlimited">已互相关注，可自由私信</template>
-            <template v-else>对方回复前还可发送 {{ remainingQuota }} 条私信</template>
+            <template v-if="selectedUser.blockedByMe">{{ $t('socialChat.quota.blockedByMe') }}</template>
+            <template v-else-if="selectedUser.blockedMe">{{ $t('socialChat.quota.blockedMe') }}</template>
+            <template v-else-if="selectedConversation?.unlimited">{{ $t('socialChat.quota.unlimited') }}</template>
+            <template v-else>{{ $t('socialChat.quota.remaining', { count: remainingQuota }) }}</template>
           </div>
           <ElInput
-            ref="inputRef"
             v-model="messageText"
             type="textarea"
             :rows="3"
             maxlength="1000"
             show-word-limit
             resize="none"
-            placeholder="输入消息"
+            :placeholder="$t('socialChat.inputPlaceholder')"
             :disabled="quotaDisabled"
             @keyup.enter.prevent="sendMessage"
           />
           <div class="input-actions">
             <div class="input-tools">
-              <ArtSvgIcon icon="ri:emotion-happy-line" />
-              <ArtSvgIcon icon="ri:image-line" />
+              <ElPopover placement="top-start" :width="268" trigger="click">
+                <template #reference>
+                  <ElButton text :disabled="quotaDisabled" class="tool-button">
+                    <ArtSvgIcon icon="ri:emotion-happy-line" />
+                  </ElButton>
+                </template>
+                <div class="emoji-panel">
+                  <button v-for="emoji in emojiList" :key="emoji" type="button" @click="appendEmoji(emoji)">
+                    {{ emoji }}
+                  </button>
+                </div>
+              </ElPopover>
+              <ElButton text :disabled="mediaDisabled || uploading" class="tool-button" @click="selectImage">
+                <ArtSvgIcon icon="ri:image-line" />
+              </ElButton>
+              <ElButton text :disabled="mediaDisabled || uploading" class="tool-button" @click="selectFile">
+                <ArtSvgIcon icon="ri:attachment-2" />
+              </ElButton>
+              <input ref="imageInputRef" type="file" accept="image/*" class="hidden-input" @change="uploadImage" />
+              <input ref="fileInputRef" type="file" class="hidden-input" @change="uploadFile" />
             </div>
-            <ElButton type="primary" :disabled="quotaDisabled || !messageText.trim()" @click="sendMessage">
-              发送
+            <ElButton type="primary" :loading="uploading" :disabled="quotaDisabled || !messageText.trim()" @click="sendMessage">
+              {{ $t('socialChat.actions.send') }}
             </ElButton>
           </div>
         </footer>
       </template>
 
-      <ElEmpty v-else class="chat-empty" description="选择一个用户开始聊天" />
+      <ElEmpty v-else class="chat-empty" :description="$t('socialChat.empty.selectUser')" />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ChatDotRound, Search } from '@element-plus/icons-vue'
+  import { Search } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { useAutoLayoutHeight } from '@/hooks/core/useLayoutHeight'
   import {
     blockUser,
@@ -160,6 +199,8 @@
     followUser,
     markConversationRead,
     sendSocialMessage,
+    uploadSocialFile,
+    uploadSocialImage,
     unblockUser,
     unfollowUser
   } from '@/api/social'
@@ -170,6 +211,7 @@
   type TabName = 'conversations' | 'following' | 'followers' | 'blocks'
 
   const { containerMinHeight } = useAutoLayoutHeight()
+  const { t } = useI18n()
 
   const activeTab = ref<TabName>('conversations')
   const keyword = ref('')
@@ -179,8 +221,11 @@
   const selectedConversation = ref<Api.Social.SocialConversation | null>(null)
   const selectedUser = ref<Api.Social.SocialUser | null>(null)
   const messageText = ref('')
-  const inputRef = ref()
   const messageScrollbarRef = ref()
+  const imageInputRef = ref<HTMLInputElement>()
+  const fileInputRef = ref<HTMLInputElement>()
+  const uploading = ref(false)
+  const emojiList = ['😀', '😄', '😂', '😊', '😍', '👍', '👏', '🙏', '🎉', '🔥', '💡', '✅', '❤️', '😎', '🤝', '💪']
 
   const selectedConversationForUser = computed(() => {
     if (!selectedUser.value) return null
@@ -196,14 +241,16 @@
     return remainingQuota.value <= 0
   })
 
+  const mediaDisabled = computed(() => quotaDisabled.value || !selectedUser.value?.mutualFollow)
+
   const relationText = computed(() => {
     if (!selectedUser.value) return ''
-    if (selectedUser.value.blockedByMe) return '已拉黑'
-    if (selectedUser.value.blockedMe) return '对方已拉黑你'
-    if (selectedUser.value.mutualFollow) return '互相关注'
-    if (selectedUser.value.following) return '我已关注'
-    if (selectedUser.value.followedBy) return '对方关注了你'
-    return '未关注'
+    if (selectedUser.value.blockedByMe) return t('socialChat.relation.blockedByMe')
+    if (selectedUser.value.blockedMe) return t('socialChat.relation.blockedMe')
+    if (selectedUser.value.mutualFollow) return t('socialChat.relation.mutualFull')
+    if (selectedUser.value.following) return t('socialChat.relation.iFollowed')
+    if (selectedUser.value.followedBy) return t('socialChat.relation.followedBy')
+    return t('socialChat.relation.none')
   })
 
   onMounted(async () => {
@@ -266,7 +313,7 @@
     const content = messageText.value.trim()
     if (!content) return
     try {
-      const message = await sendSocialMessage({ receiverId: selectedUser.value.id, content })
+      const message = await sendSocialMessage({ receiverId: selectedUser.value.id, messageType: 'TEXT', content })
       messages.value.push(message)
       messageText.value = ''
       await loadConversations()
@@ -277,10 +324,10 @@
       const httpError = error as HttpError
       const data = httpError.data as { sensitiveWords?: string[]; remainingQuota?: number } | undefined
       if (data?.sensitiveWords?.length) {
-        ElMessage.error(`内容包含敏感词：${data.sensitiveWords.join('、')}`)
+        ElMessage.error(t('socialChat.errors.sensitive', { words: data.sensitiveWords.join('、') }))
         return
       }
-      ElMessage.error(httpError.message || '消息发送失败')
+      ElMessage.error(httpError.message || t('socialChat.errors.sendFailed'))
     }
   }
 
@@ -315,15 +362,88 @@
     selectedUser.value = inConversation?.targetUser || inList || selectedUser.value
   }
 
-  function focusInput() {
-    inputRef.value?.focus?.()
-  }
-
   function scrollToBottom() {
     nextTick(() => {
       const wrap = messageScrollbarRef.value?.wrapRef
       if (wrap) wrap.scrollTop = wrap.scrollHeight
     })
+  }
+
+  function appendEmoji(emoji: string) {
+    messageText.value += emoji
+  }
+
+  function selectImage() {
+    imageInputRef.value?.click()
+  }
+
+  function selectFile() {
+    fileInputRef.value?.click()
+  }
+
+  async function uploadImage(event: Event) {
+    const input = event.target as HTMLInputElement
+    const file = input.files?.[0]
+    input.value = ''
+    if (!file || !selectedUser.value) return
+    if (file.size > 5 * 1024 * 1024) {
+      ElMessage.error(t('socialChat.errors.imageTooLarge'))
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      ElMessage.error(t('socialChat.errors.imageOnly'))
+      return
+    }
+    await uploadAndSend(file, 'IMAGE')
+  }
+
+  async function uploadFile(event: Event) {
+    const input = event.target as HTMLInputElement
+    const file = input.files?.[0]
+    input.value = ''
+    if (!file || !selectedUser.value) return
+    if (file.size > 50 * 1024 * 1024) {
+      ElMessage.error(t('socialChat.errors.fileTooLarge'))
+      return
+    }
+    await uploadAndSend(file, 'FILE')
+  }
+
+  async function uploadAndSend(file: File, messageType: 'IMAGE' | 'FILE') {
+    if (!selectedUser.value || mediaDisabled.value) return
+    uploading.value = true
+    try {
+      const uploaded = messageType === 'IMAGE' ? await uploadSocialImage(file) : await uploadSocialFile(file)
+      const message = await sendSocialMessage({
+        receiverId: selectedUser.value.id,
+        messageType,
+        fileId: uploaded.id
+      })
+      messages.value.push(message)
+      await loadConversations()
+      const current = conversations.value.find((item) => item.targetUser.id === selectedUser.value?.id)
+      if (current) selectedConversation.value = current
+      scrollToBottom()
+    } catch (error) {
+      const httpError = error as HttpError
+      ElMessage.error(httpError.message || t('socialChat.errors.fileFailed'))
+    } finally {
+      uploading.value = false
+    }
+  }
+
+  function messagePreview(message?: Api.Social.SocialMessage) {
+    if (!message) return t('socialChat.noMessage')
+    if (message.messageType === 'IMAGE') return t('socialChat.imagePreview')
+    if (message.messageType === 'FILE') return t('socialChat.filePreview', { name: message.fileName || '' }).trim()
+    return message.content || t('socialChat.noMessage')
+  }
+
+  function formatFileSize(size?: number) {
+    if (!size) return ''
+    if (size < 1024) return `${size}B`
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)}KB`
+    return `${(size / 1024 / 1024).toFixed(1)}MB`
   }
 
   function displayName(user: Api.Social.SocialUser) {
@@ -366,6 +486,29 @@
 
   .side-toolbar {
     padding: 16px 16px 8px;
+  }
+
+  .side-tabs {
+    padding: 0 12px;
+
+    :deep(.el-tabs__header) {
+      margin-bottom: 0;
+    }
+
+    :deep(.el-tabs__nav-wrap::after) {
+      height: 1px;
+    }
+
+    :deep(.el-tabs__nav) {
+      width: 100%;
+    }
+
+    :deep(.el-tabs__item) {
+      flex: 1;
+      justify-content: center;
+      padding: 0 !important;
+      text-align: center;
+    }
   }
 
   .side-list {
@@ -494,6 +637,10 @@
       .message-bubble p {
         background: rgb(var(--art-primary-rgb) / 12%);
       }
+
+      .message-file {
+        background: rgb(var(--art-primary-rgb) / 12%);
+      }
     }
   }
 
@@ -528,6 +675,55 @@
     border-radius: 8px;
   }
 
+  .message-image {
+    display: block;
+    max-width: min(280px, 100%);
+    overflow: hidden;
+    border: 1px solid var(--art-card-border);
+    border-radius: 8px;
+
+    img {
+      display: block;
+      max-width: 100%;
+      max-height: 220px;
+      object-fit: cover;
+    }
+  }
+
+  .message-file {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 2px 10px;
+    align-items: center;
+    min-width: 210px;
+    max-width: min(320px, 100%);
+    padding: 10px 12px;
+    color: inherit;
+    text-decoration: none;
+    background: var(--art-main-bg-color);
+    border-radius: 8px;
+
+    .art-svg-icon {
+      grid-row: span 2;
+      font-size: 24px;
+      color: var(--theme-color);
+    }
+
+    span {
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    em {
+      font-size: 12px;
+      font-style: normal;
+      color: var(--art-text-gray-600);
+    }
+  }
+
   .chat-input {
     padding: 14px 18px 16px;
     border-top: 1px solid var(--art-card-border);
@@ -552,8 +748,46 @@
 
   .input-tools {
     display: flex;
-    gap: 14px;
+    gap: 6px;
     color: var(--art-text-gray-600);
+  }
+
+  .tool-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+
+    .art-svg-icon {
+      font-size: 18px;
+    }
+  }
+
+  .emoji-panel {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 18px;
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      border-radius: 6px;
+
+      &:hover {
+        background: var(--art-gray-200);
+      }
+    }
+  }
+
+  .hidden-input {
+    display: none;
   }
 
   .chat-empty {
@@ -597,6 +831,10 @@
     .social-chat__side {
       height: 36%;
       min-height: 190px;
+    }
+
+    .side-tabs {
+      padding: 0 10px;
     }
 
     .message-bubble {
